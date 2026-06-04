@@ -18,7 +18,7 @@ window.showPage = function(pageId) {
   if (pageId === 'map') {
     setTimeout(() => {
       if (typeof initMap === 'function') initMap();
-      if (window.mapInstance) window.mapInstance.invalidateSize();
+      if (window.window.mapInstance) window.window.mapInstance.invalidateSize();
     }, 100);
   }
   if (pageId === 'profile') {

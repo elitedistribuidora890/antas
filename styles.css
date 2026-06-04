@@ -168,7 +168,7 @@ textarea { resize: vertical; min-height: 80px; }
 
 .logo-mark {
   width: 36px; height: 36px; border-radius: 10px;
-  background: var(--purple); color: white;
+  
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 18px;
 }

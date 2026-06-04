@@ -140,7 +140,7 @@
 <header class="navbar" id="navbar">
   <div class="nav-container">
     <a href="#" class="nav-logo" onclick="showPage('home')">
-      <div class="logo-mark">G</div>
+      <div class="logo-mark"><img src="logo.png" alt=""></div>
       <span>Antas Digital</span>
     </a>
     <nav class="nav-links desktop-only">
@@ -182,7 +182,7 @@
     <div class="hero-particles" id="particles"></div>
     <div class="hero-content">
       <div class="hero-badge">📍 Guia completo da região</div>
-      <h1 class="hero-title">Encontre tudo<br><span class="hero-accent">na sua cidade</span></h1>
+      <h1 class="hero-title">Encontre tudo<br><span class="hero-accent">em Antas!</span></h1>
       <p class="hero-subtitle">Empresas, serviços, eventos e muito mais<br>em um só lugar</p>
       <div class="search-bar">
         <div class="search-icon">🔍</div>
@@ -241,13 +241,41 @@
     <div class="container">
       <div class="bus-header">
         <h2 class="section-title" style="color:white">Ônibus em Antas</h2>
-        <button class="btn-bus-all" onclick="showPage('bus')">Ver todos ›</button>
+        <button class="btn-bus-all" onclick="alert('Em breve')">Ver todos ›</button>
       </div>
       <div class="bus-scroll" id="bus-scroll">
         <!-- JS rendered -->
       </div>
     </div>
   </section>
+
+
+  <div id="page-bus" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('home')">
+      ← Voltar
+    </button>
+
+    <h1 class="page-title">
+      Horários de Ônibus
+    </h1>
+  </div>
+
+  <div class="container">
+    <div id="bus-page-list"></div>
+  </div>
+</div>
+<script>function renderBusPage() {
+  document.getElementById('bus-page-list').innerHTML =
+    BUS_ROUTES.map(r => `
+      <div class="bus-card">
+        <strong>${r.bairro}</strong>
+        <p>Destino: ${r.destino}</p>
+        <p>Horário: ${r.horario}</p>
+      </div>
+    `).join('');
+}</script>
+
 
   <!-- News -->
   <section class="section section-alt">
@@ -679,11 +707,28 @@ async function loadCompanies() {
 }
 async function loadEvents() {
   try {
-    const snap = await getDocs(query(collection(db,'eventos'), orderBy('date'), limit(6)));
-    allEvents = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const snap = await getDocs(collection(db, 'eventos'));
+
+    allEvents = snap.docs.map(d => {
+      const data = d.data();
+
+      return {
+        id: d.id,
+        title: data.title || data.titulo || data.nome || '',
+        name: data.name || data.nome || data.titulo || '',
+        location: data.location || data.local || data.endereco || '',
+        date: data.date || data.data || data.criadoEm || new Date(),
+        time: data.time || data.horario || data.hora || 'A confirmar',
+        description: data.description || data.descricao || '',
+        image: data.image || data.imagemUrl || data.fotoUrl || ''
+      };
+    });
+
   } catch(e) {
+    console.error('Erro ao carregar eventos:', e);
     allEvents = getDemoEvents();
   }
+
   renderEvents();
   renderEventsPage();
   document.getElementById('stat-events').dataset.target = allEvents.length;
@@ -735,39 +780,16 @@ window.loadFavorites = loadFavorites;
 // ─── BUSINESS MODAL — carrega categorias do Firebase ───
 window.openBusinessModal = async function() {
   openModal('business-modal');
-  const sel = document.getElementById('biz-category');
-  sel.innerHTML = '<option value="">Carregando...</option>';
-  try {
-    const snap = await getDocs(query(collection(db, 'categorias'), orderBy('nome')));
-    if (snap.empty) {
-      // Fallback: categorias padrão caso Firebase ainda esteja vazio
-      const defaults = [
-        {nome:'Alimentação',icone:'🍽️'},{nome:'Beleza e Estética',icone:'💅'},
-        {nome:'Consertos e Reparos',icone:'🔧'},{nome:'Lojas',icone:'🛍️'},
-        {nome:'Material de Construção',icone:'🏗️'},{nome:'Saúde',icone:'🏥'},
-        {nome:'Transporte',icone:'🚗'},{nome:'Aniversário',icone:'🎂'},
-        {nome:'Presentes',icone:'🎁'},{nome:'Empregos',icone:'💼'},
-        {nome:'Grupos',icone:'👥'},{nome:'Tecnologia e Informática',icone:'💻'},
-        {nome:'Educação',icone:'📚'},{nome:'Imóveis',icone:'🏠'},
-        {nome:'Pet Shop',icone:'🐾'},{nome:'Esporte e Lazer',icone:'⚽'},
-        {nome:'Contabilidade e Finanças',icone:'💰'},{nome:'Advocacia e Jurídico',icone:'⚖️'},
-        {nome:'Religião e Igrejas',icone:'⛪'},{nome:'Eventos e Festas',icone:'🎉'},
-      ];
-      sel.innerHTML = '<option value="">Selecione...</option>' +
-        defaults.map(c => `<option value="${c.nome}">${c.icone} ${c.nome}</option>`).join('');
-    } else {
-      sel.innerHTML = '<option value="">Selecione...</option>' +
-        snap.docs.map(d => {
-          const c = d.data();
-          return `<option value="${c.nome}">${c.icone || ''} ${c.nome}</option>`;
-        }).join('');
-    }
-  } catch(err) {
-    sel.innerHTML = '<option value="">Selecione a categoria</option>';
-    console.warn('Erro ao carregar categorias:', err);
-  }
-};
 
+  const sel = document.getElementById('biz-category');
+
+  sel.innerHTML = '<option value="">Selecione...</option>' +
+    CATEGORIES.map(c => `
+      <option value="${c.name}">
+        ${c.icon || ''} ${c.name}
+      </option>
+    `).join('');
+};
 // ─── BUSINESS SUBMISSION ───
 window.submitBusiness = async function() {
   const name = document.getElementById('biz-name').value.trim();
@@ -1204,28 +1226,42 @@ const UTILITIES = [
 
 // ─── BUS SCHEDULE ───
 const BUS_ROUTES = [
-  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '06:00', destino: 'Centro' },
-  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '06:20', destino: 'Centro' },
-  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '07:00', destino: 'Centro' },
-  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '08:00', destino: 'Centro' },
-  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '09:30', destino: 'Centro' },
-  { bairro: 'Centro / Bela Vista',              horario: '07:30', destino: 'Bairro' },
-  { bairro: 'Centro / Bela Vista',              horario: '11:00', destino: 'Bairro' },
-  { bairro: 'Centro / Bela Vista',              horario: '13:00', destino: 'Bairro' },
+
+  // ANTAS → PAULO AFONSO (Cidade Sol)
+  { bairro: 'Antas', horario: '01:35', destino: 'Paulo Afonso' },
+  { bairro: 'Antas', horario: '11:40', destino: 'Paulo Afonso' },
+  { bairro: 'Antas', horario: '15:20', destino: 'Paulo Afonso' },
+  { bairro: 'Antas', horario: '22:00', destino: 'Paulo Afonso' },
+
+  // PAULO AFONSO → ANTAS (Cidade Sol)
+  { bairro: 'Paulo Afonso', horario: '06:00', destino: 'Antas' },
+  { bairro: 'Paulo Afonso', horario: '08:00', destino: 'Antas' },
+  { bairro: 'Paulo Afonso', horario: '13:00', destino: 'Antas' },
+  { bairro: 'Paulo Afonso', horario: '20:00', destino: 'Antas' },
+
+  // ANTAS → SALVADOR (confirmar na Cidade Sol)
+  { bairro: 'Antas', horario: '04:30', destino: 'Salvador' },
+  { bairro: 'Antas', horario: '22:30', destino: 'Salvador' },
+
+  // ANTAS → ARACAJU (confirmar na Coopertalse)
+  { bairro: 'Antas', horario: '06:00', destino: 'Aracaju' },
+  { bairro: 'Antas', horario: '14:00', destino: 'Aracaju' }
+
 ];
 
 function renderBusSchedule() {
   const container = document.getElementById('bus-scroll');
+
   if (!container) return;
+
   container.innerHTML = BUS_ROUTES.map(r => `
     <div class="bus-card">
-      <p class="bus-from">saindo do</p>
-      <p class="bus-bairro">${r.bairro}</p>
+      <p class="bus-from">${r.bairro}</p>
+      <p class="bus-destino">→ ${r.destino}</p>
       <p class="bus-hora">${r.horario}</p>
     </div>
   `).join('');
 }
-
 function renderUtilities() {
   document.getElementById('utilities-grid').innerHTML = UTILITIES.map(u=>`
     <div class="utility-card" style="--util-color:${u.color}">
@@ -1237,34 +1273,49 @@ function renderUtilities() {
 }
 
 // ─── MAP ───
-let mapInstance = null;
+window.window.mapInstance = null;
 let mapMarkers = [];
 
 window.initMap = function() {
-  if (mapInstance) return;
+  if (window.mapInstance) return;
   // Default to center of Brazil if no companies
-  const center = allCompanies.find(c=>c.lat)?[allCompanies[0].lat,allCompanies[0].lng]:[-14.235,-51.925];
-  mapInstance = L.map('leaflet-map').setView(center, 13);
+const firstCompanyWithCoords = allCompanies.find(
+  c => c.lat && c.lng
+);
+
+const center = firstCompanyWithCoords
+  ? [firstCompanyWithCoords.lat, firstCompanyWithCoords.lng]
+  : [-10.4108, -38.3366]; // Antas-BA
+window.window.mapInstance = L.map('leaflet-map').setView(center, 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
-  }).addTo(mapInstance);
+  }).addTo(window.mapInstance);
   updateMapMarkers();
 };
 
 window.updateMapMarkers = function() {
-  if (!mapInstance) return;
+  if (!window.mapInstance) return;
   mapMarkers.forEach(m=>m.remove());
   mapMarkers = [];
-  const withCoords = allCompanies.filter(c=>c.lat&&c.lng);
+  const withCoords = allCompanies.filter(
+  c =>
+    c.lat !== null &&
+    c.lng !== null &&
+    !isNaN(c.lat) &&
+    !isNaN(c.lng)
+);
+allCompanies.forEach(c => {
+  console.log(c.name, c.lat, c.lng);
+});
   withCoords.forEach(c=>{
-    const marker = L.marker([c.lat,c.lng]).addTo(mapInstance)
+    const marker = L.marker([c.lat,c.lng]).addTo(window.mapInstance)
       .bindPopup(`<b>${c.name}</b><br>${c.category}<br><button onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">Ver detalhes</button>`);
     mapMarkers.push(marker);
   });
   const mapList = document.getElementById('map-list');
   if(mapList) {
     mapList.innerHTML = withCoords.map(c=>`
-      <div class="map-list-item" onclick="mapInstance.setView([${c.lat},${c.lng}],16)">
+      <div class="map-list-item" onclick="window.mapInstance.setView([${c.lat},${c.lng}],16)">
         <strong>${c.name}</strong><br><small>${c.category}</small>
       </div>`).join('') || '<p class="text-muted p-3">Nenhuma empresa com localização.</p>';
   }
@@ -1274,7 +1325,7 @@ window.filterMapCompanies = function(val) {
   if (!val) { updateMapMarkers(); return; }
   const filtered = allCompanies.filter(c=>c.lat&&c.lng&&c.name?.toLowerCase().includes(val.toLowerCase()));
   mapMarkers.forEach(m=>m.remove());
-  mapMarkers = filtered.map(c=>L.marker([c.lat,c.lng]).addTo(mapInstance).bindPopup(`<b>${c.name}</b>`));
+  mapMarkers = filtered.map(c=>L.marker([c.lat,c.lng]).addTo(window.mapInstance).bindPopup(`<b>${c.name}</b>`));
 };
 
 window.toggleMapSidebar = function() {

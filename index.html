@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Antas Digital — Portal da Cidade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===== MODALS ===== -->
+<div id="modal-overlay" class="modal-overlay hidden"></div>
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="modal hidden">
+  <div class="modal-header">
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="login">Entrar</button>
+      <button class="modal-tab" data-tab="register">Cadastrar</button>
+    </div>
+    <button class="modal-close" onclick="closeModal('auth-modal')">✕</button>
+  </div>
+  <div id="tab-login" class="tab-content active">
+    <h2 class="modal-title">Bem-vindo de volta</h2>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-password" placeholder="••••••••">
+    </div>
+    <button class="btn-primary w-full" onclick="handleLogin()">Entrar</button>
+    <p class="text-center mt-3"><a href="#" onclick="showRecover()">Esqueci minha senha</a></p>
+    <div class="social-divider"><span>ou continue com</span></div>
+    <button class="btn-google" onclick="handleGoogleLogin()">
+      <svg viewBox="0 0 24 24" width="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Google
+    </button>
+  </div>
+  <div id="tab-register" class="tab-content">
+    <h2 class="modal-title">Criar conta</h2>
+    <div class="form-group">
+      <label>Nome completo</label>
+      <input type="text" id="reg-name" placeholder="Seu nome">
+    </div>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="reg-email" placeholder="seu@email.com">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres">
+    </div>
+    <button class="btn-primary w-full" onclick="handleRegister()">Criar conta</button>
+  </div>
+  <div id="tab-recover" class="tab-content">
+    <h2 class="modal-title">Recuperar senha</h2>
+    <p class="text-muted mb-3">Enviaremos um link para redefinir sua senha.</p>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="recover-email" placeholder="seu@email.com">
+    </div>
+    <button class="btn-primary w-full" onclick="handleRecover()">Enviar link</button>
+    <p class="text-center mt-3"><a href="#" onclick="switchTab('login')">← Voltar ao login</a></p>
+  </div>
+</div>
+
+<!-- Business Form Modal -->
+<div id="business-modal" class="modal modal-lg hidden">
+  <div class="modal-header">
+    <h3 class="modal-title-sm">Divulgar Meu Negócio</h3>
+    <button class="modal-close" onclick="closeModal('business-modal')">✕</button>
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Nome da Empresa *</label>
+      <input type="text" id="biz-name" placeholder="Ex: Salão da Maria">
+    </div>
+    <div class="form-group">
+      <label>Responsável *</label>
+      <input type="text" id="biz-owner" placeholder="Nome do responsável">
+    </div>
+    <div class="form-group">
+      <label>WhatsApp *</label>
+      <input type="tel" id="biz-whatsapp" placeholder="(00) 00000-0000">
+    </div>
+    <div class="form-group">
+      <label>Categoria *</label>
+      <select id="biz-category">
+        <option value="">Carregando categorias...</option>
+      </select>
+    </div>
+    <div class="form-group form-full">
+      <label>Endereço *</label>
+      <input type="text" id="biz-address" placeholder="Rua, número, bairro, cidade">
+    </div>
+    <div class="form-group">
+      <label>Instagram</label>
+      <input type="text" id="biz-instagram" placeholder="@seunegocio">
+    </div>
+    <div class="form-group form-full">
+      <label>Descrição *</label>
+      <textarea id="biz-description" rows="3" placeholder="Descreva seus produtos e serviços..."></textarea>
+    </div>
+    <div class="form-group form-full">
+      <label>Fotos</label>
+      <div class="file-drop" onclick="document.getElementById('biz-photos').click()">
+        <span class="file-drop-icon">📷</span>
+        <span>Clique para selecionar fotos</span>
+        <input type="file" id="biz-photos" multiple accept="image/*" hidden onchange="previewPhotos(this)">
+      </div>
+      <div id="photo-preview" class="photo-preview"></div>
+    </div>
+  </div>
+  <button class="btn-primary w-full mt-3" onclick="submitBusiness()">Enviar Solicitação</button>
+</div>
+
+<!-- Company Detail Modal -->
+<div id="company-modal" class="modal modal-lg hidden">
+  <button class="modal-close" onclick="closeModal('company-modal')">✕</button>
+  <div id="company-modal-content"></div>
+</div>
+
+<!-- News Detail Modal -->
+<div id="news-modal" class="modal modal-lg hidden">
+  <button class="modal-close" onclick="closeModal('news-modal')">✕</button>
+  <div id="news-modal-content"></div>
+</div>
+
+<!-- Event Detail Modal -->
+<div id="event-modal" class="modal hidden">
+  <button class="modal-close" onclick="closeModal('event-modal')">✕</button>
+  <div id="event-modal-content"></div>
+</div>
+
+<!-- ===== NAVBAR ===== -->
+<header class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="#" class="nav-logo" onclick="showPage('home')">
+      <div class="logo-mark">G</div>
+      <span>Antas Digital</span>
+    </a>
+    <nav class="nav-links desktop-only">
+      <a href="#" class="nav-link" onclick="showPage('home')">Início</a>
+      <a href="#" class="nav-link" onclick="showPage('map')">Mapa</a>
+      <a href="#" class="nav-link" onclick="showPage('news')">Notícias</a>
+      <a href="#" class="nav-link" onclick="showPage('events')">Eventos</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn-outline-sm desktop-only" onclick="openModal('auth-modal')" id="btn-login">Entrar</button>
+      <div class="user-avatar hidden" id="user-menu" onclick="showPage('profile')">
+        <span id="user-initials">U</span>
+      </div>
+      <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-menu hidden" id="mobile-menu">
+    <a href="#" class="mobile-link" onclick="showPage('home');closeMobileMenu()">🏠 Início</a>
+    <a href="#" class="mobile-link" onclick="showPage('map');closeMobileMenu()">🗺️ Mapa</a>
+    <a href="#" class="mobile-link" onclick="showPage('news');closeMobileMenu()">📰 Notícias</a>
+    <a href="#" class="mobile-link" onclick="showPage('events');closeMobileMenu()">🎉 Eventos</a>
+    <a href="#" class="mobile-link" onclick="showPage('profile');closeMobileMenu()">👤 Meu Perfil</a>
+    <div class="mobile-divider"></div>
+    <button class="btn-primary mobile-auth-btn" onclick="openModal('auth-modal');closeMobileMenu()" id="mobile-btn-login">Entrar</button>
+  </div>
+</header>
+
+<!-- ===== PAGES ===== -->
+<main id="app">
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-particles" id="particles"></div>
+    <div class="hero-content">
+      <div class="hero-badge">📍 Guia completo da região</div>
+      <h1 class="hero-title">Encontre tudo<br><span class="hero-accent">na sua cidade</span></h1>
+      <p class="hero-subtitle">Empresas, serviços, eventos e muito mais<br>em um só lugar</p>
+      <div class="search-bar">
+        <div class="search-icon">🔍</div>
+        <input type="text" id="hero-search" placeholder="Buscar empresa, serviço, bairro..." oninput="handleSearch(this.value)" onkeyup="if(event.key==='Enter')doSearch()">
+        <button class="search-btn" onclick="doSearch()">Buscar</button>
+      </div>
+      <div id="search-suggestions" class="search-suggestions hidden"></div>
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="stat-num" id="stat-companies">0</span><span>Empresas</span></div>
+        <div class="hero-stat"><span class="stat-num" id="stat-categories">12</span><span>Categorias</span></div>
+        <div class="hero-stat"><span class="stat-num" id="stat-events">0</span><span>Eventos</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Explorar Categorias</h2>
+        <button class="btn-link-blue" id="btn-see-more" onclick="toggleCategories()">Mostrar mais ›</button>
+      </div>
+      <div class="categories-grid" id="categories-grid">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Highlights -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Destaques da região 🔥</h2>
+        <div class="highlight-badge">⭐ Patrocinado</div>
+      </div>
+      <div class="highlights-scroll" id="highlights-scroll">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Popular Companies -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Populares do Achei</h2>
+      </div>
+      <div class="popular-grid" id="popular-grid">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Bus Schedule -->
+  <section class="section section-bus">
+    <div class="container">
+      <div class="bus-header">
+        <h2 class="section-title" style="color:white">Ônibus em Antas</h2>
+        <button class="btn-bus-all" onclick="showPage('bus')">Ver todos ›</button>
+      </div>
+      <div class="bus-scroll" id="bus-scroll">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- News -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Últimas Notícias</h2>
+        <button class="btn-ghost" onclick="showPage('news')">Ver todas</button>
+      </div>
+      <div class="news-grid" id="news-grid">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Events -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">O que fazer na cidade</h2>
+        <button class="btn-ghost" onclick="showPage('events')">Ver todos</button>
+      </div>
+      <div class="events-scroll" id="events-scroll">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Public Utilities -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Utilidade Pública</h2>
+      </div>
+      <div class="utilities-grid" id="utilities-grid">
+        <!-- JS rendered -->
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-home -->
+
+<!-- CATEGORY PAGE -->
+<div id="page-category" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+    <div>
+      <h1 id="category-page-title" class="page-title"></h1>
+      <p id="category-page-count" class="page-subtitle"></p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="filter-bar">
+      <input type="text" class="filter-input" placeholder="Filtrar por nome..." id="category-filter" oninput="filterCategoryCompanies(this.value)">
+      <select class="filter-select" id="category-sort" onchange="sortCategoryCompanies(this.value)">
+        <option value="name">Nome A-Z</option>
+        <option value="rating">Melhor avaliação</option>
+        <option value="views">Mais vistas</option>
+      </select>
+    </div>
+    <div class="companies-grid" id="category-companies-grid">
+      <!-- JS rendered -->
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH PAGE -->
+<div id="page-search" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+    <div>
+      <h1 class="page-title">Resultados da busca</h1>
+      <p id="search-result-info" class="page-subtitle"></p>
+    </div>
+  </div>
+  <div class="container">
+    <div class="search-page-bar">
+      <input type="text" id="search-page-input" placeholder="Buscar..." oninput="handlePageSearch(this.value)">
+      <button onclick="doPageSearch()">Buscar</button>
+    </div>
+    <div id="search-results-container">
+      <!-- JS rendered -->
+    </div>
+  </div>
+</div>
+
+<!-- MAP PAGE -->
+<div id="page-map" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+    <h1 class="page-title">Mapa da Cidade</h1>
+  </div>
+  <div class="map-wrapper">
+    <div class="map-sidebar" id="map-sidebar">
+      <div class="map-search">
+        <input type="text" placeholder="Filtrar no mapa..." id="map-filter" oninput="filterMapCompanies(this.value)">
+      </div>
+      <div id="map-list" class="map-list"></div>
+    </div>
+    <div class="map-container" id="map-container">
+      <div id="leaflet-map" style="height:100%;width:100%"></div>
+      <div class="map-toggle-sidebar" onclick="toggleMapSidebar()">☰</div>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS PAGE -->
+<div id="page-news" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+    <h1 class="page-title">Notícias Regionais</h1>
+  </div>
+  <div class="container">
+    <div class="news-grid-full" id="news-page-grid">
+      <!-- JS rendered -->
+    </div>
+  </div>
+</div>
+
+<!-- EVENTS PAGE -->
+<div id="page-events" class="page">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+    <h1 class="page-title">Eventos & Agenda</h1>
+  </div>
+  <div class="container">
+    <div class="events-filter">
+      <button class="filter-chip active" onclick="filterEvents('all',this)">Todos</button>
+      <button class="filter-chip" onclick="filterEvents('today',this)">Hoje</button>
+      <button class="filter-chip" onclick="filterEvents('week',this)">Esta semana</button>
+      <button class="filter-chip" onclick="filterEvents('month',this)">Este mês</button>
+    </div>
+    <div class="events-page-grid" id="events-page-grid">
+      <!-- JS rendered -->
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE PAGE -->
+<div id="page-profile" class="page">
+  <div class="profile-page-topbar">
+    <h1 class="profile-page-title">PERFIL</h1>
+  </div>
+  <div class="profile-page-body">
+
+    <!-- Login card (logged out) -->
+    <div id="profile-logged-out" class="profile-login-card">
+      <p class="profile-login-hello">Olá!</p>
+      <p class="profile-login-sub">Entre ou crie uma conta para aproveitar melhor o app</p>
+      <button class="btn-primary w-full profile-login-btn" onclick="openModal('auth-modal')">Fazer login</button>
+      <p class="profile-login-hints">- Salve suas empresas favoritas</p>
+      <p class="profile-login-hints">- Comente o que achou das empresas</p>
+      <p class="profile-login-hints">- Tenha acesso a conteúdos específicos</p>
+    </div>
+
+    <!-- Logged in header (hidden when logged out) -->
+    <div id="profile-user-header" class="profile-user-header hidden">
+      <div class="profile-avatar-lg" id="profile-avatar">U</div>
+      <div class="profile-user-info">
+        <h2 id="profile-name">Usuário</h2>
+        <p id="profile-email" class="text-muted"></p>
+      </div>
+    </div>
+
+    <!-- Menu list (always visible) -->
+    <div class="profile-menu-list">
+      <div class="profile-menu-divider"></div>
+      <button class="profile-menu-item" onclick="handleProfileMenuClick('dados')">
+        <span class="profile-menu-icon">☰</span>
+        <span class="profile-menu-label">Dados da conta</span>
+        <span class="profile-menu-arrow">›</span>
+      </button>
+      <div class="profile-menu-divider"></div>
+      <button class="profile-menu-item" onclick="handleProfileMenuClick('favoritos')">
+        <span class="profile-menu-icon profile-menu-icon-heart">♡</span>
+        <span class="profile-menu-label">Favoritos</span>
+        <span class="profile-menu-arrow">›</span>
+      </button>
+      <div class="profile-menu-divider"></div>
+      <button class="profile-menu-item" onclick="handleProfileMenuClick('agendamentos')">
+        <span class="profile-menu-icon">↺</span>
+        <span class="profile-menu-label">Agendamentos</span>
+        <span class="profile-menu-arrow">›</span>
+      </button>
+      <div class="profile-menu-divider"></div>
+      <button class="profile-menu-item" onclick="handleProfileMenuClick('notificacoes')">
+        <span class="profile-menu-icon">🔔</span>
+        <span class="profile-menu-label">Notificações</span>
+        <span class="profile-menu-arrow">›</span>
+      </button>
+      <div class="profile-menu-divider"></div>
+      <button class="profile-menu-item" onclick="handleProfileMenuClick('cupons')">
+        <span class="profile-menu-icon">🧳</span>
+        <span class="profile-menu-label">Cupons</span>
+        <span class="profile-menu-arrow">›</span>
+      </button>
+      <div class="profile-menu-divider"></div>
+    </div>
+
+    <!-- Logout button (only when logged in) -->
+    <div id="profile-logout-section" class="hidden" style="padding:16px 0;">
+      <button class="btn-outline-sm" style="width:100%;color:var(--error);border-color:var(--error);" onclick="handleLogout()">Sair da conta</button>
+    </div>
+
+    <!-- Favorites panel (drawer) -->
+    <div id="profile-favorites-panel" class="hidden" style="padding:0;">
+      <div class="profile-panel-header">
+        <button class="back-btn" onclick="document.getElementById('profile-favorites-panel').classList.add('hidden')">← Voltar</button>
+        <h2 class="page-title">Favoritos</h2>
+      </div>
+      <div id="favorites-grid" class="companies-grid" style="padding:16px"></div>
+      <div id="favorites-empty" class="empty-state hidden">
+        <p>Você ainda não salvou favoritos.<br>Explore empresas e toque no ❤️</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main><!-- /app -->
+
+<!-- ===== FIXED BUTTON ===== -->
+<button class="fab" onclick="openBusinessModal()" title="Divulgar meu negócio">
+  <span class="fab-icon">+</span>
+  <span class="fab-label">Divulgar Negócio</span>
+</button>
+
+<!-- ===== BOTTOM NAV (Mobile) ===== -->
+<nav class="bottom-nav">
+  <button class="bottom-nav-item active" onclick="showPage('home');setActiveNav(this)">
+    <span class="bnav-icon">🏠</span>
+    <span>Início</span>
+  </button>
+  <button class="bottom-nav-item" onclick="showPage('map');setActiveNav(this)">
+    <span class="bnav-icon">🗺️</span>
+    <span>Mapa</span>
+  </button>
+  <button class="bottom-nav-item" onclick="showPage('news');setActiveNav(this)">
+    <span class="bnav-icon">📰</span>
+    <span>Notícias</span>
+  </button>
+  <button class="bottom-nav-item" onclick="showPage('events');setActiveNav(this)">
+    <span class="bnav-icon">🎉</span>
+    <span>Eventos</span>
+  </button>
+  <button class="bottom-nav-item" onclick="showPage('profile');setActiveNav(this)">
+    <span class="bnav-icon">👤</span>
+    <span>Perfil</span>
+  </button>
+</nav>
+
+<!-- ===== TOAST ===== -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, increment, query, where, orderBy, limit, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// ─── FIREBASE CONFIG ─── (substitua pelos seus dados)
+const firebaseConfig = {
+  apiKey: "AIzaSyDbMlnT8pO0_JECJsGrQn2CNfcsKA6uyGQ",
+  authDomain: "cidade-9528a.firebaseapp.com",
+  projectId: "cidade-9528a",
+  storageBucket: "cidade-9528a.firebasestorage.app",
+  messagingSenderId: "475692348722",
+  appId: "1:475692348722:web:f03639854c7243e917932b",
+  measurementId: "G-EW7598TPL2"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const storage = getStorage(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ─── Expose to global ───
+window.DB = db;
+window.AUTH = auth;
+window.STORAGE = storage;
+window.FB = { collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, query, where, orderBy, limit, onSnapshot, setDoc };
+window.FB_AUTH = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile, googleProvider };
+
+// ─── Auth State ───
+onAuthStateChanged(auth, (user) => {
+  window.currentUser = user;
+  updateAuthUI(user);
+  if (user) loadFavorites();
+});
+
+function updateAuthUI(user) {
+  const btnLogin = document.getElementById('btn-login');
+  const mobileBtnLogin = document.getElementById('mobile-btn-login');
+  const userMenu = document.getElementById('user-menu');
+  const userInitials = document.getElementById('user-initials');
+  if (user) {
+    btnLogin?.classList.add('hidden');
+    mobileBtnLogin?.classList.add('hidden');
+    userMenu?.classList.remove('hidden');
+    const name = user.displayName || user.email || 'U';
+    userInitials.textContent = name[0].toUpperCase();
+    // New profile layout
+    document.getElementById('profile-logged-out')?.classList.add('hidden');
+    document.getElementById('profile-user-header')?.classList.remove('hidden');
+    document.getElementById('profile-logout-section')?.classList.remove('hidden');
+    document.getElementById('profile-name').textContent = user.displayName || 'Usuário';
+    document.getElementById('profile-email').textContent = user.email;
+    document.getElementById('profile-avatar').textContent = name[0].toUpperCase();
+  } else {
+    btnLogin?.classList.remove('hidden');
+    mobileBtnLogin?.classList.remove('hidden');
+    userMenu?.classList.add('hidden');
+    document.getElementById('profile-logged-out')?.classList.remove('hidden');
+    document.getElementById('profile-user-header')?.classList.add('hidden');
+    document.getElementById('profile-logout-section')?.classList.add('hidden');
+  }
+}
+window.updateAuthUI = updateAuthUI;
+
+// ─── AUTH ACTIONS ───
+window.handleLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw = document.getElementById('login-password').value;
+  if (!email || !pw) return showToast('Preencha todos os campos', 'error');
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    closeModal('auth-modal');
+    showToast('Login realizado com sucesso!', 'success');
+  } catch(e) {
+    showToast(translateFirebaseError(e.code), 'error');
+  }
+};
+
+window.handleRegister = async function() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const pw = document.getElementById('reg-password').value;
+  if (!name||!email||!pw) return showToast('Preencha todos os campos', 'error');
+  if (pw.length < 6) return showToast('Senha deve ter mínimo 6 caracteres', 'error');
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    await updateProfile(cred.user, { displayName: name });
+    await setDoc(doc(db,'usuarios',cred.user.uid), { name, email, createdAt: new Date(), favorites: [] });
+    closeModal('auth-modal');
+    showToast('Conta criada com sucesso!', 'success');
+  } catch(e) {
+    showToast(translateFirebaseError(e.code), 'error');
+  }
+};
+
+window.handleGoogleLogin = async function() {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    await setDoc(doc(db,'usuarios',user.uid), { name: user.displayName, email: user.email, photo: user.photoURL, createdAt: new Date() }, {merge:true});
+    closeModal('auth-modal');
+    showToast('Bem-vindo, ' + user.displayName + '!', 'success');
+  } catch(e) {
+    showToast('Erro ao entrar com Google', 'error');
+  }
+};
+
+window.handleRecover = async function() {
+  const email = document.getElementById('recover-email').value.trim();
+  if (!email) return showToast('Digite seu e-mail', 'error');
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showToast('E-mail de recuperação enviado!', 'success');
+    switchTab('login');
+  } catch(e) {
+    showToast(translateFirebaseError(e.code), 'error');
+  }
+};
+
+window.handleLogout = async function() {
+  await signOut(auth);
+  showToast('Até logo!', 'success');
+  showPage('home');
+};
+
+// ─── FIRESTORE DATA LOADING ───
+let allCompanies = [];
+let allEvents = [];
+let allNews = [];
+
+async function loadAll() {
+  await Promise.all([loadCompanies(), loadEvents(), loadNews()]);
+  animateStats();
+}
+
+async function loadCompanies() {
+  try {
+    const snap = await getDocs(collection(db,'empresas'));
+
+    allCompanies = snap.docs.map(d => {
+      const data = d.data();
+
+      return {
+        id: d.id,
+
+        name: data.name || data.nome || '',
+        category: data.category || data.categoria || '',
+        description: data.description || data.descricao || '',
+        address: data.address || data.endereco || '',
+        phone: data.phone || data.telefone || '',
+        whatsapp: data.whatsapp || '',
+        instagram: data.instagram || '',
+        logo: data.logo || data.logoUrl || '',
+        cover: data.cover || data.capaUrl || '',
+        lat: data.lat || null,
+        lng: data.lng || null,
+        rating: data.rating || 0,
+        views: data.views || 0,
+        sponsored: data.sponsored || data.patrocinada || false,
+        status: data.status || 'ativa'
+      };
+    }).filter(c => c.status === 'ativa');
+
+  } catch(e) {
+    console.error(e);
+    allCompanies = getDemoCompanies();
+  }
+
+  renderHighlights();
+  renderPopular();
+  updateMapMarkers();
+  document.getElementById('stat-companies').dataset.target = allCompanies.length;
+}
+async function loadEvents() {
+  try {
+    const snap = await getDocs(query(collection(db,'eventos'), orderBy('date'), limit(6)));
+    allEvents = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) {
+    allEvents = getDemoEvents();
+  }
+  renderEvents();
+  renderEventsPage();
+  document.getElementById('stat-events').dataset.target = allEvents.length;
+}
+
+async function loadNews() {
+  try {
+    const snap = await getDocs(
+      query(collection(db,'noticias'), orderBy('criadoEm','desc'), limit(6))
+    );
+
+    allNews = snap.docs.map(d => {
+      const data = d.data();
+
+      return {
+        id: d.id,
+        title: data.title || data.titulo || '',
+        image: data.image || data.imagemUrl || '',
+        summary: data.summary || data.resumo || '',
+        content: data.content || data.texto || '',
+        date: data.date || data.criadoEm || new Date(),
+        category: data.category || data.categoria || 'Geral',
+        author: data.author || data.autor || ''
+      };
+    });
+
+  } catch(e) {
+    console.error(e);
+    allNews = getDemoNews();
+  }
+
+  renderNews();
+  renderNewsPage();
+}
+
+
+async function loadFavorites() {
+  if (!window.currentUser) return;
+  try {
+    const snap = await getDocs(query(collection(db,'favoritos'), where('userId','==',window.currentUser.uid)));
+    window.userFavorites = snap.docs.map(d=>d.data().companyId);
+    renderFavorites();
+  } catch(e) {
+    window.userFavorites = [];
+  }
+}
+window.loadFavorites = loadFavorites;
+
+// ─── BUSINESS MODAL — carrega categorias do Firebase ───
+window.openBusinessModal = async function() {
+  openModal('business-modal');
+  const sel = document.getElementById('biz-category');
+  sel.innerHTML = '<option value="">Carregando...</option>';
+  try {
+    const snap = await getDocs(query(collection(db, 'categorias'), orderBy('nome')));
+    if (snap.empty) {
+      // Fallback: categorias padrão caso Firebase ainda esteja vazio
+      const defaults = [
+        {nome:'Alimentação',icone:'🍽️'},{nome:'Beleza e Estética',icone:'💅'},
+        {nome:'Consertos e Reparos',icone:'🔧'},{nome:'Lojas',icone:'🛍️'},
+        {nome:'Material de Construção',icone:'🏗️'},{nome:'Saúde',icone:'🏥'},
+        {nome:'Transporte',icone:'🚗'},{nome:'Aniversário',icone:'🎂'},
+        {nome:'Presentes',icone:'🎁'},{nome:'Empregos',icone:'💼'},
+        {nome:'Grupos',icone:'👥'},{nome:'Tecnologia e Informática',icone:'💻'},
+        {nome:'Educação',icone:'📚'},{nome:'Imóveis',icone:'🏠'},
+        {nome:'Pet Shop',icone:'🐾'},{nome:'Esporte e Lazer',icone:'⚽'},
+        {nome:'Contabilidade e Finanças',icone:'💰'},{nome:'Advocacia e Jurídico',icone:'⚖️'},
+        {nome:'Religião e Igrejas',icone:'⛪'},{nome:'Eventos e Festas',icone:'🎉'},
+      ];
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        defaults.map(c => `<option value="${c.nome}">${c.icone} ${c.nome}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        snap.docs.map(d => {
+          const c = d.data();
+          return `<option value="${c.nome}">${c.icone || ''} ${c.nome}</option>`;
+        }).join('');
+    }
+  } catch(err) {
+    sel.innerHTML = '<option value="">Selecione a categoria</option>';
+    console.warn('Erro ao carregar categorias:', err);
+  }
+};
+
+// ─── BUSINESS SUBMISSION ───
+window.submitBusiness = async function() {
+  const name = document.getElementById('biz-name').value.trim();
+  const owner = document.getElementById('biz-owner').value.trim();
+  const whatsapp = document.getElementById('biz-whatsapp').value.trim();
+  const category = document.getElementById('biz-category').value;
+  const address = document.getElementById('biz-address').value.trim();
+  const instagram = document.getElementById('biz-instagram').value.trim();
+  const description = document.getElementById('biz-description').value.trim();
+  const photos = document.getElementById('biz-photos').files;
+
+  if (!name||!owner||!whatsapp||!category||!address||!description) {
+    return showToast('Preencha todos os campos obrigatórios', 'error');
+  }
+
+  const btn = document.querySelector('#business-modal .btn-primary');
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+
+  try {
+    const photoUrls = [];
+    for (let photo of photos) {
+      const storageRef = ref(storage, `solicitacoes/${Date.now()}_${photo.name}`);
+      const snap = await uploadBytes(storageRef, photo);
+      const url = await getDownloadURL(snap.ref);
+      photoUrls.push(url);
+    }
+    // Dados do usuário logado
+    const user = window.currentUser;
+    await addDoc(collection(db, "solicitacoes_empresas"), {
+      nome: name,
+      responsavel: owner,
+      categoria: category,
+      whatsapp,
+      endereco: address,
+      instagram,
+      descricao: description,
+      fotos: photoUrls,
+      status: "pendente",
+      criadoEm: new Date(),
+      // Dados do solicitante (usuário logado)
+      usuarioId:       user?.uid        || null,
+      usuarioNome:     user?.displayName || owner || null,
+      usuarioEmail:    user?.email       || null,
+      usuarioWhatsapp: whatsapp          || null,
+    });
+    closeModal('business-modal');
+    showToast('Solicitação enviada com sucesso! Entraremos em contato em breve.', 'success', 5000);
+    document.getElementById('biz-name').value='';
+    document.getElementById('biz-owner').value='';
+    document.getElementById('biz-whatsapp').value='';
+    document.getElementById('biz-category').value='';
+    document.getElementById('biz-address').value='';
+    document.getElementById('biz-instagram').value='';
+    document.getElementById('biz-description').value='';
+    document.getElementById('photo-preview').innerHTML='';
+  } catch(e) {
+    showToast('Erro ao enviar. Tente novamente.', 'error');
+  }
+  btn.textContent = 'Enviar Solicitação';
+  btn.disabled = false;
+};
+
+// ─── COMPANY INTERACTIONS ───
+window.openCompany = async function(company) {
+  // Increment views only for unique devices (fingerprint via localStorage)
+  try {
+    const viewKey = 'viewed_' + company.id;
+    const alreadyViewed = localStorage.getItem(viewKey);
+    if (!alreadyViewed) {
+      await updateDoc(doc(db,'empresas',company.id), { views: increment(1) });
+      localStorage.setItem(viewKey, '1');
+    }
+  } catch(e){}
+
+  const isFav = (window.userFavorites||[]).includes(company.id);
+  const stars = renderStars(company.rating||0);
+  
+  document.getElementById('company-modal-content').innerHTML = `
+    <div class="company-cover" style="background-image:url('${company.cover||'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800'}')">
+      <div class="company-cover-overlay"></div>
+    </div>
+    <div class="company-detail">
+      <div class="company-detail-top">
+        <div class="company-logo-lg">${company.logo ? `<img src="${company.logo}" alt="${company.name}">` : `<span>${company.name[0]}</span>`}</div>
+        <div class="company-detail-info">
+          <h2 class="company-detail-name">${company.name}</h2>
+          <p class="company-category-tag">${company.category}</p>
+          <div class="rating-row">${stars} <span class="rating-num">${(company.rating||0).toFixed(1)}</span></div>
+        </div>
+        <button class="fav-btn ${isFav?'active':''}" onclick="toggleFavorite('${company.id}',this)">❤️</button>
+      </div>
+      <div class="company-stats-row">
+        <div class="cs-item">👁️ <span>${company.views||0} views</span></div>
+        <div class="cs-item">💬 <span>${company.whatsappClicks||0} contatos</span></div>
+        <div class="cs-item">⭐ <span>${(company.rating||0).toFixed(1)}</span></div>
+      </div>
+      ${company.description?`<p class="company-description">${company.description}</p>`:''}
+      <div class="company-info-list">
+        ${company.address?`<div class="info-item">📍 <span>${company.address}</span></div>`:''}
+        ${company.hours?`<div class="info-item">🕐 <span>${company.hours}</span></div>`:''}
+        ${company.phone?`<div class="info-item">📞 <span>${company.phone}</span></div>`:''}
+      </div>
+      ${company.gallery&&company.gallery.length?`
+        <h3 class="gallery-title">Galeria</h3>
+        <div class="gallery-grid">
+          ${company.gallery.map(img=>`<img src="${img}" alt="foto" onclick="openImageModal('${img}')">`).join('')}
+        </div>`:''}
+      <div class="company-actions">
+        ${company.whatsapp?`<button class="btn-whatsapp" onclick="handleWhatsApp('${company.id}','${company.whatsapp}')">
+          <svg viewBox="0 0 24 24" width="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Falar no WhatsApp
+        </button>`:''}
+        ${company.lat&&company.lng?`<button class="btn-route" onclick="openRoute(${company.lat},${company.lng})">🗺️ Ver rota</button>`:''}
+        <button class="btn-share" onclick="shareCompany('${company.name}','${window.location.href}')">↗️ Compartilhar</button>
+      </div>
+    </div>
+  `;
+  openModal('company-modal');
+};
+
+window.handleWhatsApp = async function(companyId, whatsapp) {
+  try {
+    await updateDoc(doc(db,'empresas',companyId), { whatsappClicks: increment(1) });
+  } catch(e){}
+  const num = whatsapp.replace(/\D/g,'');
+  window.open(`https://wa.me/55${num}`, '_blank');
+};
+
+window.openRoute = function(lat, lng) {
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+};
+
+window.shareCompany = function(name, url) {
+  if (navigator.share) {
+    navigator.share({ title: name, url });
+  } else {
+    navigator.clipboard.writeText(url);
+    showToast('Link copiado!', 'success');
+  }
+};
+
+window.toggleFavorite = async function(companyId, btn) {
+  if (!window.currentUser) {
+    openModal('auth-modal');
+    return showToast('Entre para salvar favoritos', 'info');
+  }
+  const favs = window.userFavorites || [];
+  const idx = favs.indexOf(companyId);
+  if (idx > -1) {
+    // Remove
+    favs.splice(idx, 1);
+    btn.classList.remove('active');
+    // Delete from Firestore
+    const q = query(collection(db,'favoritos'), where('userId','==',window.currentUser.uid), where('companyId','==',companyId));
+    const snap = await getDocs(q);
+    snap.forEach(d=>deleteDoc(doc(db,'favoritos',d.id)));
+    showToast('Removido dos favoritos', 'info');
+  } else {
+    favs.push(companyId);
+    btn.classList.add('active');
+    await addDoc(collection(db,'favoritos'), { userId: window.currentUser.uid, companyId, addedAt: new Date() });
+    showToast('Salvo nos favoritos ❤️', 'success');
+  }
+  window.userFavorites = favs;
+  renderFavorites();
+};
+
+// ─── SEARCH ───
+window.handleSearch = function(val) {
+  const sug = document.getElementById('search-suggestions');
+  if (!val || val.length < 2) { sug.classList.add('hidden'); return; }
+  const results = allCompanies.filter(c =>
+    c.name?.toLowerCase().includes(val.toLowerCase()) ||
+    c.category?.toLowerCase().includes(val.toLowerCase()) ||
+    c.neighborhood?.toLowerCase().includes(val.toLowerCase())
+  ).slice(0,5);
+  if (!results.length) { sug.classList.add('hidden'); return; }
+  sug.innerHTML = results.map(c=>`
+    <div class="suggestion-item" onclick="openCompany(${JSON.stringify(c).replace(/'/g,"\\'")}); document.getElementById('search-suggestions').classList.add('hidden')">
+      <span class="sug-name">${c.name}</span>
+      <span class="sug-cat">${c.category}</span>
+    </div>`).join('');
+  sug.classList.remove('hidden');
+};
+
+window.doSearch = function() {
+  const val = document.getElementById('hero-search').value.trim();
+  if (!val) return;
+  document.getElementById('search-suggestions').classList.add('hidden');
+  document.getElementById('search-page-input').value = val;
+  showPage('search');
+  doPageSearch();
+};
+
+window.handlePageSearch = function(val) { /* live filter */ };
+
+window.doPageSearch = function() {
+  const val = document.getElementById('search-page-input').value.trim().toLowerCase();
+  const results = allCompanies.filter(c =>
+    c.name?.toLowerCase().includes(val) ||
+    c.category?.toLowerCase().includes(val) ||
+    c.neighborhood?.toLowerCase().includes(val) ||
+    c.description?.toLowerCase().includes(val) ||
+    (c.services||[]).some(s=>s.toLowerCase().includes(val))
+  );
+  document.getElementById('search-result-info').textContent = `${results.length} resultado(s) para "${val}"`;
+  const container = document.getElementById('search-results-container');
+  if (!results.length) {
+    container.innerHTML = '<div class="empty-state"><p>Nenhum resultado encontrado.</p></div>';
+    return;
+  }
+  container.innerHTML = `<div class="companies-grid">${results.map(c=>companyCard(c)).join('')}</div>`;
+};
+
+// ─── RENDER FUNCTIONS ───
+function renderHighlights() {
+  const sponsored = allCompanies.filter(c=>c.sponsored).concat(getDemoHighlights());
+  const container = document.getElementById('highlights-scroll');
+  if (!sponsored.length) { container.innerHTML = '<p class="text-muted text-center w-full py-4">Nenhum destaque cadastrado.</p>'; return; }
+  container.innerHTML = sponsored.slice(0,6).map(c=>`
+    <div class="highlight-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <div class="highlight-badge-tag">⭐ Destaque</div>
+      <div class="highlight-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${c.name[0]}</span>`}</div>
+      <h3 class="highlight-name">${c.name}</h3>
+      <p class="highlight-cat">${c.category}</p>
+      <div class="highlight-rating">${renderStars(c.rating||0)} <span>${(c.rating||0).toFixed(1)}</span></div>
+    </div>`).join('');
+}
+
+function renderPopular() {
+  const sorted = [...allCompanies].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8);
+  const container = document.getElementById('popular-grid');
+  if (!sorted.length) { container.innerHTML='<p class="text-muted">Carregando...</p>'; return; }
+  container.innerHTML = sorted.map(c=>`
+    <div class="popular-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <div class="popular-img" style="background-image:url('${c.cover||'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}')">
+        <div class="popular-overlay"></div>
+        <div class="popular-info">
+          <h3>${c.name}</h3>
+          <p>${c.category}</p>
+          <span class="views-badge">👁️ ${c.views||0}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderNews() {
+  const container = document.getElementById('news-grid');
+  container.innerHTML = allNews.slice(0,3).map(n=>newsCard(n)).join('');
+}
+
+function renderNewsPage() {
+  const container = document.getElementById('news-page-grid');
+  container.innerHTML = allNews.map(n=>newsCard(n)).join('');
+}
+
+function newsCard(n) {
+  return `<div class="news-card" onclick="openNews(${JSON.stringify(n).replace(/"/g,'&quot;')})">
+    <div class="news-img" style="background-image:url('${n.image||'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400'}')"></div>
+    <div class="news-body">
+      <span class="news-date">${formatDate(n.date)}</span>
+      <h3 class="news-title">${n.title}</h3>
+      <p class="news-summary">${n.summary||''}</p>
+      <span class="news-read">Ler mais →</span>
+    </div>
+  </div>`;
+}
+
+window.openNews = function(news) {
+  document.getElementById('news-modal-content').innerHTML = `
+    ${news.image?`<div class="news-modal-img" style="background-image:url('${news.image}')"></div>`:''}
+    <div class="news-modal-body">
+      <span class="news-date">${formatDate(news.date)}</span>
+      <h2 class="news-modal-title">${news.title}</h2>
+      <p class="news-content">${news.content||news.summary}</p>
+    </div>`;
+  openModal('news-modal');
+};
+
+function renderEvents() {
+  const container = document.getElementById('events-scroll');
+  container.innerHTML = allEvents.slice(0,6).map(e=>eventCard(e)).join('');
+}
+
+function renderEventsPage() {
+  const container = document.getElementById('events-page-grid');
+  container.innerHTML = allEvents.map(e=>eventCard(e)).join('');
+}
+
+function eventCard(e) {
+  return `<div class="event-card" onclick="openEvent(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+    <div class="event-img" style="background-image:url('${e.image||'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400'}')">
+      <div class="event-date-badge">${formatEventDate(e.date)}</div>
+    </div>
+    <div class="event-body">
+      <h3 class="event-title">${e.name||e.title}</h3>
+      <p class="event-location">📍 ${e.location}</p>
+      <p class="event-time">🕐 ${e.time||'A confirmar'}</p>
+    </div>
+  </div>`;
+}
+
+window.openEvent = function(ev) {
+  document.getElementById('event-modal-content').innerHTML = `
+    ${ev.image?`<div class="event-modal-img" style="background-image:url('${ev.image}')"></div>`:''}
+    <div class="event-modal-body">
+      <h2>${ev.name||ev.title}</h2>
+      <div class="event-detail-info">
+        <p>📍 ${ev.location}</p>
+        <p>📅 ${formatDate(ev.date)}</p>
+        <p>🕐 ${ev.time||'A confirmar'}</p>
+      </div>
+      ${ev.description?`<p class="mt-3">${ev.description}</p>`:''}
+    </div>`;
+  openModal('event-modal');
+};
+
+window.filterEvents = function(filter, btn) {
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  let filtered = allEvents;
+  const now = new Date();
+  if (filter === 'today') {
+    filtered = allEvents.filter(e=>{
+      const d = e.date?.toDate?.() || new Date(e.date);
+      return d.toDateString() === now.toDateString();
+    });
+  } else if (filter === 'week') {
+    const week = new Date(now); week.setDate(week.getDate()+7);
+    filtered = allEvents.filter(e=>{ const d = e.date?.toDate?.() || new Date(e.date); return d >= now && d <= week; });
+  } else if (filter === 'month') {
+    filtered = allEvents.filter(e=>{ const d = e.date?.toDate?.() || new Date(e.date); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); });
+  }
+  document.getElementById('events-page-grid').innerHTML = filtered.length ? filtered.map(e=>eventCard(e)).join('') : '<div class="empty-state"><p>Nenhum evento neste período.</p></div>';
+};
+
+function companyCard(c) {
+  return `<div class="company-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+    <div class="company-card-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${c.name[0]}</span>`}</div>
+    <div class="company-card-body">
+      <h3 class="company-card-name">${c.name}</h3>
+      <p class="company-card-cat">${c.category}</p>
+      ${c.neighborhood?`<p class="company-card-city">📍 ${c.neighborhood}</p>`:''}
+      <div class="company-card-rating">${renderStars(c.rating||0)} <span>${(c.rating||0).toFixed(1)}</span></div>
+    </div>
+  </div>`;
+}
+
+function renderFavorites() {
+  const favs = window.userFavorites || [];
+  const favCompanies = allCompanies.filter(c=>favs.includes(c.id));
+  const grid = document.getElementById('favorites-grid');
+  const empty = document.getElementById('favorites-empty');
+  if (!favCompanies.length) {
+    grid.innerHTML=''; empty?.classList.remove('hidden');
+  } else {
+    empty?.classList.add('hidden');
+    grid.innerHTML = favCompanies.map(c=>companyCard(c)).join('');
+  }
+}
+
+// ─── CATEGORIES ───
+const CATEGORIES = [
+  {name:'Alimentação',icon:'🍽️',color:'#F59E0B'},
+  {name:'Beleza e Estética',icon:'💅',color:'#EC4899'},
+  {name:'Consertos e Reparos',icon:'🔧',color:'#6B7280'},
+  {name:'Lojas',icon:'🛍️',color:'#10B981'},
+  {name:'Material de Construção',icon:'🏗️',color:'#F97316'},
+  {name:'Saúde',icon:'🏥',color:'#EF4444'},
+  {name:'Transporte',icon:'🚗',color:'#3B82F6'},
+  {name:'Aniversário',icon:'🎂',color:'#8B5CF6'},
+  {name:'Presentes',icon:'🎁',color:'#EF4444'},
+  {name:'Empregos',icon:'💼',color:'#0EA5E9'},
+  {name:'Grupos',icon:'👥',color:'#14B8A6'},
+  {name:'Tecnologia e Informática',icon:'💻',color:'#7C3AED'},
+];
+
+let categoriesExpanded = false;
+
+function renderCategories() {
+  const grid = document.getElementById('categories-grid');
+  const show = categoriesExpanded ? CATEGORIES : CATEGORIES.slice(0,8);
+  grid.innerHTML = show.map(cat=>`
+    <div class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
+      <div class="cat-icon">${cat.icon}</div>
+      <span class="cat-name">${cat.name}</span>
+      <span class="cat-count">${allCompanies.filter(c=>c.category===cat.name).length}</span>
+    </div>`).join('');
+}
+
+window.toggleCategories = function() {
+  categoriesExpanded = !categoriesExpanded;
+  document.getElementById('btn-see-more').textContent = categoriesExpanded ? 'Ver menos' : 'Ver mais';
+  renderCategories();
+};
+
+window.showCategory = function(categoryName) {
+  document.getElementById('category-page-title').textContent = CATEGORIES.find(c=>c.name===categoryName)?.icon + ' ' + categoryName;
+  window.currentCategoryCompanies = allCompanies.filter(c=>c.category===categoryName);
+  document.getElementById('category-page-count').textContent = `${window.currentCategoryCompanies.length} empresa(s) encontrada(s)`;
+  renderCategoryCompanies(window.currentCategoryCompanies);
+  showPage('category');
+};
+
+function renderCategoryCompanies(companies) {
+  const grid = document.getElementById('category-companies-grid');
+  if (!companies.length) { grid.innerHTML='<div class="empty-state"><p>Nenhuma empresa nesta categoria ainda.</p></div>'; return; }
+  grid.innerHTML = companies.map(c=>companyCard(c)).join('');
+}
+
+window.filterCategoryCompanies = function(val) {
+  const filtered = (window.currentCategoryCompanies||[]).filter(c=>c.name?.toLowerCase().includes(val.toLowerCase()));
+  renderCategoryCompanies(filtered);
+};
+
+window.sortCategoryCompanies = function(by) {
+  let sorted = [...(window.currentCategoryCompanies||[])];
+  if (by==='rating') sorted.sort((a,b)=>(b.rating||0)-(a.rating||0));
+  else if (by==='views') sorted.sort((a,b)=>(b.views||0)-(a.views||0));
+  else sorted.sort((a,b)=>a.name?.localeCompare(b.name));
+  renderCategoryCompanies(sorted);
+};
+
+// ─── UTILITIES ───
+const UTILITIES = [
+  {name:'SAMU',phone:'192',icon:'🚑',color:'#EF4444'},
+  {name:'Polícia Militar',phone:'190',icon:'👮',color:'#1D4ED8'},
+  {name:'Bombeiros',phone:'193',icon:'🚒',color:'#DC2626'},
+  {name:'Hospital Municipal',phone:'(00) 0000-0000',icon:'🏥',color:'#059669'},
+  {name:'UPA',phone:'(00) 0000-0001',icon:'⛑️',color:'#0891B2'},
+  {name:'Prefeitura',phone:'(00) 0000-0002',icon:'🏛️',color:'#7C3AED'},
+];
+
+// ─── BUS SCHEDULE ───
+const BUS_ROUTES = [
+  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '06:00', destino: 'Centro' },
+  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '06:20', destino: 'Centro' },
+  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '07:00', destino: 'Centro' },
+  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '08:00', destino: 'Centro' },
+  { bairro: 'Moxotó / Jardim Bahia / Barroca', horario: '09:30', destino: 'Centro' },
+  { bairro: 'Centro / Bela Vista',              horario: '07:30', destino: 'Bairro' },
+  { bairro: 'Centro / Bela Vista',              horario: '11:00', destino: 'Bairro' },
+  { bairro: 'Centro / Bela Vista',              horario: '13:00', destino: 'Bairro' },
+];
+
+function renderBusSchedule() {
+  const container = document.getElementById('bus-scroll');
+  if (!container) return;
+  container.innerHTML = BUS_ROUTES.map(r => `
+    <div class="bus-card">
+      <p class="bus-from">saindo do</p>
+      <p class="bus-bairro">${r.bairro}</p>
+      <p class="bus-hora">${r.horario}</p>
+    </div>
+  `).join('');
+}
+
+function renderUtilities() {
+  document.getElementById('utilities-grid').innerHTML = UTILITIES.map(u=>`
+    <div class="utility-card" style="--util-color:${u.color}">
+      <div class="utility-icon">${u.icon}</div>
+      <h3 class="utility-name">${u.name}</h3>
+      <p class="utility-phone">${u.phone}</p>
+      <a href="tel:${u.phone.replace(/\D/g,'')}" class="utility-call-btn">Ligar</a>
+    </div>`).join('');
+}
+
+// ─── MAP ───
+let mapInstance = null;
+let mapMarkers = [];
+
+window.initMap = function() {
+  if (mapInstance) return;
+  // Default to center of Brazil if no companies
+  const center = allCompanies.find(c=>c.lat)?[allCompanies[0].lat,allCompanies[0].lng]:[-14.235,-51.925];
+  mapInstance = L.map('leaflet-map').setView(center, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(mapInstance);
+  updateMapMarkers();
+};
+
+window.updateMapMarkers = function() {
+  if (!mapInstance) return;
+  mapMarkers.forEach(m=>m.remove());
+  mapMarkers = [];
+  const withCoords = allCompanies.filter(c=>c.lat&&c.lng);
+  withCoords.forEach(c=>{
+    const marker = L.marker([c.lat,c.lng]).addTo(mapInstance)
+      .bindPopup(`<b>${c.name}</b><br>${c.category}<br><button onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">Ver detalhes</button>`);
+    mapMarkers.push(marker);
+  });
+  const mapList = document.getElementById('map-list');
+  if(mapList) {
+    mapList.innerHTML = withCoords.map(c=>`
+      <div class="map-list-item" onclick="mapInstance.setView([${c.lat},${c.lng}],16)">
+        <strong>${c.name}</strong><br><small>${c.category}</small>
+      </div>`).join('') || '<p class="text-muted p-3">Nenhuma empresa com localização.</p>';
+  }
+};
+
+window.filterMapCompanies = function(val) {
+  if (!val) { updateMapMarkers(); return; }
+  const filtered = allCompanies.filter(c=>c.lat&&c.lng&&c.name?.toLowerCase().includes(val.toLowerCase()));
+  mapMarkers.forEach(m=>m.remove());
+  mapMarkers = filtered.map(c=>L.marker([c.lat,c.lng]).addTo(mapInstance).bindPopup(`<b>${c.name}</b>`));
+};
+
+window.toggleMapSidebar = function() {
+  document.getElementById('map-sidebar').classList.toggle('hidden');
+};
+
+// ─── HELPERS ───
+window.renderStars = function(rating) {
+  return Array.from({length:5},(_,i)=>`<span class="${i<Math.round(rating)?'star-on':'star-off'}">★</span>`).join('');
+};
+
+window.formatDate = function(date) {
+  if (!date) return '';
+  const d = date?.toDate?.() || new Date(date);
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+};
+
+window.formatEventDate = function(date) {
+  if (!date) return '??';
+  const d = date?.toDate?.() || new Date(date);
+  return `${d.getDate()}\n${d.toLocaleString('pt-BR',{month:'short'})}`;
+};
+
+window.animateStats = function() {
+  document.querySelectorAll('.stat-num').forEach(el=>{
+    const target = parseInt(el.dataset.target||el.textContent||0);
+    if (!target) return;
+    let current = 0;
+    const step = Math.ceil(target/40);
+    const timer = setInterval(()=>{
+      current = Math.min(current+step, target);
+      el.textContent = current;
+      if (current>=target) clearInterval(timer);
+    },30);
+  });
+};
+
+window.previewPhotos = function(input) {
+  const preview = document.getElementById('photo-preview');
+  preview.innerHTML='';
+  [...input.files].forEach(f=>{
+    const r = new FileReader();
+    r.onload = e=>{ preview.innerHTML+=`<img src="${e.target.result}" class="preview-img">`; };
+    r.readAsDataURL(f);
+  });
+};
+
+function translateFirebaseError(code) {
+  const map = {
+    'auth/user-not-found':'Usuário não encontrado',
+    'auth/wrong-password':'Senha incorreta',
+    'auth/email-already-in-use':'E-mail já cadastrado',
+    'auth/weak-password':'Senha fraca. Use pelo menos 6 caracteres',
+    'auth/invalid-email':'E-mail inválido',
+    'auth/too-many-requests':'Muitas tentativas. Tente mais tarde'
+  };
+  return map[code]||'Erro ao autenticar. Tente novamente.';
+}
+
+// ─── DEMO DATA ───
+function getDemoCompanies() {
+  return [
+    {id:'1',name:'Restaurante do João',category:'Alimentação',rating:4.5,views:234,sponsored:false,neighborhood:'Centro',address:'Rua das Flores, 123',hours:'Seg-Sex 11h-22h',whatsapp:'00999999999',description:'O melhor restaurante da cidade com pratos típicos regionais.',cover:'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800',lat:-12.9714,lng:-38.5014},
+    {id:'2',name:'Salão Beleza Total',category:'Beleza e Estética',rating:4.8,views:567,sponsored:true,neighborhood:'Vila Nova',address:'Av. Principal, 456',hours:'Ter-Sáb 8h-19h',whatsapp:'00988888888',description:'Especialistas em cortes, coloração e tratamentos capilares.',sponsored:true,cover:'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800'},
+    {id:'3',name:'Farmácia Saúde Mais',category:'Saúde',rating:4.2,views:189,neighborhood:'Jardim América',address:'Rua das Palmeiras, 789',hours:'Seg-Dom 7h-23h',whatsapp:'00977777777',description:'Sua farmácia de confiança com delivery.',cover:'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=800'},
+    {id:'4',name:'TechFix Informática',category:'Tecnologia e Informática',rating:4.6,views:312,neighborhood:'Centro',address:'Praça Central, 10',hours:'Seg-Sex 8h-18h',whatsapp:'00966666666',description:'Conserto e manutenção de computadores e celulares.',cover:'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=800'},
+    {id:'5',name:'Mercadinho Bom Preço',category:'Lojas',rating:4.0,views:445,neighborhood:'Bela Vista',sponsored:true,address:'Rua Sete, 77',hours:'Seg-Sáb 7h-21h',whatsapp:'00955555555',description:'Variedade e qualidade para sua família.',cover:'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=800'},
+    {id:'6',name:'Moto Táxi Expresso',category:'Transporte',rating:3.9,views:98,neighborhood:'Toda a cidade',address:'Atende toda a cidade',hours:'Seg-Dom 6h-22h',whatsapp:'00944444444',description:'Transporte rápido e seguro pela cidade.'},
+    {id:'7',name:'Construção & Cia',category:'Material de Construção',rating:4.3,views:201,neighborhood:'Industrial',address:'Rod. BR-101, km 5',hours:'Seg-Sex 7h-17h, Sáb 7h-12h',whatsapp:'00933333333'},
+    {id:'8',name:'Festas & Alegria',category:'Aniversário',rating:4.7,views:388,sponsored:true,neighborhood:'Centro',address:'Rua das Festas, 200',hours:'Seg-Sex 9h-18h',whatsapp:'00922222222',description:'Decoração e buffet para festas inesquecíveis.'},
+  ];
+}
+
+function getDemoHighlights() {
+  return getDemoCompanies().filter(c=>c.sponsored);
+}
+
+function getDemoEvents() {
+  return [
+    {id:'e1',title:'Feira de Artesanato',name:'Feira de Artesanato Local',location:'Praça Central',date:new Date(Date.now()+86400000*3),time:'8h às 18h',description:'A maior feira de artesanato da região com artistas locais.',image:'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?w=400'},
+    {id:'e2',title:'Show de Forró',name:'Show de Forró na Praça',location:'Parque Municipal',date:new Date(Date.now()+86400000*7),time:'20h',description:'Uma noite de forró pé de serra com banda ao vivo.',image:'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400'},
+    {id:'e3',title:'Campeonato de Futebol',name:'Copa da Cidade 2025',location:'Estádio Municipal',date:new Date(Date.now()+86400000*14),time:'15h',description:'Final do campeonato municipal de futebol.',image:'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400'},
+    {id:'e4',title:'Exposição de Arte',name:'Arte & Cultura na Cidade',location:'Centro Cultural',date:new Date(Date.now()+86400000*5),time:'10h às 20h',description:'Exposição com obras de artistas regionais.',image:'https://images.unsplash.com/photo-1561214115-f2f134cc4912?w=400'},
+  ];
+}
+
+function getDemoNews() {
+  return [
+    {id:'n1',title:'Prefeitura anuncia novo parque para a cidade',summary:'A administração municipal confirmou a construção de um novo espaço de lazer no bairro Vila Verde.',date:new Date(),image:'https://images.unsplash.com/photo-1444666757592-02ebba11ec45?w=400',content:'A prefeitura municipal anunciou nesta semana o projeto de construção de um novo parque público. O espaço contará com pista de caminhada, playground, academia ao ar livre e área verde. As obras devem começar no próximo trimestre e têm previsão de conclusão em 18 meses.'},
+    {id:'n2',title:'Abertura de vagas no comércio local cresce 20%',summary:'Setor de comércio registra aumento significativo nas contratações durante o período de festas.',date:new Date(Date.now()-86400000),image:'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400',content:'O setor comercial da cidade registrou crescimento de 20% nas vagas de emprego no último trimestre. O aumento é atribuído à expansão do comércio local e às festas de fim de ano.'},
+    {id:'n3',title:'Festival gastronômico movimenta o centro',summary:'Evento reúne restaurantes e produtores locais no maior festival de gastronomia da história da cidade.',date:new Date(Date.now()-86400000*2),image:'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400',content:'O Festival Gastronômico Municipal acontece este final de semana na Praça Central. Com mais de 30 expositores entre restaurantes e produtores artesanais, o evento promete ser o maior de sua história.'},
+  ];
+}
+
+// ─── PROFILE MENU CLICK ───
+window.handleProfileMenuClick = function(section) {
+  if (!window.currentUser) {
+    openModal('auth-modal');
+    return showToast('Entre para acessar esta seção', 'info');
+  }
+  if (section === 'favoritos') {
+    document.getElementById('profile-favorites-panel').classList.remove('hidden');
+    renderFavorites();
+  } else {
+    showToast('Em breve...', 'info');
+  }
+};
+
+// ─── INIT ───
+renderCategories();
+renderUtilities();
+renderBusSchedule();
+loadAll();
+
+</script>
+
+<!-- Leaflet Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="app.js"></script>
+</body>
+</html>

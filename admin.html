@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antas Digital — Painel Administrativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin.css" />
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc,
+      deleteDoc, onSnapshot, query, where, orderBy, limit, setDoc, increment, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    // ══════════════════════════════════════════
+    // CONFIGURE SEU FIREBASE AQUI
+    // ══════════════════════════════════════════
+    const firebaseConfig = {
+     apiKey: "AIzaSyDbMlnT8pO0_JECJsGrQn2CNfcsKA6uyGQ",
+  authDomain: "cidade-9528a.firebaseapp.com",
+  projectId: "cidade-9528a",
+  storageBucket: "cidade-9528a.firebasestorage.app",
+  messagingSenderId: "475692348722",
+  appId: "1:475692348722:web:f03639854c7243e917932b",
+  measurementId: "G-EW7598TPL2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    const storage = getStorage(app);
+
+    // Expose globally
+    window._fb = { auth, db, storage,
+      signInWithEmailAndPassword, signOut, onAuthStateChanged,
+      collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+      onSnapshot, query, where, orderBy, limit, setDoc, increment, serverTimestamp, ref,
+      uploadBytes, getDownloadURL, deleteObject
+    };
+
+    // Auth state observer
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Check if admin
+        const snap = await getDoc(doc(db, 'admins', user.uid));
+        if (snap.exists()) {
+          window._currentUser = { ...user, role: 'admin', data: snap.data() };
+          showPanel();
+        } else {
+          await signOut(auth);
+          showLogin('Acesso negado. Você não é administrador.');
+        }
+      } else {
+        window._currentUser = null;
+        showLogin();
+      }
+    });
+  </script>
+</head>
+<body>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div id="login-screen" class="login-screen">
+  <div class="login-bg">
+    <div class="login-orb orb1"></div>
+    <div class="login-orb orb2"></div>
+    <div class="login-orb orb3"></div>
+  </div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon"><img src="logo-antas.png" alt="" width="100%"></div>
+      <div>
+        <h1>Antas Digital</h1>
+        <span>Painel Administrativo</span>
+      </div>
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="admin@Antas Digital.com.br" />
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="login-password" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary w-full" id="btn-login">
+      <span id="btn-login-text">Entrar no Painel</span>
+      <span id="btn-login-loading" class="hidden spinner-sm"></span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ ADMIN PANEL ══════════ -->
+<div id="admin-panel" class="admin-panel hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="logo-emoji">🏙️</span>
+        <div>
+          <strong>Antas Digital</strong>
+          <small>Admin Panel</small>
+        </div>
+      </div>
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Principal</div>
+      <a class="nav-item active" data-page="dashboard" onclick="navTo('dashboard')">
+        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+      </a>
+
+      <div class="nav-section-label">Cadastros</div>
+      <a class="nav-item" data-page="empresas" onclick="navTo('empresas')">
+        <span class="nav-icon">🏢</span><span class="nav-label">Empresas</span>
+        <span class="nav-badge" id="badge-pendentes">0</span>
+      </a>
+      <a class="nav-item" data-page="aprovacoes" onclick="navTo('aprovacoes')">
+        <span class="nav-icon">✅</span><span class="nav-label">Aprovações</span>
+      </a>
+      <a class="nav-item" data-page="noticias" onclick="navTo('noticias')">
+        <span class="nav-icon">📰</span><span class="nav-label">Notícias</span>
+      </a>
+      <a class="nav-item" data-page="eventos" onclick="navTo('eventos')">
+        <span class="nav-icon">🎉</span><span class="nav-label">Eventos</span>
+      </a>
+      <a class="nav-item" data-page="utilidades" onclick="navTo('utilidades')">
+        <span class="nav-icon">🔧</span><span class="nav-label">Utilidades</span>
+      </a>
+      <a class="nav-item" data-page="categorias" onclick="navTo('categorias')">
+        <span class="nav-icon">🏷️</span><span class="nav-label">Categorias</span>
+      </a>
+
+      <div class="nav-section-label">Monetização</div>
+      <a class="nav-item" data-page="cupons" onclick="navTo('cupons')">
+        <span class="nav-icon">🎟️</span><span class="nav-label">Cupons</span>
+      </a>
+      <a class="nav-item" data-page="patrocinados" onclick="navTo('patrocinados')">
+        <span class="nav-icon">⭐</span><span class="nav-label">Patrocinados</span>
+      </a>
+
+      <div class="nav-section-label">Sistema</div>
+      <a class="nav-item" data-page="usuarios" onclick="navTo('usuarios')">
+        <span class="nav-icon">👥</span><span class="nav-label">Usuários</span>
+      </a>
+      <a class="nav-item" data-page="configuracoes" onclick="navTo('configuracoes')">
+        <span class="nav-icon">⚙️</span><span class="nav-label">Configurações</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebar-avatar">A</div>
+        <div class="user-meta">
+          <span id="sidebar-name">Admin</span>
+          <small>Administrador</small>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content" id="main-content">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="topbar-menu" onclick="toggleSidebar()">☰</button>
+        <div class="breadcrumb" id="breadcrumb">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-time" id="topbar-time"></div>
+        <button class="topbar-notif" onclick="navTo('aprovacoes')">
+          🔔 <span class="notif-dot" id="notif-dot"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Pages -->
+    <div class="pages-container">
+
+      <!-- ── DASHBOARD ── -->
+      <section class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h2>Dashboard</h2>
+          <span class="page-subtitle">Visão geral do portal</span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card" style="--accent:#6366f1">
+            <div class="stat-icon">🏢</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-empresas">—</span>
+              <span class="stat-label">Empresas Ativas</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#f59e0b">
+            <div class="stat-icon">📰</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-noticias">—</span>
+              <span class="stat-label">Notícias</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#10b981">
+            <div class="stat-icon">🎉</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-eventos">—</span>
+              <span class="stat-label">Eventos</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#ec4899">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-usuarios">—</span>
+              <span class="stat-label">Usuários</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#3b82f6">
+            <div class="stat-icon">👁️</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-visualizacoes">—</span>
+              <span class="stat-label">Visualizações</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#22c55e">
+            <div class="stat-icon">💬</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-whatsapp">—</span>
+              <span class="stat-label">Cliques WhatsApp</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="charts-row">
+          <div class="chart-card">
+            <h3>Visualizações — Últimos 7 dias</h3>
+            <canvas id="chart-views" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Empresas por Categoria</h3>
+            <canvas id="chart-cats" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="tables-row">
+          <div class="table-card">
+            <h3>Empresas Recentes</h3>
+            <table class="data-table" id="tbl-recent-empresas">
+              <thead><tr><th>Nome</th><th>Categoria</th><th>Status</th></tr></thead>
+              <tbody id="tbody-recent-empresas"><tr><td colspan="3" class="loading-row">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="table-card">
+            <h3>Pendentes de Aprovação</h3>
+            <table class="data-table">
+              <thead><tr><th>Empresa</th><th>Data</th><th>Ação</th></tr></thead>
+              <tbody id="tbody-pendentes"><tr><td colspan="3" class="loading-row">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── EMPRESAS ── -->
+      <section class="page" id="page-empresas">
+        <div class="page-header">
+          <div>
+            <h2>Gerenciar Empresas</h2>
+            <span class="page-subtitle">CRUD completo de empresas cadastradas</span>
+          </div>
+          <button class="btn-primary" onclick="openEmpresaModal()">+ Nova Empresa</button>
+        </div>
+
+        <div class="filters-bar">
+          <input type="text" id="filter-empresa-nome" placeholder="Buscar empresa..." oninput="filterEmpresas()" class="filter-input" />
+          <select id="filter-empresa-status" onchange="filterEmpresas()" class="filter-select">
+            <option value="">Todos os status</option>
+            <option value="ativa">Ativa</option>
+            <option value="pendente">Pendente</option>
+            <option value="inativa">Inativa</option>
+          </select>
+          <select id="filter-empresa-cat" onchange="filterEmpresas()" class="filter-select">
+            <option value="">Todas as categorias</option>
+          </select>
+        </div>
+
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
+              <tr><th>Logo</th><th>Nome</th><th>Categoria</th><th>Telefone</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="tbody-empresas"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── APROVAÇÕES ── -->
+      <section class="page" id="page-aprovacoes">
+        <div class="page-header">
+          <h2>Solicitações Pendentes</h2>
+          <span class="page-subtitle">Empresas aguardando aprovação</span>
+        </div>
+        <div id="aprovacoes-list" class="aprovacoes-list">
+          <div class="loading-row">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- ── NOTÍCIAS ── -->
+      <section class="page" id="page-noticias">
+        <div class="page-header">
+          <div>
+            <h2>Gerenciar Notícias</h2>
+            <span class="page-subtitle">Publicações do portal</span>
+          </div>
+          <button class="btn-primary" onclick="openNoticiaModal()">+ Nova Notícia</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Imagem</th><th>Título</th><th>Categoria</th><th>Autor</th><th>Data</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-noticias"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── EVENTOS ── -->
+      <section class="page" id="page-eventos">
+        <div class="page-header">
+          <div>
+            <h2>Gerenciar Eventos</h2>
+            <span class="page-subtitle">Agenda de eventos da cidade</span>
+          </div>
+          <button class="btn-primary" onclick="openEventoModal()">+ Novo Evento</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Imagem</th><th>Nome</th><th>Local</th><th>Data</th><th>Horário</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-eventos"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── UTILIDADES ── -->
+      <section class="page" id="page-utilidades">
+        <div class="page-header">
+          <div>
+            <h2>Utilidades Públicas</h2>
+            <span class="page-subtitle">Serviços essenciais da cidade</span>
+          </div>
+          <button class="btn-primary" onclick="openUtilidadeModal()">+ Nova Utilidade</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Nome</th><th>Categoria</th><th>Telefone</th><th>WhatsApp</th><th>Endereço</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-utilidades"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── CATEGORIAS ── -->
+      <section class="page" id="page-categorias">
+        <div class="page-header">
+          <div>
+            <h2>Categorias</h2>
+            <span class="page-subtitle">Segmentos de empresas</span>
+          </div>
+          <button class="btn-primary" onclick="openCategoriaModal()">+ Nova Categoria</button>
+        </div>
+        <div class="categorias-grid" id="categorias-grid">
+          <div class="loading-row">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- ── CUPONS ── -->
+      <section class="page" id="page-cupons">
+        <div class="page-header">
+          <div>
+            <h2>Cupons</h2>
+            <span class="page-subtitle">Sistema de descontos</span>
+          </div>
+          <button class="btn-primary" onclick="openCupomModal()">+ Novo Cupom</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Código</th><th>Empresa</th><th>Desconto</th><th>Validade</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-cupons"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── PATROCINADOS ── -->
+      <section class="page" id="page-patrocinados">
+        <div class="page-header">
+          <div>
+            <h2>Empresas Patrocinadas</h2>
+            <span class="page-subtitle">Destaques pagos</span>
+          </div>
+          <button class="btn-primary" onclick="openPatrocinadoModal()">+ Novo Destaque</button>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Empresa</th><th>Início</th><th>Fim</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-patrocinados"><tr><td colspan="5" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── USUÁRIOS ── -->
+      <section class="page" id="page-usuarios">
+        <div class="page-header">
+          <h2>Usuários</h2>
+          <span class="page-subtitle">Contas cadastradas no portal</span>
+        </div>
+        <div class="table-card">
+          <table class="data-table">
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Cadastro</th><th>Ações</th></tr></thead>
+            <tbody id="tbody-usuarios"><tr><td colspan="5" class="loading-row">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── CONFIGURAÇÕES ── -->
+      <section class="page" id="page-configuracoes">
+        <div class="page-header">
+          <h2>Configurações Gerais</h2>
+          <span class="page-subtitle">Personalização do portal</span>
+        </div>
+        <div class="config-grid">
+          <div class="config-card">
+            <h3>Identidade Visual</h3>
+            <div class="field"><label>Nome do Portal</label><input type="text" id="cfg-nome" /></div>
+            <div class="field"><label>Logo URL</label><input type="text" id="cfg-logo" /></div>
+            <div class="field"><label>Cor Principal</label>
+              <div class="color-row"><input type="color" id="cfg-cor" value="#6366f1" /><span id="cfg-cor-hex">#6366f1</span></div>
+            </div>
+          </div>
+          <div class="config-card">
+            <h3>Contatos Oficiais</h3>
+            <div class="field"><label>WhatsApp Oficial</label><input type="text" id="cfg-whatsapp" placeholder="(00) 00000-0000" /></div>
+            <div class="field"><label>Instagram</label><input type="text" id="cfg-instagram" placeholder="@Antas Digital" /></div>
+            <div class="field"><label>Facebook</label><input type="text" id="cfg-facebook" /></div>
+          </div>
+          <div class="config-card config-full">
+            <h3>Banner Inicial</h3>
+            <div class="field"><label>URL do Banner</label><input type="text" id="cfg-banner" placeholder="https://..." /></div>
+            <div class="field"><label>Texto do Banner</label><input type="text" id="cfg-banner-texto" /></div>
+            <div class="field"><label>Link do Banner</label><input type="text" id="cfg-banner-link" /></div>
+          </div>
+          <div class="config-card config-full" style="text-align:right">
+            <button class="btn-primary" onclick="saveConfiguracoes()">💾 Salvar Configurações</button>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /pages-container -->
+  </main>
+</div><!-- /admin-panel -->
+
+<!-- ══════════ MODALS ══════════ -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeAllModals()"></div>
+
+<!-- Modal Empresa -->
+<div id="modal-empresa" class="modal hidden">
+  <div class="modal-header">
+    <h3 id="modal-empresa-title">Nova Empresa</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="empresa-id" />
+    <div class="modal-cols">
+      <div class="field">
+        <label>Logo</label>
+        <div class="upload-area" id="upload-logo" onclick="document.getElementById('file-logo').click()">
+          <img id="preview-logo" class="hidden" />
+          <span id="upload-logo-text">📷 Clique para enviar</span>
+        </div>
+        <input type="file" id="file-logo" accept="image/*" class="hidden" onchange="previewImage('file-logo','preview-logo','upload-logo-text')" />
+      </div>
+      <div class="field">
+        <label>Capa</label>
+        <div class="upload-area" id="upload-capa" onclick="document.getElementById('file-capa').click()">
+          <img id="preview-capa" class="hidden" />
+          <span id="upload-capa-text">🖼️ Clique para enviar</span>
+        </div>
+        <input type="file" id="file-capa" accept="image/*" class="hidden" onchange="previewImage('file-capa','preview-capa','upload-capa-text')" />
+      </div>
+    </div>
+    <div class="modal-cols">
+      <div class="field"><label>Nome *</label><input type="text" id="empresa-nome" /></div>
+      <div class="field"><label>Categoria *</label>
+        <select id="empresa-categoria"><option value="">Selecionar</option></select>
+      </div>
+    </div>
+    <div class="field"><label>Descrição</label><textarea id="empresa-descricao" rows="3"></textarea></div>
+    <div class="modal-cols">
+      <div class="field"><label>Endereço</label><input type="text" id="empresa-endereco" /></div>
+      <div class="field"><label>Telefone</label><input type="text" id="empresa-telefone" /></div>
+    </div>
+    <div class="modal-cols">
+      <div class="field"><label>WhatsApp</label><input type="text" id="empresa-whatsapp" /></div>
+      <div class="field"><label>Instagram</label><input type="text" id="empresa-instagram" /></div>
+    </div>
+    <div class="modal-cols">
+      <div class="field"><label>Latitude</label><input type="text" id="empresa-lat" placeholder="-12.345678" /></div>
+      <div class="field"><label>Longitude</label><input type="text" id="empresa-lng" placeholder="-38.123456" /></div>
+    </div>
+    <div class="field">
+      <label>Status</label>
+      <select id="empresa-status">
+        <option value="ativa">Ativa</option>
+        <option value="pendente">Pendente</option>
+        <option value="inativa">Inativa</option>
+      </select>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="saveEmpresa()">
+      <span id="save-empresa-text">Salvar Empresa</span>
+      <span id="save-empresa-loading" class="hidden spinner-sm"></span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal Notícia -->
+<div id="modal-noticia" class="modal hidden">
+  <div class="modal-header">
+    <h3 id="modal-noticia-title">Nova Notícia</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="noticia-id" />
+    <div class="field">
+      <label>Imagem</label>
+      <div class="upload-area" onclick="document.getElementById('file-noticia-img').click()">
+        <img id="preview-noticia-img" class="hidden" />
+        <span id="upload-noticia-text">📷 Clique para enviar</span>
+      </div>
+      <input type="file" id="file-noticia-img" accept="image/*" class="hidden"
+        onchange="previewImage('file-noticia-img','preview-noticia-img','upload-noticia-text')" />
+    </div>
+    <div class="field"><label>Título *</label><input type="text" id="noticia-titulo" /></div>
+    <div class="modal-cols">
+      <div class="field"><label>Categoria</label>
+        <select id="noticia-categoria">
+          <option>Geral</option><option>Política</option><option>Economia</option>
+          <option>Esporte</option><option>Cultura</option><option>Saúde</option>
+        </select>
+      </div>
+      <div class="field"><label>Autor</label><input type="text" id="noticia-autor" /></div>
+    </div>
+    <div class="field"><label>Texto *</label><textarea id="noticia-texto" rows="6"></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="saveNoticia()">Publicar Notícia</button>
+  </div>
+</div>
+
+<!-- Modal Evento -->
+<div id="modal-evento" class="modal hidden">
+  <div class="modal-header">
+    <h3 id="modal-evento-title">Novo Evento</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="evento-id" />
+    <div class="field">
+      <label>Imagem</label>
+      <div class="upload-area" onclick="document.getElementById('file-evento-img').click()">
+        <img id="preview-evento-img" class="hidden" />
+        <span id="upload-evento-text">📷 Clique para enviar</span>
+      </div>
+      <input type="file" id="file-evento-img" accept="image/*" class="hidden"
+        onchange="previewImage('file-evento-img','preview-evento-img','upload-evento-text')" />
+    </div>
+    <div class="field"><label>Nome do Evento *</label><input type="text" id="evento-nome" /></div>
+    <div class="field"><label>Local</label><input type="text" id="evento-local" /></div>
+    <div class="modal-cols">
+      <div class="field"><label>Data *</label><input type="date" id="evento-data" /></div>
+      <div class="field"><label>Horário</label><input type="time" id="evento-horario" /></div>
+    </div>
+    <div class="field"><label>Descrição</label><textarea id="evento-descricao" rows="4"></textarea></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="saveEvento()">Salvar Evento</button>
+  </div>
+</div>
+
+<!-- Modal Utilidade -->
+<div id="modal-utilidade" class="modal hidden">
+  <div class="modal-header">
+    <h3 id="modal-utilidade-title">Nova Utilidade Pública</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="utilidade-id" />
+    <div class="modal-cols">
+      <div class="field"><label>Nome *</label><input type="text" id="utilidade-nome" /></div>
+      <div class="field"><label>Categoria</label>
+        <select id="utilidade-categoria">
+          <option>Saúde</option><option>Segurança</option><option>Educação</option>
+          <option>Transporte</option><option>Governo</option><option>Outros</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-cols">
+      <div class="field"><label>Telefone</label><input type="text" id="utilidade-telefone" /></div>
+      <div class="field"><label>WhatsApp</label><input type="text" id="utilidade-whatsapp" /></div>
+    </div>
+    <div class="field"><label>Endereço</label><input type="text" id="utilidade-endereco" /></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="saveUtilidade()">Salvar</button>
+  </div>
+</div>
+
+<!-- Modal Categoria -->
+<div id="modal-categoria" class="modal hidden">
+  <div class="modal-header">
+    <h3 id="modal-categoria-title">Nova Categoria</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="categoria-id" />
+    <div class="field">
+      <label>Escolha rápida</label>
+      <div id="categoria-quick-pick" class="cat-quick-pick"></div>
+    </div>
+    <div class="field"><label>Nome *</label><input type="text" id="categoria-nome" /></div>
+    <div class="field"><label>Ícone (emoji ou URL)</label><input type="text" id="categoria-icone" placeholder="🍕 ou URL da imagem" /></div>
+    <div class="field"><label>Cor</label>
+      <div class="color-row"><input type="color" id="categoria-cor" value="#2563EB" /><span id="cat-cor-hex">#2563EB</span></div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="saveCategoria()">Salvar</button>
+  </div>
+</div>
+
+<!-- Modal Cupom -->
+<div id="modal-cupom" class="modal hidden">
+  <div class="modal-header">
+    <h3 id="modal-cupom-title">Novo Cupom</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="cupom-id" />
+    <div class="modal-cols">
+      <div class="field"><label>Código *</label><input type="text" id="cupom-codigo" placeholder="PROMO10" /></div>
+      <div class="field"><label>Desconto (%)</label><input type="number" id="cupom-desconto" min="1" max="100" /></div>
+    </div>
+    <div class="modal-cols">
+      <div class="field"><label>Empresa</label>
+        <select id="cupom-empresa"><option value="">Selecionar empresa</option></select>
+      </div>
+      <div class="field"><label>Validade</label><input type="date" id="cupom-validade" /></div>
+    </div>
+    <div class="field"><label>Descrição</label><input type="text" id="cupom-descricao" /></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="saveCupom()">Salvar Cupom</button>
+  </div>
+</div>
+
+<!-- Modal Patrocinado -->
+<div id="modal-patrocinado" class="modal hidden">
+  <div class="modal-header">
+    <h3>Novo Destaque Patrocinado</h3>
+    <button class="modal-close" onclick="closeAllModals()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="patrocinado-id" />
+    <div class="field"><label>Empresa *</label>
+      <select id="patrocinado-empresa"><option value="">Selecionar empresa</option></select>
+    </div>
+    <div class="modal-cols">
+      <div class="field"><label>Data Início *</label><input type="date" id="patrocinado-inicio" /></div>
+      <div class="field"><label>Data Fim *</label><input type="date" id="patrocinado-fim" /></div>
+    </div>
+    <div class="field"><label>Valor Pago (R$)</label><input type="number" id="patrocinado-valor" step="0.01" /></div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+    <button class="btn-primary" onclick="savePatrocinado()">Ativar Destaque</button>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div id="confirm-dialog" class="modal hidden" style="max-width:400px">
+  <div class="modal-body" style="text-align:center;padding:2rem">
+    <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+    <h3 id="confirm-msg">Confirmar exclusão?</h3>
+    <p style="color:var(--text-muted);margin:.5rem 0 1.5rem">Esta ação não pode ser desfeita.</p>
+    <div style="display:flex;gap:1rem;justify-content:center">
+      <button class="btn-ghost" onclick="closeAllModals()">Cancelar</button>
+      <button class="btn-danger" id="confirm-ok">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="admin-toast" class="admin-toast hidden"></div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

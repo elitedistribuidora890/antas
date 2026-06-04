@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════
+   GUIA CITY — APP.JS
+   Navegação, Modais e Interações UI
+═══════════════════════════════════════════════ */
+
+'use strict';
+
+// ─── PAGE NAVIGATION ───
+window.showPage = function(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) {
+    page.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Special page init
+  if (pageId === 'map') {
+    setTimeout(() => {
+      if (typeof initMap === 'function') initMap();
+      if (window.mapInstance) window.mapInstance.invalidateSize();
+    }, 100);
+  }
+  if (pageId === 'profile') {
+    if (window.loadFavorites) loadFavorites();
+  }
+
+  // Update bottom nav
+  const navItems = document.querySelectorAll('.bottom-nav-item');
+  const pageNavMap = { home: 0, map: 1, news: 2, events: 3, profile: 4 };
+  navItems.forEach((item, idx) => {
+    item.classList.toggle('active', idx === pageNavMap[pageId]);
+  });
+
+  // Close mobile menu
+  closeMobileMenu();
+};
+
+window.setActiveNav = function(btn) {
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+};
+
+// ─── MOBILE MENU ───
+window.toggleMobileMenu = function() {
+  const menu = document.getElementById('mobile-menu');
+  menu.classList.toggle('hidden');
+};
+
+window.closeMobileMenu = function() {
+  document.getElementById('mobile-menu')?.classList.add('hidden');
+};
+
+// ─── MODALS ───
+window.openModal = function(id) {
+  const modal = document.getElementById(id);
+  const overlay = document.getElementById('modal-overlay');
+  if (modal) modal.classList.remove('hidden');
+  if (overlay) overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeModal = function(id) {
+  const modal = document.getElementById(id);
+  if (modal) modal.classList.add('hidden');
+  // Check if any other modals open
+  const anyOpen = [...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hidden'));
+  if (!anyOpen) {
+    document.getElementById('modal-overlay')?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+};
+
+// Close modal on overlay click
+document.getElementById('modal-overlay')?.addEventListener('click', () => {
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  document.getElementById('modal-overlay')?.classList.add('hidden');
+  document.body.style.overflow = '';
+});
+
+// ─── AUTH TABS ───
+window.switchTab = function(tabName) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+
+  const tab = document.getElementById('tab-' + tabName);
+  if (tab) tab.classList.add('active');
+
+  const tabBtn = document.querySelector(`.modal-tab[data-tab="${tabName}"]`);
+  if (tabBtn) tabBtn.classList.add('active');
+};
+
+window.showRecover = function() {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-recover')?.classList.add('active');
+};
+
+// Bind auth modal tabs
+document.querySelectorAll('.modal-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    if (tab) switchTab(tab);
+  });
+});
+
+// ─── PROFILE TABS ───
+window.switchProfileTab = function(tabName, btn) {
+  document.querySelectorAll('.profile-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('profile-tab-' + tabName)?.classList.add('active');
+  btn.classList.add('active');
+};
+
+// ─── NAVBAR SCROLL BEHAVIOR ───
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const navbar = document.getElementById('navbar');
+  const currentScroll = window.scrollY;
+  if (currentScroll > lastScroll && currentScroll > 80) {
+    navbar.style.transform = 'translateY(-100%)';
+    navbar.style.transition = 'transform .3s ease';
+  } else {
+    navbar.style.transform = 'translateY(0)';
+  }
+  lastScroll = currentScroll;
+}, { passive: true });
+
+// ─── TOAST ───
+window.showToast = function(message, type = 'info', duration = 3000) {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.classList.remove('hidden');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => {
+    toast.classList.add('hidden');
+  }, duration);
+};
+
+// ─── PARTICLES HERO ───
+(function createParticles() {
+  const container = document.getElementById('particles');
+  if (!container) return;
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    const size = Math.random() * 6 + 2;
+    p.style.cssText = `
+      position:absolute;
+      width:${size}px; height:${size}px;
+      border-radius:50%;
+      background:rgba(255,255,255,${Math.random()*.3+.05});
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      animation: floatParticle ${Math.random()*8+6}s infinite ease-in-out ${Math.random()*4}s;
+    `;
+    container.appendChild(p);
+  }
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes floatParticle {
+      0%, 100% { transform: translateY(0) scale(1); opacity: .3; }
+      50% { transform: translateY(-20px) scale(1.2); opacity: .8; }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// ─── CLOSE SEARCH SUGGESTIONS ───
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-bar') && !e.target.closest('.search-suggestions')) {
+    document.getElementById('search-suggestions')?.classList.add('hidden');
+  }
+});
+
+// ─── KEYBOARD SHORTCUTS ───
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+    document.getElementById('modal-overlay')?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+    e.preventDefault();
+    document.getElementById('hero-search')?.focus();
+  }
+});
+
+// ─── INTERSECT ANIMATION ───
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+// Observe section cards after render
+setTimeout(() => {
+  document.querySelectorAll('.category-card, .company-card, .news-card, .utility-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity .4s ease, transform .4s ease';
+    observer.observe(el);
+  });
+}, 1000);
+
+// ─── WHATSAPP MASK ───
+const whatsappInput = document.getElementById('biz-whatsapp');
+if (whatsappInput) {
+  whatsappInput.addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '').slice(0, 11);
+    if (v.length > 2) v = '(' + v.slice(0, 2) + ') ' + v.slice(2);
+    if (v.length > 10) v = v.slice(0, 10) + '-' + v.slice(10);
+    this.value = v;
+  });
+}
+
+// ─── PWA INSTALL PROMPT ───
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Could show install button here
+});
+
+// ─── SHARE API FALLBACK ───
+window.openImageModal = function(src) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain;';
+  overlay.appendChild(img);
+  overlay.addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+};
+
+// ─── STATS ANIMATION ON SCROLL ───
+// ─── STATS ANIMATION ON SCROLL ───
+function animateStats() {
+  document.querySelectorAll('.stat-num').forEach(el => {
+    const target = parseInt(el.dataset.target || el.textContent || 0);
+    let current = 0;
+    const step = Math.max(1, Math.ceil(target / 50));
+
+    const timer = setInterval(() => {
+      current += step;
+
+      if (current >= target) {
+        current = target;
+        clearInterval(timer);
+      }
+
+      el.textContent = current;
+    }, 20);
+  });
+}
+
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      animateStats();
+      statsObserver.disconnect();
+    }
+  });
+});
+
+const statsEl = document.querySelector('.hero-stats');
+if (statsEl) {
+  statsObserver.observe(statsEl);
+}
+
+
+// ─── PULL TO REFRESH ─── (mobile UX)
+let startY = 0;
+document.addEventListener('touchstart', (e) => { startY = e.touches[0].pageY; }, { passive: true });
+document.addEventListener('touchend', (e) => {
+  const deltaY = e.changedTouches[0].pageY - startY;
+  if (deltaY > 100 && window.scrollY === 0) {
+    showToast('Atualizando...', 'info', 1500);
+    setTimeout(() => location.reload(), 500);
+  }
+}, { passive: true });
+
+console.log(`
+  ██████╗ ██╗   ██╗██╗ █████╗      ██████╗██╗████████╗██╗   ██╗
+ ██╔════╝ ██║   ██║██║██╔══██╗    ██╔════╝██║╚══██╔══╝╚██╗ ██╔╝
+ ██║  ███╗██║   ██║██║███████║    ██║     ██║   ██║    ╚████╔╝ 
+ ██║   ██║██║   ██║██║██╔══██║    ██║     ██║   ██║     ╚██╔╝  
+ ╚██████╔╝╚██████╔╝██║██║  ██║    ╚██████╗██║   ██║      ██║   
+  ╚═════╝  ╚═════╝ ╚═╝╚═╝  ╚═╝    ╚═════╝╚═╝   ╚═╝      ╚═╝   
+                                                                  
+  🏙️ Portal da Cidade — by Antas Digital
+  Configure o Firebase em index.html para ativar o banco de dados.
+`);

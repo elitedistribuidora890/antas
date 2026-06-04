@@ -24,7 +24,22 @@ window.showPage = function(pageId) {
   if (pageId === 'profile') {
     if (window.loadFavorites) loadFavorites();
   }
+window.addEventListener('load', function () {
+  setTimeout(() => {
+  document.getElementById('cookie-notif').style.display = 'block';
+}, 3000);
+});
 
+window.aceitarNotificacoes = function () {
+  localStorage.setItem('cookie_notif_status', 'accepted');
+  document.getElementById('cookie-notif').style.display = 'none';
+  showToast('Notificações ativadas!', 'success');
+};
+
+window.recusarNotificacoes = function () {
+  localStorage.setItem('cookie_notif_status', 'declined');
+  document.getElementById('cookie-notif').style.display = 'none';
+};
   // Update bottom nav
   const navItems = document.querySelectorAll('.bottom-nav-item');
   const pageNavMap = { home: 0, map: 1, news: 2, events: 3, profile: 4 };
@@ -297,3 +312,21 @@ console.log(`
   🏙️ Portal da Cidade — by Antas Digital
   Configure o Firebase em index.html para ativar o banco de dados.
 `);
+setTimeout(() => {
+  const aviso = document.getElementById('cookie-notif');
+
+  if (aviso && !localStorage.getItem('cookie_notif_status')) {
+    aviso.style.display = 'block';
+  }
+}, 3000);
+
+window.aceitarNotificacoes = function () {
+  localStorage.setItem('cookie_notif_status', 'accepted');
+  document.getElementById('cookie-notif').style.display = 'none';
+  showToast('Notificações ativadas!', 'success');
+};
+
+window.recusarNotificacoes = function () {
+  localStorage.setItem('cookie_notif_status', 'declined');
+  document.getElementById('cookie-notif').style.display = 'none';
+};

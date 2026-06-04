@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="shortcut icon" href="logo.png" type="image/x-icon">
 </head>
 <body>
 
@@ -465,6 +466,13 @@
         <span class="profile-menu-label">Notificações</span>
         <span class="profile-menu-arrow">›</span>
       </button>
+      <div style="padding:16px">
+  <button
+    class="btn-primary w-full"
+    onclick="ativarNotificacoes()">
+    🔔 Ativar Notificações
+  </button>
+</div>
       <div class="profile-menu-divider"></div>
       <button class="profile-menu-item" onclick="handleProfileMenuClick('cupons')">
         <span class="profile-menu-icon">🧳</span>
@@ -528,7 +536,38 @@
 
 <!-- ===== TOAST ===== -->
 <div id="toast" class="toast hidden"></div>
+<div id="cookie-notif" style="
+  position: fixed;
+  bottom: 90px;
+  left: 16px;
+  right: 16px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 35px rgba(0,0,0,.18);
+  z-index: 9999;
+  display: none;
+">
+  <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
+  <p style="margin:0 0 14px;color:#475569;font-size:14px;">
+    Podemos enviar avisos sobre notícias, eventos e novidades da cidade.
+  </p>
 
+  <button onclick="aceitarNotificacoes()" class="btn-primary w-full">
+    Aceitar notificações
+  </button>
+
+  <button onclick="recusarNotificacoes()" style="
+    margin-top:10px;
+    width:100%;
+    background:transparent;
+    border:0;
+    color:#64748b;
+    font-size:14px;
+  ">
+    Agora não
+  </button>
+</div>
 <!-- Firebase SDKs -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -780,16 +819,39 @@ window.loadFavorites = loadFavorites;
 // ─── BUSINESS MODAL — carrega categorias do Firebase ───
 window.openBusinessModal = async function() {
   openModal('business-modal');
-
   const sel = document.getElementById('biz-category');
-
-  sel.innerHTML = '<option value="">Selecione...</option>' +
-    CATEGORIES.map(c => `
-      <option value="${c.name}">
-        ${c.icon || ''} ${c.name}
-      </option>
-    `).join('');
+  sel.innerHTML = '<option value="">Carregando...</option>';
+  try {
+    const snap = await getDocs(query(collection(db, 'categorias'), orderBy('nome')));
+    if (snap.empty) {
+      // Fallback: categorias padrão caso Firebase ainda esteja vazio
+      const defaults = [
+        {nome:'Alimentação',icone:'🍽️'},{nome:'Beleza e Estética',icone:'💅'},
+        {nome:'Consertos e Reparos',icone:'🔧'},{nome:'Lojas',icone:'🛍️'},
+        {nome:'Material de Construção',icone:'🏗️'},{nome:'Saúde',icone:'🏥'},
+        {nome:'Transporte',icone:'🚗'},{nome:'Aniversário',icone:'🎂'},
+        {nome:'Presentes',icone:'🎁'},{nome:'Empregos',icone:'💼'},
+        {nome:'Grupos',icone:'👥'},{nome:'Tecnologia e Informática',icone:'💻'},
+        {nome:'Educação',icone:'📚'},{nome:'Imóveis',icone:'🏠'},
+        {nome:'Pet Shop',icone:'🐾'},{nome:'Esporte e Lazer',icone:'⚽'},
+        {nome:'Contabilidade e Finanças',icone:'💰'},{nome:'Advocacia e Jurídico',icone:'⚖️'},
+        {nome:'Religião e Igrejas',icone:'⛪'},{nome:'Eventos e Festas',icone:'🎉'},
+      ];
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        defaults.map(c => `<option value="${c.nome}">${c.icone} ${c.nome}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">Selecione...</option>' +
+        snap.docs.map(d => {
+          const c = d.data();
+          return `<option value="${c.nome}">${c.icone || ''} ${c.nome}</option>`;
+        }).join('');
+    }
+  } catch(err) {
+    sel.innerHTML = '<option value="">Selecione a categoria</option>';
+    console.warn('Erro ao carregar categorias:', err);
+  }
 };
+
 // ─── BUSINESS SUBMISSION ───
 window.submitBusiness = async function() {
   const name = document.getElementById('biz-name').value.trim();
@@ -1273,11 +1335,11 @@ function renderUtilities() {
 }
 
 // ─── MAP ───
-window.window.mapInstance = null;
+window.mapInstance = null;
 let mapMarkers = [];
 
 window.initMap = function() {
-  if (window.mapInstance) return;
+  if (mapInstance) return;
   // Default to center of Brazil if no companies
 const firstCompanyWithCoords = allCompanies.find(
   c => c.lat && c.lng
@@ -1286,15 +1348,15 @@ const firstCompanyWithCoords = allCompanies.find(
 const center = firstCompanyWithCoords
   ? [firstCompanyWithCoords.lat, firstCompanyWithCoords.lng]
   : [-10.4108, -38.3366]; // Antas-BA
-window.window.mapInstance = L.map('leaflet-map').setView(center, 13);
+window.mapInstance = L.map('leaflet-map').setView(center, 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap'
-  }).addTo(window.mapInstance);
+  }).addTo(mapInstance);
   updateMapMarkers();
 };
 
 window.updateMapMarkers = function() {
-  if (!window.mapInstance) return;
+  if (!mapInstance) return;
   mapMarkers.forEach(m=>m.remove());
   mapMarkers = [];
   const withCoords = allCompanies.filter(
@@ -1308,14 +1370,14 @@ allCompanies.forEach(c => {
   console.log(c.name, c.lat, c.lng);
 });
   withCoords.forEach(c=>{
-    const marker = L.marker([c.lat,c.lng]).addTo(window.mapInstance)
+    const marker = L.marker([c.lat,c.lng]).addTo(mapInstance)
       .bindPopup(`<b>${c.name}</b><br>${c.category}<br><button onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">Ver detalhes</button>`);
     mapMarkers.push(marker);
   });
   const mapList = document.getElementById('map-list');
   if(mapList) {
     mapList.innerHTML = withCoords.map(c=>`
-      <div class="map-list-item" onclick="window.mapInstance.setView([${c.lat},${c.lng}],16)">
+      <div class="map-list-item" onclick="mapInstance.setView([${c.lat},${c.lng}],16)">
         <strong>${c.name}</strong><br><small>${c.category}</small>
       </div>`).join('') || '<p class="text-muted p-3">Nenhuma empresa com localização.</p>';
   }
@@ -1325,7 +1387,7 @@ window.filterMapCompanies = function(val) {
   if (!val) { updateMapMarkers(); return; }
   const filtered = allCompanies.filter(c=>c.lat&&c.lng&&c.name?.toLowerCase().includes(val.toLowerCase()));
   mapMarkers.forEach(m=>m.remove());
-  mapMarkers = filtered.map(c=>L.marker([c.lat,c.lng]).addTo(window.mapInstance).bindPopup(`<b>${c.name}</b>`));
+  mapMarkers = filtered.map(c=>L.marker([c.lat,c.lng]).addTo(mapInstance).bindPopup(`<b>${c.name}</b>`));
 };
 
 window.toggleMapSidebar = function() {
@@ -1441,7 +1503,14 @@ renderBusSchedule();
 loadAll();
 
 </script>
-
+<div id="cookie-notif" style="position:fixed;bottom:90px;left:16px;right:16px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.25);z-index:999999;display:none;">
+  <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
+  <p style="margin:0 0 14px;color:#475569;font-size:14px;">
+    Podemos enviar avisos sobre notícias, eventos e novidades da cidade.
+  </p>
+  <button onclick="aceitarNotificacoes()" class="btn-primary w-full">Aceitar notificações</button>
+  <button onclick="recusarNotificacoes()" style="margin-top:10px;width:100%;background:transparent;border:0;color:#64748b;font-size:14px;">Agora não</button>
+</div>  
 <!-- Leaflet Map -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

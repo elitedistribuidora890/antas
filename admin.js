@@ -5,6 +5,7 @@
 'use strict';
 
 // ─── HELPERS ───────────────────────────────────
+
 const fb = () => window._fb;
 const db = () => window._fb.db;
 
@@ -50,16 +51,49 @@ window.showLogin = function(err) {
     el.textContent = err; el.classList.remove('hidden');
   }
 };
+window.navTo = function(page) {
+  document.querySelectorAll('.page').forEach(p =>
+    p.classList.remove('active')
+  );
 
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === page);
+  });
+
+  const breadcrumb = document.getElementById('breadcrumb');
+  if (breadcrumb) {
+    breadcrumb.textContent = PAGE_LABELS?.[page] || page;
+  }
+
+  // CHAMA O FIREBASE
+  if (window.PAGE_LOADERS && window.PAGE_LOADERS[page]) {
+    window.PAGE_LOADERS[page]();
+  }
+
+  console.log('Página aberta:', page);
+};
 window.showPanel = function() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('admin-panel').classList.remove('hidden');
+
   const u = window._currentUser;
   if (u) {
-    document.getElementById('sidebar-name').textContent = u.displayName || u.email?.split('@')[0] || 'Admin';
-    document.getElementById('sidebar-avatar').textContent = (u.displayName || u.email || 'A')[0].toUpperCase();
+    document.getElementById('sidebar-name').textContent =
+      u.displayName || u.email?.split('@')[0] || 'Admin';
+
+    document.getElementById('sidebar-avatar').textContent =
+      (u.displayName || u.email || 'A')[0].toUpperCase();
   }
-  navTo('dashboard');
+
+  if (typeof window.navTo === 'function') {
+    window.navTo('dashboard');
+  } else {
+    console.error('Função navTo não carregou. Verifique erro acima no admin.js.');
+  }
+
   startClock();
 };
 
@@ -103,7 +137,12 @@ document.getElementById('login-password')?.addEventListener('keydown', e => {
 });
 
 window.doLogout = async function() {
-  await fb().signOut(fb().auth);
+  try {
+    await window._fb.signOut(window._fb.auth);
+  } catch (e) {
+    console.error('Erro ao sair:', e);
+    alert('Erro ao sair do painel.');
+  }
 };
 
 // ─── NAVIGATION ────────────────────────────────
@@ -111,23 +150,27 @@ const PAGE_LABELS = {
   dashboard:'Dashboard', empresas:'Gerenciar Empresas', aprovacoes:'Aprovações Pendentes',
   noticias:'Notícias', eventos:'Eventos', utilidades:'Utilidades Públicas',
   categorias:'Categorias', cupons:'Cupons', patrocinados:'Patrocinados',
-  usuarios:'Usuários', configuracoes:'Configurações'
+  usuarios:'Usuários', configuracoes:'Configurações',
+  'promocoes-admin':'Promoções da Cidade', 'classificados-admin':'Classificados',
+  'config-ia':'Configurações da IA', 'config-firebase':'Configurações do Firebase'
 };
-const PAGE_LOADERS = {
-  dashboard: loadDashboard, empresas: loadEmpresas, aprovacoes: loadAprovacoes,
-  noticias: loadNoticias, eventos: loadEventos, utilidades: loadUtilidades,
-  categorias: loadCategorias, cupons: loadCupons, patrocinados: loadPatrocinados,
-  usuarios: loadUsuarios, configuracoes: loadConfiguracoes
-};
+window.PAGE_LOADERS = {
+  dashboard: () => loadDashboard(),
+  empresas: () => loadEmpresas(),
+  aprovacoes: () => loadAprovacoes(),
+  noticias: () => loadNoticias(),
+  eventos: () => loadEventos(),
+  utilidades: () => loadUtilidades(),
+  categorias: () => loadCategorias(),
+  cupons: () => loadCupons(),
+  patrocinados: () => loadPatrocinados(),
+  usuarios: () => loadUsuarios(),
+  configuracoes: () => loadConfiguracoes(),
 
-window.navTo = function(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page)?.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => {
-    n.classList.toggle('active', n.dataset.page === page);
-  });
-  document.getElementById('breadcrumb').textContent = PAGE_LABELS[page] || page;
-  if (PAGE_LOADERS[page]) PAGE_LOADERS[page]();
+  'promocoes-admin': () => window.loadPromocoesAdmin?.(),
+  'classificados-admin': () => window.loadClassificadosAdmin?.(),
+  'config-ia': () => window.loadIAConfig?.(),
+  'config-firebase': () => window.loadFirebaseConfig?.()
 };
 
 window.toggleSidebar = function() {
@@ -524,15 +567,38 @@ async function loadAprovacoes() {
 
 window.aprovarEmpresa = async function(solId) {
   const { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } = fb();
+
   try {
     const snap = await getDoc(doc(db(), 'solicitacoes_empresas', solId));
     if (!snap.exists()) return;
-    const data = { ...snap.data(), status: 'ativa', criadoEm: serverTimestamp(), aprovadoEm: serverTimestamp() };
+
+    const s = snap.data();
+
+    const data = {
+      ...s,
+      status: 'ativa',
+
+      ownerUid: s.usuarioId || null,
+      usuarioId: s.usuarioId || null,
+
+      criadoEm: serverTimestamp(),
+      aprovadoEm: serverTimestamp()
+    };
+
     await addDoc(collection(db(), 'empresas'), data);
-    await updateDoc(doc(db(), 'solicitacoes_empresas', solId), { status: 'aprovada' });
-    toast('Empresa aprovada e publicada!','success');
+
+    await updateDoc(doc(db(), 'solicitacoes_empresas', solId), {
+      status: 'aprovada',
+      aprovadoEm: serverTimestamp()
+    });
+
+    toast('Empresa aprovada e painel liberado!', 'success');
     loadAprovacoes();
-  } catch(e) { console.error(e); toast('Erro ao aprovar.','error'); }
+
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao aprovar empresa.', 'error');
+  }
 };
 
 window.rejeitarEmpresa = async function(solId) {
@@ -701,7 +767,6 @@ window.deleteEvento = function(id) {
   });
 };
 
-// ══════════════════════════════════════════════════
 // UTILIDADES PÚBLICAS
 // ══════════════════════════════════════════════════
 let _utilidades = [];
@@ -1106,3 +1171,238 @@ window.saveConfiguracoes = async function() {
 };
 
 console.log('[Antas Digital Admin] Panel loaded.');
+/* ══════════════════════════════════════════
+   ADMIN — PROMOÇÕES, CLASSIFICADOS, IA, FIREBASE
+══════════════════════════════════════════ */
+
+/* ─── PROMOÇÕES ADMIN ─── */
+let _allPromocoes = [];
+window.loadPromocoesAdmin = async function() {
+  const { collection, getDocs, query, orderBy, updateDoc, deleteDoc, doc } = fb();
+  try {
+    const snap = await getDocs(query(collection(db(), 'promocoes'), orderBy('createdAt', 'desc')));
+    _allPromocoes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPromocoesAdmin(_allPromocoes);
+  } catch(e) {
+    document.getElementById('tb-promocoes-admin').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma promoção encontrada.</td></tr>';
+  }
+};
+
+function renderPromocoesAdmin(list) {
+  const tb = document.getElementById('tb-promocoes-admin');
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhuma promoção cadastrada.</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(p => {
+    const validade = p.validade ? new Date(p.validade+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const badge = p.status === 'ativa'
+      ? '<span style="color:#059669;font-weight:700">● Ativa</span>'
+      : '<span style="color:#DC2626;font-weight:700">● Inativa</span>';
+    const foto = p.foto ? `<img src="${p.foto}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px;">` : '';
+    return `<tr>
+      <td>${foto}${p.titulo}</td>
+      <td>${p.empresaNome || '—'}</td>
+      <td>R$ ${parseFloat(p.valOriginal||0).toFixed(2).replace('.',',')}</td>
+      <td style="color:var(--primary);font-weight:700">R$ ${parseFloat(p.valPromo||0).toFixed(2).replace('.',',')}</td>
+      <td>${validade}</td>
+      <td>${badge}</td>
+      <td>
+        <button class="btn-ghost btn-sm" onclick="togglePromocaoStatus('${p.id}','${p.status}')">
+          ${p.status === 'ativa' ? '⏸ Desativar' : '▶ Ativar'}
+        </button>
+        <button class="btn-danger btn-sm" onclick="deletePromocaoAdmin('${p.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.togglePromocaoStatus = async function(id, currentStatus) {
+  const { doc, updateDoc } = fb();
+  const newStatus = currentStatus === 'ativa' ? 'inativa' : 'ativa';
+  try {
+    await updateDoc(doc(db(), 'promocoes', id), { status: newStatus });
+    toast(`Promoção ${newStatus === 'ativa' ? 'ativada' : 'desativada'}!`, 'success');
+    loadPromocoesAdmin();
+  } catch(e) { toast('Erro ao atualizar status', 'error'); }
+};
+
+window.deletePromocaoAdmin = async function(id) {
+  if (!confirm('Excluir esta promoção?')) return;
+  const { doc, deleteDoc } = fb();
+  try {
+    await deleteDoc(doc(db(), 'promocoes', id));
+    toast('Promoção excluída', 'info');
+    loadPromocoesAdmin();
+  } catch(e) { toast('Erro ao excluir', 'error'); }
+};
+
+/* ─── CLASSIFICADOS ADMIN ─── */
+let _allClassificados = [];
+let _currentCatFilter = 'todos';
+
+window.loadClassificadosAdmin = async function() {
+  const { collection, getDocs, query, orderBy } = fb();
+  try {
+    const snap = await getDocs(query(collection(db(), 'classificados'), orderBy('createdAt', 'desc')));
+    _allClassificados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderClassificadosAdmin(_allClassificados);
+  } catch(e) {
+    document.getElementById('tb-classificados-admin').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum classificado encontrado.</td></tr>';
+  }
+};
+
+window.filterClassificados = function(cat, btn) {
+  _currentCatFilter = cat;
+  document.querySelectorAll('.admin-cat-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = cat === 'todos' ? _allClassificados : _allClassificados.filter(c => c.categoria === cat);
+  renderClassificadosAdmin(filtered);
+};
+
+function renderClassificadosAdmin(list) {
+  const tb = document.getElementById('tb-classificados-admin');
+  if (!list.length) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">Nenhum anúncio encontrado.</td></tr>';
+    return;
+  }
+  tb.innerHTML = list.map(c => {
+    const badge = c.status === 'ativo'
+      ? '<span style="color:#059669;font-weight:700">● Ativo</span>'
+      : '<span style="color:#DC2626;font-weight:700">● Inativo</span>';
+    const foto = c.fotos?.[0] ? `<img src="${c.fotos[0]}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px;">` : '';
+    const data = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleDateString('pt-BR') : '—';
+    const valor = c.valor > 0 ? `R$ ${parseFloat(c.valor).toFixed(2).replace('.',',')}` : 'A combinar';
+    return `<tr>
+      <td>${foto}${c.titulo}</td>
+      <td>${c.categoriaLabel || c.categoria}</td>
+      <td>${valor}</td>
+      <td>${c.whatsapp || '—'}</td>
+      <td>${badge}</td>
+      <td>${data}</td>
+      <td>
+        <button class="btn-ghost btn-sm" onclick="toggleClassificadoStatus('${c.id}','${c.status}')">
+          ${c.status === 'ativo' ? '⏸ Suspender' : '▶ Reativar'}
+        </button>
+        <button class="btn-danger btn-sm" onclick="deleteClassificadoAdmin('${c.id}')">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+window.toggleClassificadoStatus = async function(id, currentStatus) {
+  const { doc, updateDoc } = fb();
+  const newStatus = currentStatus === 'ativo' ? 'inativo' : 'ativo';
+  try {
+    await updateDoc(doc(db(), 'classificados', id), { status: newStatus });
+    toast(`Classificado ${newStatus === 'ativo' ? 'reativado' : 'suspenso'}!`, 'success');
+    loadClassificadosAdmin();
+  } catch(e) { toast('Erro ao atualizar status', 'error'); }
+};
+
+window.deleteClassificadoAdmin = async function(id) {
+  if (!confirm('Excluir este classificado?')) return;
+  const { doc, deleteDoc } = fb();
+  try {
+    await deleteDoc(doc(db(), 'classificados', id));
+    toast('Classificado excluído', 'info');
+    loadClassificadosAdmin();
+  } catch(e) { toast('Erro ao excluir', 'error'); }
+};
+
+/* ─── CONFIG IA ─── */
+window.loadIAConfig = async function() {
+  const { doc, getDoc } = fb();
+  try {
+    const snap = await getDoc(doc(db(), 'configuracoes', 'ia'));
+    if (snap.exists()) {
+      const d = snap.data();
+      document.getElementById('ia-status').checked = d.ativo || false;
+      document.getElementById('ia-status-label').textContent = d.ativo ? 'Ativada' : 'Desativada';
+      document.getElementById('ia-provider').value = d.provider || 'groq';
+      document.getElementById('ia-model').value = d.model || 'llama3-8b-8192';
+      document.getElementById('ia-apikey').value = d.apiKey || '';
+      document.getElementById('ia-prompt-base').value = d.promptBase || '';
+    }
+  } catch(e) { toast('Erro ao carregar config da IA', 'error'); }
+};
+
+document.getElementById && document.getElementById('ia-status')?.addEventListener('change', function() {
+  document.getElementById('ia-status-label').textContent = this.checked ? 'Ativada' : 'Desativada';
+});
+
+window.toggleApiKey = function() {
+  const input = document.getElementById('ia-apikey');
+  input.type = input.type === 'password' ? 'text' : 'password';
+};
+
+window.saveIAConfig = async function() {
+  const { doc, setDoc, serverTimestamp } = fb();
+  const apiKey = document.getElementById('ia-apikey').value.trim();
+  if (!apiKey) { toast('Informe a API Key da Groq', 'error'); return; }
+  try {
+    await setDoc(doc(db(), 'configuracoes', 'ia'), {
+      ativo: document.getElementById('ia-status').checked,
+      provider: document.getElementById('ia-provider').value,
+      model: document.getElementById('ia-model').value,
+      apiKey,  // stored only in Firestore, never sent to public frontend
+      promptBase: document.getElementById('ia-prompt-base').value,
+      atualizadoEm: serverTimestamp()
+    });
+    toast('Configurações da IA salvas! ✅', 'success');
+  } catch(e) { toast('Erro ao salvar config da IA', 'error'); }
+};
+
+/* ─── CONFIG FIREBASE ─── */
+window.loadFirebaseConfig = async function() {
+  const { doc, getDoc } = fb();
+  try {
+    const snap = await getDoc(doc(db(), 'configuracoes', 'firebase'));
+    if (snap.exists()) {
+      const d = snap.data();
+      ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].forEach(k => {
+        const el = document.getElementById('fb-' + k);
+        if (el) el.value = d[k] || '';
+      });
+    }
+  } catch(e) { toast('Erro ao carregar config do Firebase', 'error'); }
+};
+window.saveFirebaseConfig = async function() {
+  const { doc, setDoc, serverTimestamp } = fb();
+
+  const data = {
+    apiKey: document.getElementById('fb-apiKey').value.trim(),
+    authDomain: document.getElementById('fb-authDomain').value.trim(),
+    projectId: document.getElementById('fb-projectId').value.trim(),
+    storageBucket: document.getElementById('fb-storageBucket').value.trim(),
+    messagingSenderId: document.getElementById('fb-messagingSenderId').value.trim(),
+    appId: document.getElementById('fb-appId').value.trim(),
+    measurementId: document.getElementById('fb-measurementId').value.trim(),
+    atualizadoEm: serverTimestamp()
+  };
+
+  await setDoc(doc(db(), 'configuracoes', 'firebase'), data, { merge: true });
+
+  toast('Configurações do Firebase salvas!', 'success');
+};
+window.saveFirebaseConfig = async function() {
+  const { doc, setDoc, serverTimestamp } = fb();
+  try {
+    const data = {};
+    ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].forEach(k => {
+      data[k] = document.getElementById('fb-' + k)?.value?.trim() || '';
+    });
+    data.atualizadoEm = serverTimestamp();
+    await setDoc(doc(db(), 'configuracoes', 'firebase'), data);
+    toast('Configurações do Firebase salvas! ✅', 'success');
+  } catch(e) { toast('Erro ao salvar config do Firebase', 'error'); }
+};
+
+// Init ia-status toggle listener after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ia-status')?.addEventListener('change', function() {
+    document.getElementById('ia-status-label').textContent = this.checked ? 'Ativada' : 'Desativada';
+  });
+});

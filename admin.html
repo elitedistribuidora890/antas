@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Antas Digital — Painel Administrativo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="admin.css" />
 
   <!-- Firebase -->
@@ -44,24 +45,54 @@
       onSnapshot, query, where, orderBy, limit, setDoc, increment, serverTimestamp, ref,
       uploadBytes, getDownloadURL, deleteObject
     };
+window.addEventListener('load', () => {
 
-    // Auth state observer
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Check if admin
-        const snap = await getDoc(doc(db, 'admins', user.uid));
-        if (snap.exists()) {
-          window._currentUser = { ...user, role: 'admin', data: snap.data() };
-          showPanel();
-        } else {
-          await signOut(auth);
-          showLogin('Acesso negado. Você não é administrador.');
+  const { auth, onAuthStateChanged, doc, getDoc } = window._fb;
+
+  onAuthStateChanged(auth, async (user) => {
+
+    if (!user) {
+      if (window.showLogin) window.showLogin();
+      return;
+    }
+
+    try {
+
+      const snap = await getDoc(
+        doc(window._fb.db, 'admins', user.uid)
+      );
+
+      if (!snap.exists()) {
+        await window._fb.signOut(auth);
+        if (window.showLogin) {
+          window.showLogin('Acesso negado.');
         }
-      } else {
-        window._currentUser = null;
-        showLogin();
+        return;
       }
-    });
+
+      window._currentUser = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        role: 'admin'
+      };
+
+      if (window.showPanel) {
+        window.showPanel();
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+
+  });
+
+});
+setTimeout(() => {
+  if (typeof window.showPanel === 'function') {
+    window.showPanel();
+  }
+}, 300);
   </script>
 </head>
 <body>
@@ -75,7 +106,7 @@
   </div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-icon"><img src="logo.png" alt="" width="100%"></div>
+      <div class="logo-icon"><img src="logo.png" alt="Antas Digital" width="100%"></div>
       <div>
         <h1>Antas Digital</h1>
         <span>Painel Administrativo</span>
@@ -148,12 +179,26 @@
         <span class="nav-icon">⭐</span><span class="nav-label">Patrocinados</span>
       </a>
 
+      <div class="nav-section-label">Comercial</div>
+      <a class="nav-item" data-page="promocoes-admin" onclick="navTo('promocoes-admin')">
+        <span class="nav-icon">🏷️</span><span class="nav-label">Promoções</span>
+      </a>
+      <a class="nav-item" data-page="classificados-admin" onclick="navTo('classificados-admin')">
+        <span class="nav-icon">📌</span><span class="nav-label">Classificados</span>
+      </a>
+
       <div class="nav-section-label">Sistema</div>
       <a class="nav-item" data-page="usuarios" onclick="navTo('usuarios')">
         <span class="nav-icon">👥</span><span class="nav-label">Usuários</span>
       </a>
       <a class="nav-item" data-page="configuracoes" onclick="navTo('configuracoes')">
         <span class="nav-icon">⚙️</span><span class="nav-label">Configurações</span>
+      </a>
+      <a class="nav-item" data-page="config-ia" onclick="navTo('config-ia')">
+        <span class="nav-icon">🤖</span><span class="nav-label">Config. IA</span>
+      </a>
+      <a class="nav-item" data-page="config-firebase" onclick="navTo('config-firebase')">
+        <span class="nav-icon">🔥</span><span class="nav-label">Config. Firebase</span>
       </a>
     </nav>
 
@@ -460,6 +505,148 @@
         </div>
       </section>
 
+
+      <!-- ══════ PROMOÇÕES ADMIN ══════ -->
+      <section class="page" id="page-promocoes-admin">
+        <div class="page-header">
+          <div>
+            <h2>Promoções da Cidade</h2>
+            <span class="page-subtitle">Todas as promoções das empresas</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Promoção</th><th>Empresa</th><th>De</th><th>Por</th><th>Validade</th><th>Status</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="tb-promocoes-admin">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════ CLASSIFICADOS ADMIN ══════ -->
+      <section class="page" id="page-classificados-admin">
+        <div class="page-header">
+          <div>
+            <h2>Classificados</h2>
+            <span class="page-subtitle">Anúncios publicados no portal</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <button class="btn-ghost admin-cat-filter active" data-cat="todos" onclick="filterClassificados('todos',this)">Todos</button>
+          <button class="btn-ghost admin-cat-filter" data-cat="venda_carro" onclick="filterClassificados('venda_carro',this)">🚗 Carros</button>
+          <button class="btn-ghost admin-cat-filter" data-cat="aluguel_casa" onclick="filterClassificados('aluguel_casa',this)">🏠 Casas</button>
+          <button class="btn-ghost admin-cat-filter" data-cat="terrenos" onclick="filterClassificados('terrenos',this)">🌳 Terrenos</button>
+          <button class="btn-ghost admin-cat-filter" data-cat="empregos" onclick="filterClassificados('empregos',this)">💼 Empregos</button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr>
+              <th>Anúncio</th><th>Categoria</th><th>Valor</th><th>WhatsApp</th><th>Status</th><th>Data</th><th>Ações</th>
+            </tr></thead>
+            <tbody id="tb-classificados-admin">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════ CONFIG IA ══════ -->
+      <section class="page" id="page-config-ia">
+        <div class="page-header">
+          <h2>🤖 Configurações da IA</h2>
+          <span class="page-subtitle">Assistente virtual do portal — acesso restrito ao admin</span>
+        </div>
+        <div class="config-grid">
+          <div class="config-card config-full">
+            <h3>Status da IA</h3>
+            <div class="field" style="display:flex;align-items:center;gap:12px;">
+              <label style="margin:0">IA Ativada</label>
+              <label class="toggle-admin">
+                <input type="checkbox" id="ia-status">
+                <span class="toggle-admin-slider"></span>
+              </label>
+              <span id="ia-status-label" style="font-size:13px;color:var(--text-muted)">Desativada</span>
+            </div>
+          </div>
+          <div class="config-card">
+            <h3>Provedor</h3>
+            <div class="field">
+              <label>Provedor de IA</label>
+              <select id="ia-provider">
+                <option value="groq">Groq (Llama)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Modelo</label>
+              <select id="ia-model">
+                <option value="llama3-8b-8192">llama3-8b-8192 (Rápido)</option>
+                <option value="llama3-70b-8192">llama3-70b-8192 (Potente)</option>
+                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+              </select>
+            </div>
+          </div>
+          <div class="config-card">
+            <h3>🔑 API Key (Groq)</h3>
+            <div class="field">
+              <label>API Key <span style="color:var(--danger);font-size:11px">⚠️ Salva de forma segura — nunca exposta no frontend</span></label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="password" id="ia-apikey" placeholder="gsk_..." style="flex:1;">
+                <button class="btn-ghost" onclick="toggleApiKey()" style="white-space:nowrap;font-size:13px">👁️ Ver</button>
+              </div>
+            </div>
+          </div>
+          <div class="config-card config-full">
+            <h3>Prompt Base</h3>
+            <div class="field">
+              <label>Instruções para a IA (como ela deve se comportar)</label>
+              <textarea id="ia-prompt-base" rows="6" placeholder="Você é o assistente do Antas Digital, guia comercial da região. Responda apenas com base nos dados do sistema..."></textarea>
+            </div>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
+              💡 A IA responde perguntas sobre empresas, produtos, promoções, classificados e vagas cadastradas no sistema.
+              Se não encontrar dados, responde: <em>"Não encontrei essa informação cadastrada no Antas Digital no momento."</em>
+            </p>
+          </div>
+          <div class="config-card config-full" style="text-align:right">
+            <button class="btn-primary" onclick="saveIAConfig()">💾 Salvar Configurações da IA</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════ CONFIG FIREBASE ══════ -->
+      <section class="page" id="page-config-firebase">
+        <div class="page-header">
+          <h2>🔥 Configurações do Firebase</h2>
+          <span class="page-subtitle">Credenciais do projeto — acesso exclusivo do admin</span>
+        </div>
+        <div class="config-grid">
+          <div class="config-card config-full">
+            <h3>⚠️ Atenção</h3>
+            <p style="font-size:13px;color:var(--text-muted);line-height:1.6">
+              Estas configurações são as credenciais do Firebase usadas pelo portal. Altere apenas se souber o que está fazendo.
+              As configurações ficam armazenadas no Firestore com acesso restrito ao administrador.
+            </p>
+          </div>
+          <div class="config-card">
+            <h3>Projeto Firebase</h3>
+            <div class="field"><label>API Key</label><input type="text" id="fb-apiKey" placeholder="AIza..."></div>
+            <div class="field"><label>Auth Domain</label><input type="text" id="fb-authDomain" placeholder="project.firebaseapp.com"></div>
+            <div class="field"><label>Project ID</label><input type="text" id="fb-projectId" placeholder="meu-projeto"></div>
+          </div>
+          <div class="config-card">
+            <h3>Recursos</h3>
+            <div class="field"><label>Storage Bucket</label><input type="text" id="fb-storageBucket" placeholder="project.firebasestorage.app"></div>
+            <div class="field"><label>Messaging Sender ID</label><input type="text" id="fb-messagingSenderId" placeholder="123456789"></div>
+            <div class="field"><label>App ID</label><input type="text" id="fb-appId" placeholder="1:123:web:abc..."></div>
+          </div>
+          <div class="config-card config-full" style="text-align:right">
+            <button class="btn-primary" onclick="saveFirebaseConfig()">💾 Salvar Config. Firebase</button>
+          </div>
+        </div>
+      </section>
+
     </div><!-- /pages-container -->
   </main>
 </div><!-- /admin-panel -->
@@ -716,6 +903,27 @@
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+<!-- AVISO DE NOTIFICAÇÕES -->
+<div id="cookie-notif" style="position:fixed;bottom:90px;left:16px;right:16px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.25);z-index:999999;display:none;">
+  <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
+  <p style="margin:0 0 14px;color:#475569;font-size:14px;">
+    Podemos enviar avisos sobre notícias, eventos e novidades da cidade.
+  </p>
+  <button onclick="aceitarNotificacoes()" class="btn-primary w-full">
+    Aceitar notificações
+  </button>
+  <button onclick="recusarNotificacoes()" style="margin-top:10px;width:100%;background:transparent;border:0;color:#64748b;font-size:14px;">
+    Agora não
+  </button>
+</div>
+
+<!-- Leaflet Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script src="admin.js"></script>
+</body>
+</html>
 </body>
 </html>

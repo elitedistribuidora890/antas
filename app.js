@@ -6,48 +6,51 @@
 'use strict';
 
 // ─── PAGE NAVIGATION ───
-window.showPage = function(pageId) {
+window.navTo = function(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const page = document.getElementById('page-' + pageId);
-  if (page) {
-    page.classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === page);
+  });
+
+  const breadcrumb = document.getElementById('breadcrumb');
+  if (breadcrumb) breadcrumb.textContent = PAGE_LABELS?.[page] || page;
+
+  if (window.PAGE_LOADERS && typeof window.PAGE_LOADERS[page] === 'function') {
+    window.PAGE_LOADERS[page]();
   }
 
-  // Special page init
+  console.log('Página aberta:', page);
+};
+
+ window.showPage = function(pageId) {
+
+  document.querySelectorAll('.page').forEach(p =>
+    p.classList.remove('active')
+  );
+
+  document.getElementById('page-' + pageId)?.classList.add('active');
+
   if (pageId === 'map') {
     setTimeout(() => {
-      if (typeof initMap === 'function') initMap();
-      if (window.window.mapInstance) window.window.mapInstance.invalidateSize();
+      if (window.initMap) initMap();
     }, 100);
   }
+
   if (pageId === 'profile') {
     if (window.loadFavorites) loadFavorites();
   }
-window.addEventListener('load', function () {
-  setTimeout(() => {
-  document.getElementById('cookie-notif').style.display = 'block';
-}, 3000);
-});
 
-window.aceitarNotificacoes = function () {
-  localStorage.setItem('cookie_notif_status', 'accepted');
-  document.getElementById('cookie-notif').style.display = 'none';
-  showToast('Notificações ativadas!', 'success');
-};
-
-window.recusarNotificacoes = function () {
-  localStorage.setItem('cookie_notif_status', 'declined');
-  document.getElementById('cookie-notif').style.display = 'none';
-};
-  // Update bottom nav
   const navItems = document.querySelectorAll('.bottom-nav-item');
   const pageNavMap = { home: 0, map: 1, news: 2, events: 3, profile: 4 };
+
   navItems.forEach((item, idx) => {
     item.classList.toggle('active', idx === pageNavMap[pageId]);
   });
 
-  // Close mobile menu
   closeMobileMenu();
 };
 
@@ -78,7 +81,6 @@ window.openModal = function(id) {
 window.closeModal = function(id) {
   const modal = document.getElementById(id);
   if (modal) modal.classList.add('hidden');
-  // Check if any other modals open
   const anyOpen = [...document.querySelectorAll('.modal')].some(m => !m.classList.contains('hidden'));
   if (!anyOpen) {
     document.getElementById('modal-overlay')?.classList.add('hidden');
@@ -97,12 +99,8 @@ document.getElementById('modal-overlay')?.addEventListener('click', () => {
 window.switchTab = function(tabName) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
-
-  const tab = document.getElementById('tab-' + tabName);
-  if (tab) tab.classList.add('active');
-
-  const tabBtn = document.querySelector(`.modal-tab[data-tab="${tabName}"]`);
-  if (tabBtn) tabBtn.classList.add('active');
+  document.getElementById('tab-' + tabName)?.classList.add('active');
+  document.querySelector(`.modal-tab[data-tab="${tabName}"]`)?.classList.add('active');
 };
 
 window.showRecover = function() {
@@ -111,7 +109,6 @@ window.showRecover = function() {
   document.getElementById('tab-recover')?.classList.add('active');
 };
 
-// Bind auth modal tabs
 document.querySelectorAll('.modal-tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
@@ -131,6 +128,7 @@ window.switchProfileTab = function(tabName, btn) {
 let lastScroll = 0;
 window.addEventListener('scroll', () => {
   const navbar = document.getElementById('navbar');
+  if (!navbar) return;
   const currentScroll = window.scrollY;
   if (currentScroll > lastScroll && currentScroll > 80) {
     navbar.style.transform = 'translateY(-100%)';
@@ -149,9 +147,7 @@ window.showToast = function(message, type = 'info', duration = 3000) {
   toast.className = `toast ${type}`;
   toast.classList.remove('hidden');
   clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(() => {
-    toast.classList.add('hidden');
-  }, duration);
+  window._toastTimer = setTimeout(() => toast.classList.add('hidden'), duration);
 };
 
 // ─── PARTICLES HERO ───
@@ -172,7 +168,6 @@ window.showToast = function(message, type = 'info', duration = 3000) {
     `;
     container.appendChild(p);
   }
-
   const style = document.createElement('style');
   style.textContent = `
     @keyframes floatParticle {
@@ -213,7 +208,6 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.1 });
 
-// Observe section cards after render
 setTimeout(() => {
   document.querySelectorAll('.category-card, .company-card, .news-card, .utility-card').forEach(el => {
     el.style.opacity = '0';
@@ -239,10 +233,9 @@ let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  // Could show install button here
 });
 
-// ─── SHARE API FALLBACK ───
+// ─── IMAGE MODAL ───
 window.openImageModal = function(src) {
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;cursor:pointer;';
@@ -255,21 +248,14 @@ window.openImageModal = function(src) {
 };
 
 // ─── STATS ANIMATION ON SCROLL ───
-// ─── STATS ANIMATION ON SCROLL ───
 function animateStats() {
   document.querySelectorAll('.stat-num').forEach(el => {
     const target = parseInt(el.dataset.target || el.textContent || 0);
     let current = 0;
     const step = Math.max(1, Math.ceil(target / 50));
-
     const timer = setInterval(() => {
       current += step;
-
-      if (current >= target) {
-        current = target;
-        clearInterval(timer);
-      }
-
+      if (current >= target) { current = target; clearInterval(timer); }
       el.textContent = current;
     }, 20);
   });
@@ -277,20 +263,13 @@ function animateStats() {
 
 const statsObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      animateStats();
-      statsObserver.disconnect();
-    }
+    if (entry.isIntersecting) { animateStats(); statsObserver.disconnect(); }
   });
 });
-
 const statsEl = document.querySelector('.hero-stats');
-if (statsEl) {
-  statsObserver.observe(statsEl);
-}
+if (statsEl) statsObserver.observe(statsEl);
 
-
-// ─── PULL TO REFRESH ─── (mobile UX)
+// ─── PULL TO REFRESH ───
 let startY = 0;
 document.addEventListener('touchstart', (e) => { startY = e.touches[0].pageY; }, { passive: true });
 document.addEventListener('touchend', (e) => {
@@ -301,6 +280,28 @@ document.addEventListener('touchend', (e) => {
   }
 }, { passive: true });
 
+// ─── COOKIE / NOTIFICAÇÕES ───
+window.addEventListener('load', function() {
+  setTimeout(() => {
+    const aviso = document.getElementById('cookie-notif');
+    if (aviso && !localStorage.getItem('cookie_notif_status')) {
+      aviso.style.display = 'block';
+    }
+  }, 3000);
+});
+
+window.aceitarNotificacoes = function() {
+  localStorage.setItem('cookie_notif_status', 'accepted');
+  document.getElementById('cookie-notif').style.display = 'none';
+  showToast('Notificações ativadas!', 'success');
+};
+
+window.recusarNotificacoes = function() {
+  localStorage.setItem('cookie_notif_status', 'declined');
+  document.getElementById('cookie-notif').style.display = 'none';
+};
+
+// ─── CONSOLE SIGNATURE ───
 console.log(`
   ██████╗ ██╗   ██╗██╗ █████╗      ██████╗██╗████████╗██╗   ██╗
  ██╔════╝ ██║   ██║██║██╔══██╗    ██╔════╝██║╚══██╔══╝╚██╗ ██╔╝
@@ -308,25 +309,10 @@ console.log(`
  ██║   ██║██║   ██║██║██╔══██║    ██║     ██║   ██║     ╚██╔╝  
  ╚██████╔╝╚██████╔╝██║██║  ██║    ╚██████╗██║   ██║      ██║   
   ╚═════╝  ╚═════╝ ╚═╝╚═╝  ╚═╝    ╚═════╝╚═╝   ╚═╝      ╚═╝   
-                                                                  
+
   🏙️ Portal da Cidade — by Antas Digital
-  Configure o Firebase em index.html para ativar o banco de dados.
+
 `);
-setTimeout(() => {
-  const aviso = document.getElementById('cookie-notif');
-
-  if (aviso && !localStorage.getItem('cookie_notif_status')) {
-    aviso.style.display = 'block';
-  }
-}, 3000);
-
-window.aceitarNotificacoes = function () {
-  localStorage.setItem('cookie_notif_status', 'accepted');
-  document.getElementById('cookie-notif').style.display = 'none';
-  showToast('Notificações ativadas!', 'success');
-};
-
-window.recusarNotificacoes = function () {
-  localStorage.setItem('cookie_notif_status', 'declined');
-  document.getElementById('cookie-notif').style.display = 'none';
+window.toggleAIChat = function() {
+  document.getElementById('ai-floating-chat').classList.toggle('hidden');
 };

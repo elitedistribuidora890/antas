@@ -528,7 +528,7 @@
         <button class="profile-menu-item" onclick="handleProfileMenuClick('notificacoes')">
           <span class="profile-menu-icon">🔔</span>
           <span class="profile-menu-label">Notificações</span>
-          <span class="profile-menu-arrow">›</span>
+          <span class="profile-menu-arrow">›</span> </button>
 
         <div class="profile-menu-divider"></div>
         <button class="profile-menu-item" onclick="handleProfileMenuClick('cupons')">
@@ -1547,11 +1547,10 @@
   function getDemoCompanies() {
  
   }
-
-  function getDemoHighlights() {
-    return getDemoCompanies().filter(c=>c.sponsored);
-  }
-
+function getDemoHighlights() {
+  const demo = typeof DEMO_COMPANIES !== 'undefined' ? DEMO_COMPANIES : [];
+  return demo.filter(c => c.sponsored || c.patrocinada);
+}
   function getDemoEvents() {
   
   }

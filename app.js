@@ -34,11 +34,17 @@ window.navTo = function(page) {
 
   document.getElementById('page-' + pageId)?.classList.add('active');
 
-  if (pageId === 'map') {
+if (pageId === 'map') {
+  setTimeout(() => {
+    if (typeof initMap === 'function') initMap();
+
     setTimeout(() => {
-      if (window.initMap) initMap();
-    }, 100);
-  }
+      if (window.mapInstance) {
+        window.mapInstance.invalidateSize();
+      }
+    }, 200);
+  }, 100);
+}
 
   if (pageId === 'profile') {
     if (window.loadFavorites) loadFavorites();

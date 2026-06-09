@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
   <html lang="pt-BR">
   <head>
   <meta charset="UTF-8">
@@ -126,6 +126,45 @@
     <div id="company-modal-content"></div>
   </div>
 
+  <!-- Purchase Modal -->
+  <div id="purchase-modal" class="modal hidden" style="max-width:480px">
+    <div class="modal-header">
+      <h3 class="modal-title-sm">🛒 Finalizar Pedido</h3>
+      <button class="modal-close" onclick="closeModal('purchase-modal')">✕</button>
+    </div>
+    <div id="purchase-item-summary" style="background:#F0F7FF;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
+      <!-- Filled by JS -->
+    </div>
+    <div class="form-group">
+      <label style="font-size:13px;font-weight:600;color:#374151">Nome completo</label>
+      <input type="text" id="purchase-name" placeholder="Seu nome completo" readonly style="background:#F3F4F6;color:#6B7280">
+    </div>
+    <div class="form-group">
+      <label style="font-size:13px;font-weight:600;color:#374151">Endereço de entrega</label>
+      <input type="text" id="purchase-address" placeholder="Rua, número, bairro, cidade">
+    </div>
+    <div class="form-group">
+      <label style="font-size:13px;font-weight:600;color:#374151">Forma de pagamento</label>
+      <select id="purchase-payment">
+        <option value="">Selecione...</option>
+        <option value="PIX">💸 PIX</option>
+        <option value="Dinheiro">💵 Dinheiro</option>
+        <option value="Cartão de Débito">💳 Cartão de Débito</option>
+        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+        <option value="Boleto">📄 Boleto Bancário</option>
+      </select>
+    </div>
+    <div class="form-group" id="purchase-obs-group">
+      <label style="font-size:13px;font-weight:600;color:#374151">Observações (opcional)</label>
+      <textarea id="purchase-obs" rows="2" placeholder="Ex: sem cebola, entregar no portão..."></textarea>
+    </div>
+    <button class="btn-primary w-full" onclick="sendPurchaseToWhatsApp()" style="margin-top:4px;background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg viewBox="0 0 24 24" width="18" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar pedido via WhatsApp
+    </button>
+    <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px">Você será direcionado ao WhatsApp da empresa para confirmar o pedido.</p>
+  </div>
+
   <!-- News Detail Modal -->
   <div id="news-modal" class="modal modal-lg hidden">
     <button class="modal-close" onclick="closeModal('news-modal')">✕</button>
@@ -202,7 +241,31 @@
         </div>
       </div>
     </section>
+ <div id="page-bus" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="showPage('home')">
+        ← Voltar
+      </button>
 
+      <h1 class="page-title">
+        Horários de Ônibus
+      </h1>
+    </div>
+
+    <div class="container">
+      <div id="bus-page-list"></div>
+    </div>
+  </div>
+  <script>function renderBusPage() {
+    document.getElementById('bus-page-list').innerHTML =
+      BUS_ROUTES.map(r => `
+        <div class="bus-card">
+          <strong>${r.bairro}</strong>
+          <p>Destino: ${r.destino}</p>
+          <p>Horário: ${r.horario}</p>
+        </div>
+      `).join('');
+  }</script>
     <!-- Highlights -->
     <section class="section section-alt">
       <div class="container">
@@ -242,31 +305,7 @@
     </section>
 
 
-    <div id="page-bus" class="page">
-    <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">
-        ← Voltar
-      </button>
-
-      <h1 class="page-title">
-        Horários de Ônibus
-      </h1>
-    </div>
-
-    <div class="container">
-      <div id="bus-page-list"></div>
-    </div>
-  </div>
-  <script>function renderBusPage() {
-    document.getElementById('bus-page-list').innerHTML =
-      BUS_ROUTES.map(r => `
-        <div class="bus-card">
-          <strong>${r.bairro}</strong>
-          <p>Destino: ${r.destino}</p>
-          <p>Horário: ${r.horario}</p>
-        </div>
-      `).join('');
-  }</script>
+   
 
 
     <!-- News -->
@@ -498,6 +537,16 @@
         </div>
       </div>
 
+      <!-- Painel da Empresa (visível só para donos aprovados) -->
+      <div id="profile-empresa-banner" class="hidden" style="margin:16px 0;background:linear-gradient(135deg,#1E3A8A,#2563EB);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;cursor:pointer;text-decoration:none;" onclick="window.location.href='empresa-antas.html'">
+        <div style="width:44px;height:44px;background:rgba(255,255,255,.18);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">🏢</div>
+        <div style="flex:1">
+          <div style="font-weight:700;color:white;font-size:15px" id="profile-empresa-nome">Minha Empresa</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:2px">Acessar Painel da Empresa →</div>
+        </div>
+        <div style="width:8px;height:8px;background:#34D399;border-radius:50%;flex-shrink:0"></div>
+      </div>
+
       <!-- Menu list (always visible) -->
     <div class="profile-menu-divider"></div>
 
@@ -660,8 +709,25 @@
   onAuthStateChanged(auth, (user) => {
     window.currentUser = user;
     updateAuthUI(user);
-    if (user) loadFavorites();
+    if (user) {
+      loadFavorites();
+      checkUserEmpresa(user.uid);
+    } else {
+      document.getElementById('profile-empresa-banner')?.classList.add('hidden');
+    }
   });
+
+  async function checkUserEmpresa(uid) {
+    try {
+      const snap = await getDocs(query(collection(db, 'empresas'), where('ownerUid', '==', uid), where('status', '==', 'ativa')));
+      const banner = document.getElementById('profile-empresa-banner');
+      if (!snap.empty && banner) {
+        const emp = snap.docs[0].data();
+        document.getElementById('profile-empresa-nome').textContent = emp.nome || 'Minha Empresa';
+        banner.classList.remove('hidden');
+      }
+    } catch(e) { /* silently ignore */ }
+  }
 
   function updateAuthUI(user) {
     const btnLogin = document.getElementById('btn-login');
@@ -801,10 +867,20 @@
 
     renderHighlights();
     renderPopular();
+    function normalizeText(str) {
+  return String(str || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s]/g, '')
+    .trim()
+    .toLowerCase();
+}
+    renderCategories();
     updateMapMarkers();
     document.getElementById('stat-companies').dataset.target = allCompanies.length;
   }
   async function loadEvents() {
+    allEvents = []; // garante array antes de qualquer coisa
     try {
       const snap = await getDocs(collection(db, 'eventos'));
 
@@ -824,16 +900,18 @@
       });
 
     } catch(e) {
-      console.error('Erro ao carregar eventos:', e);
-      allEvents = getDemoEvents();
+      console.warn('Eventos: usando dados de demonstração.', e.code);
+      allEvents = (typeof getDemoEvents === 'function') ? getDemoEvents() : [];
     }
 
+    if (!Array.isArray(allEvents)) allEvents = [];
     renderEvents();
     renderEventsPage();
     document.getElementById('stat-events').dataset.target = allEvents.length;
   }
 
   async function loadNews() {
+    allNews = []; // garante array antes de qualquer coisa
     try {
       const snap = await getDocs(
         query(collection(db,'noticias'), orderBy('criadoEm','desc'), limit(6))
@@ -855,10 +933,11 @@
       });
 
     } catch(e) {
-      console.error(e);
-      allNews = getDemoNews();
+      console.warn('Notícias: usando dados de demonstração.', e.code);
+      allNews = (typeof getDemoNews === 'function') ? getDemoNews() : [];
     }
 
+    if (!Array.isArray(allNews)) allNews = [];
     renderNews();
     renderNewsPage();
   }
@@ -1053,15 +1132,109 @@
           <button class="btn-share" onclick="shareCompany('${company.name}','${window.location.href}')">↗️ Compartilhar</button>
         </div>
         <!-- Rating Section -->
+        <!-- Abas de conteúdo por categoria -->
+        ${buildCategoryTabs(company)}
         <div class="rating-section" id="rating-section-${company.id}" style="margin-top:20px;padding-top:16px;border-top:1px solid #E5E7EB">
           <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">⭐ Avalie esta empresa</h3>
           <div id="rating-ui-${company.id}">Carregando avaliações...</div>
         </div>
       </div>
     `;
+    window._currentCompanyWhatsapp = company.whatsapp || '';
     openModal('company-modal');
-    // Load ratings
     loadCompanyRatings(company.id);
+    loadCompanyContent(company.id, company.category);
+  };
+
+  // ─── MAPEAMENTO CATEGORIA → TIPO DE CONTEÚDO ───
+  const CATEGORY_CONTENT = {
+    'Alimentação':              { tipo: 'cardapio',  label: '🍽️ Cardápio',    colecao: 'catalogo' },
+    'Beleza e Estética':        { tipo: 'servicos',  label: '💅 Serviços',     colecao: 'catalogo' },
+    'Consertos e Reparos':      { tipo: 'servicos',  label: '🔧 Serviços',     colecao: 'catalogo' },
+    'Lojas':                    { tipo: 'produtos',  label: '🛍️ Produtos',     colecao: 'catalogo' },
+    'Material de Construção':   { tipo: 'produtos',  label: '🏗️ Produtos',     colecao: 'catalogo' },
+    'Saúde':                    { tipo: 'servicos',  label: '🏥 Serviços',     colecao: 'catalogo' },
+    'Tecnologia e Informática': { tipo: 'produtos',  label: '💻 Produtos',     colecao: 'catalogo' },
+    'Pet Shop':                 { tipo: 'servicos',  label: '🐾 Serviços',     colecao: 'catalogo' },
+    'Educação':                 { tipo: 'servicos',  label: '📚 Serviços',     colecao: 'catalogo' },
+    'Imóveis':                  { tipo: 'imoveis',   label: '🏠 Imóveis',      colecao: 'catalogo' },
+    'Esporte e Lazer':          { tipo: 'produtos',  label: '⚽ Produtos',     colecao: 'catalogo' },
+    'Eventos e Festas':         { tipo: 'servicos',  label: '🎉 Serviços',     colecao: 'catalogo' },
+    'Contabilidade e Finanças': { tipo: 'servicos',  label: '💰 Serviços',     colecao: 'catalogo' },
+    'Advocacia e Jurídico':     { tipo: 'servicos',  label: '⚖️ Serviços',     colecao: 'catalogo' },
+    'Transporte':               { tipo: 'servicos',  label: '🚗 Serviços',     colecao: 'catalogo' },
+  };
+
+  function buildCategoryTabs(company) {
+    const cfg = CATEGORY_CONTENT[company.category];
+    if (!cfg) return ''; // categoria sem aba extra
+    return `
+      <div style="margin-top:20px;border-top:1px solid #E5E7EB;padding-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h3 style="font-size:15px;font-weight:700">${cfg.label}</h3>
+        </div>
+        <div id="cat-content-${company.id}" style="min-height:60px">
+          <div style="color:#9CA3AF;font-size:13px;text-align:center;padding:20px">Carregando...</div>
+        </div>
+      </div>`;
+  }
+
+  window.loadCompanyContent = async function(companyId, category) {
+    const cfg = CATEGORY_CONTENT[category];
+    const container = document.getElementById(`cat-content-${companyId}`);
+    if (!cfg || !container) return;
+    try {
+      const snap = await getDocs(query(
+        collection(db, cfg.colecao),
+        where('empresaId', '==', companyId)
+      ));
+      if (snap.empty) {
+        container.innerHTML = `<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px">Nenhum item cadastrado ainda.</p>`;
+        return;
+      }
+      const docs = [...snap.docs].sort((a,b) => {
+        const ta = a.data().createdAt?.seconds || 0;
+        const tb = b.data().createdAt?.seconds || 0;
+        return tb - ta;
+      });
+      // Store company whatsapp for purchase modal (already set by openCompany, but refresh if needed)
+      if (!window._currentCompanyWhatsapp) {
+        try {
+          const compSnap = await getDoc(doc(db, 'empresas', companyId));
+          if (compSnap.exists()) window._currentCompanyWhatsapp = compSnap.data().whatsapp || '';
+        } catch(e) {}
+      }
+
+      container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">` +
+        docs.map(d => {
+          const item = d.data();
+          const foto = item.fotoUrl || item.foto || '';
+          const nome = item.nome || item.titulo || item.name || '—';
+          const preco = item.preco || item.valor || item.price || 0;
+          const precoFmt = preco > 0 ? `R$ ${parseFloat(preco).toFixed(2).replace('.',',')}` : '';
+          const desc = item.descricao || item.description || '';
+          const disponivel = item.status !== 'indisponivel' && item.status !== 'inativo';
+          const itemDataJson = JSON.stringify({nome, preco, precoFmt, foto, desc}).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+          return `<div style="background:#F9FAFB;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;opacity:${disponivel?1:0.5};display:flex;flex-direction:column">
+            ${foto
+              ? `<img src="${foto}" alt="${nome}" style="width:100%;height:100px;object-fit:cover">`
+              : `<div style="width:100%;height:100px;background:linear-gradient(135deg,#DBEAFE,#EFF6FF);display:flex;align-items:center;justify-content:center;font-size:32px">${cfg.label.split(' ')[0]}</div>`
+            }
+            <div style="padding:8px;flex:1;display:flex;flex-direction:column;gap:2px">
+              <div style="font-size:13px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome}</div>
+              ${desc ? `<div style="font-size:11px;color:#6B7280;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${desc}</div>` : ''}
+              ${precoFmt ? `<div style="font-size:13px;font-weight:700;color:#2563EB;margin-top:2px">${precoFmt}</div>` : ''}
+              ${!disponivel
+                ? `<div style="font-size:10px;color:#EF4444;font-weight:600;margin-top:4px">Indisponível</div>`
+                : `<button onclick="openPurchaseModal(${itemDataJson})" style="margin-top:6px;width:100%;padding:6px 0;background:#2563EB;color:white;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#1D4ED8'" onmouseout="this.style.background='#2563EB'">🛒 Comprar</button>`
+              }
+            </div>
+          </div>`;
+        }).join('') + `</div>`;
+    } catch(e) {
+      console.warn('Conteúdo da empresa:', e.code);
+      container.innerHTML = `<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px">Nenhum item encontrado.</p>`;
+    }
   };
 
   window.handleWhatsApp = async function(companyId, whatsapp) {
@@ -1070,6 +1243,68 @@
     } catch(e){}
     const num = whatsapp.replace(/\D/g,'');
     window.open(`https://wa.me/55${num}`, '_blank');
+  };
+
+  // ─── PURCHASE MODAL ───
+  window.openPurchaseModal = function(item) {
+    if (!window.currentUser) {
+      openModal('auth-modal');
+      showToast('Faça login para comprar 🔒', 'info');
+      return;
+    }
+    // Save current item for later use
+    window._purchaseItem = item;
+
+    // Fill summary card
+    const summaryEl = document.getElementById('purchase-item-summary');
+    summaryEl.innerHTML = `
+      ${item.foto ? `<img src="${item.foto}" alt="${item.nome}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0">` : `<div style="width:60px;height:60px;background:#DBEAFE;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🛍️</div>`}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
+        ${item.precoFmt ? `<div style="font-size:16px;font-weight:800;color:#2563EB;margin-top:2px">${item.precoFmt}</div>` : '<div style="font-size:13px;color:#6B7280">Preço a combinar</div>'}
+      </div>`;
+
+    // Pre-fill user name (readonly)
+    const user = window.currentUser;
+    document.getElementById('purchase-name').value = user.displayName || user.email || '';
+    // Clear fields
+    document.getElementById('purchase-address').value = '';
+    document.getElementById('purchase-payment').value = '';
+    document.getElementById('purchase-obs').value = '';
+
+    openModal('purchase-modal');
+  };
+
+  window.sendPurchaseToWhatsApp = function() {
+    const address = document.getElementById('purchase-address').value.trim();
+    const payment = document.getElementById('purchase-payment').value;
+    const obs = document.getElementById('purchase-obs').value.trim();
+    const user = window.currentUser;
+    const item = window._purchaseItem;
+
+    if (!address) return showToast('Informe o endereço de entrega', 'error');
+    if (!payment) return showToast('Selecione a forma de pagamento', 'error');
+
+    const whatsapp = (window._currentCompanyWhatsapp || '').replace(/\D/g,'');
+    if (!whatsapp) return showToast('Empresa sem WhatsApp cadastrado', 'error');
+
+    const nome = user.displayName || user.email || 'Cliente';
+    const preco = item.precoFmt || 'A combinar';
+    const produto = item.nome || 'Produto';
+
+    const msg = `🛒 *NOVO PEDIDO — Antas Digital*\n\n`
+      + `👤 *Cliente:* ${nome}\n`
+      + `📦 *Produto:* ${produto}\n`
+      + `💰 *Valor:* ${preco}\n`
+      + `📍 *Endereço:* ${address}\n`
+      + `💳 *Pagamento:* ${payment}\n`
+      + (obs ? `📝 *Obs:* ${obs}\n` : '')
+      + `\n_Pedido realizado pelo portal Antas Digital_`;
+
+    const url = `https://wa.me/55${whatsapp}?text=${encodeURIComponent(msg)}`;
+    closeModal('purchase-modal');
+    window.open(url, '_blank');
+    showToast('Pedido enviado! 🎉', 'success');
   };
 
   window.openRoute = function(lat, lng) {
@@ -1174,9 +1409,9 @@
   }
 
   function renderPopular() {
-    const sorted = [...allCompanies].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8);
+    const sorted = [...allCompanies].filter(c=>(c.views||0)>0).sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8);
     const container = document.getElementById('popular-grid');
-    if (!sorted.length) { container.innerHTML='<p class="text-muted">Carregando...</p>'; return; }
+    if (!sorted.length) { container.innerHTML='<p class="text-muted text-center py-4">Nenhuma empresa acessada ainda.</p>'; return; }
     container.innerHTML = sorted.map(c=>`
       <div class="popular-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
         <div class="popular-img" style="background-image:url('${c.cover||'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}')">
@@ -1328,12 +1563,14 @@
   function renderCategories() {
     const grid = document.getElementById('categories-grid');
     const show = categoriesExpanded ? CATEGORIES : CATEGORIES.slice(0,8);
-    grid.innerHTML = show.map(cat=>`
-      <div class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
+    grid.innerHTML = show.map(cat=>{
+      const count = allCompanies.filter(c=>c.category===cat.name).length;
+      return `<div class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
         <div class="cat-icon">${cat.icon}</div>
         <span class="cat-name">${cat.name}</span>
-        <span class="cat-count">${allCompanies.filter(c=>c.category===cat.name).length}</span>
-      </div>`).join('');
+        <span class="cat-count">${count} ${count===1?'empresa':'empresas'}</span>
+      </div>`;
+    }).join('');
   }
 
   window.toggleCategories = function() {
@@ -1624,8 +1861,12 @@ function getDemoHighlights() {
     const container = document.getElementById(`rating-ui-${companyId}`);
     if (!container) return;
     try {
-      const snap = await getDocs(query(collection(db,'ratings'), where('companyId','==',companyId), orderBy('createdAt','desc')));
-      const ratings = snap.docs.map(d => ({id:d.id,...d.data()}));
+      const snap = await getDocs(query(collection(db,'ratings'), where('companyId','==',companyId)));
+      const ratings = snap.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>{
+        const ta = a.createdAt?.toDate?.()?.getTime() || a.createdAt || 0;
+        const tb = b.createdAt?.toDate?.()?.getTime() || b.createdAt || 0;
+        return tb - ta;
+      });
       const avg = ratings.length ? (ratings.reduce((s,r)=>s+(r.rating||0),0)/ratings.length).toFixed(1) : null;
       const userRating = window.currentUser ? ratings.find(r=>r.userId===window.currentUser.uid) : null;
 
@@ -1640,7 +1881,7 @@ function getDemoHighlights() {
             <div id="star-picker-${companyId}" style="display:flex;gap:4px;font-size:28px;cursor:pointer;margin-bottom:10px">
               ${[1,2,3,4,5].map(i=>`<span onclick="setRating('${companyId}',${i})" onmouseover="hoverRating('${companyId}',${i})" onmouseout="resetRatingHover('${companyId}')" style="color:${i<=curRating?'#F59E0B':'#E5E7EB'};transition:color .1s" data-star="${i}">★</span>`).join('')}
             </div>
-            <input type="text" id="rating-comment-${companyId}" placeholder="Comentário (opcional)" value="${userRating?.comment||''}" style="font-size:13px;padding:8px 12px;border-radius:8px;border:1.5px solid #E5E7EB;margin-bottom:8px">
+            <input type="text" id="rating-comment-${companyId}" placeholder="Comentário (opcional)" value="${userRating?.comment||''}" style="width:100%;box-sizing:border-box;font-size:13px;padding:8px 12px;border-radius:8px;border:1.5px solid #E5E7EB;margin-bottom:8px;display:block">
             <button onclick="submitRating('${companyId}')" style="background:#2563EB;color:white;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">${userRating?'Atualizar avaliação':'Enviar avaliação'}</button>
             ${userRating?`<input type="hidden" id="rating-doc-${companyId}" value="${userRating.id}">`:''}
           </div>`;
@@ -1949,19 +2190,73 @@ function getDemoHighlights() {
   loadPromocoesHome();
 
   </script>
-  <div id="cookie-notif" style="position:fixed;bottom:90px;left:16px;right:16px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.25);z-index:999999;display:none;">
-    <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
-    <p style="margin:0 0 14px;color:#475569;font-size:14px;">
-      Podemos enviar avisos sobre notícias, eventos e novidades da cidade.
-    </p>
-    <button onclick="aceitarNotificacoes()" class="btn-primary w-full">Aceitar notificações</button>
-    <button onclick="recusarNotificacoes()" style="margin-top:10px;width:100%;background:transparent;border:0;color:#64748b;font-size:14px;">Agora não</button>
-  </div>  
+    
   <!-- Leaflet Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script src="app.js"></script>
+  <script>
+  // Sobrescreve showPage do app.js para funcionar com IDs do index (page-xxx)
+  window.showPage = function(pageId) {
+    const prefixed = 'page-' + pageId;
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.remove('active');
+    });
+    const page = document.getElementById(prefixed) || document.getElementById(pageId);
+    if (page) {
+      page.classList.add('active');
+      if (pageId === 'map' && typeof window.initMap === 'function') window.initMap();
+    } else {
+      console.warn('Pagina nao encontrada:', pageId);
+    }
+  };
+  // Controla item ativo no bottom nav
+  window.setActiveNav = function(btn) {
+    document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  };
+
+  // ─── MODAL HELPERS (global) ───
+  window.openModal = function(id) {
+    document.getElementById(id)?.classList.remove('hidden');
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  };
+  window.closeModal = function(id) {
+    document.getElementById(id)?.classList.add('hidden');
+    // Only hide overlay if no other modals are open
+    const anyOpen = document.querySelectorAll(
+      '#auth-modal:not(.hidden), #business-modal:not(.hidden), #company-modal:not(.hidden), #news-modal:not(.hidden), #event-modal:not(.hidden), #purchase-modal:not(.hidden)'
+    ).length > 0;
+    if (!anyOpen) {
+      const overlay = document.getElementById('modal-overlay');
+      if (overlay) overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  };
+  document.getElementById('modal-overlay')?.addEventListener('click', function() {
+    ['auth-modal','business-modal','company-modal','news-modal','event-modal','purchase-modal'].forEach(id => {
+      document.getElementById(id)?.classList.add('hidden');
+    });
+    this.classList.add('hidden');
+    document.body.style.overflow = '';
+  });
+
+  // Toast global
+  window.showToast = function(msg, type, ms) {
+    type = type || 'info'; ms = ms || 3000;
+    const el = document.getElementById('toast');
+    if (!el) return;
+    const colors = { success:'#059669', error:'#DC2626', info:'#2563EB', warning:'#D97706' };
+    el.textContent = msg;
+    el.className = 'toast';
+    el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:' + (colors[type]||'#374151') + ';color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.25);white-space:nowrap;transition:opacity .3s';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.style.cssText='display:none',300); }, ms);
+  };
+  </script>
   <button class="ai-float-btn" onclick="toggleAIChat()">
   🤖
 </button>
@@ -1983,5 +2278,83 @@ function getDemoHighlights() {
     <button onclick="sendAIMessage()">➤</button>
   </div>
 </div>
-  </body>
+  
+
+<script>
+/* Correções globais — Antas Digital */
+(function () {
+  function byId(id) { return document.getElementById(id); }
+
+  window.authSwitchTab = function (tab) {
+    document.querySelectorAll('#auth-modal .modal-tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+    document.querySelectorAll('#auth-modal .tab-content').forEach(panel => {
+      panel.classList.toggle('active', panel.id === 'tab-' + tab);
+    });
+  };
+
+  window.switchTab = window.authSwitchTab;
+
+  window.showRecover = function () {
+    window.authSwitchTab('recover');
+  };
+
+  document.addEventListener('click', function (ev) {
+    const tabBtn = ev.target.closest('#auth-modal .modal-tab[data-tab]');
+    if (tabBtn) window.authSwitchTab(tabBtn.dataset.tab);
+  });
+
+  window.toggleAIChat = function () {
+    const chat = byId('ai-floating-chat');
+    if (chat) chat.classList.toggle('hidden');
+  };
+
+  window.openImageModal = function (src) {
+    let modal = byId('image-viewer-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'image-viewer-modal';
+      modal.className = 'modal hidden';
+      modal.style.maxWidth = '92vw';
+      modal.innerHTML = `
+        <button class="modal-close" onclick="closeModal('image-viewer-modal')">✕</button>
+        <img id="image-viewer-img" alt="Imagem ampliada" style="width:100%;max-height:80vh;object-fit:contain;border-radius:14px;display:block">
+      `;
+      document.body.appendChild(modal);
+    }
+    const img = byId('image-viewer-img');
+    if (img) img.src = src;
+    if (typeof openModal === 'function') openModal('image-viewer-modal');
+    else modal.classList.remove('hidden');
+  };
+
+  window.aceitarNotificacoes = async function () {
+    const box = byId('cookie-notif');
+    try {
+      if ('Notification' in window) await Notification.requestPermission();
+      localStorage.setItem('antas_notificacoes', 'aceitas');
+      if (box) box.style.display = 'none';
+      if (typeof showToast === 'function') showToast('Notificações ativadas!', 'success');
+    } catch (e) {
+      console.error(e);
+      if (typeof showToast === 'function') showToast('Não foi possível ativar notificações.', 'error');
+    }
+  };
+
+  window.recusarNotificacoes = function () {
+    localStorage.setItem('antas_notificacoes', 'recusadas');
+    const box = byId('cookie-notif');
+    if (box) box.style.display = 'none';
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const box = byId('cookie-notif');
+    if (box && !localStorage.getItem('antas_notificacoes')) {
+      setTimeout(() => { box.style.display = 'block'; }, 1200);
+    }
+  });
+})();
+</script>
+</body>
   </html>

@@ -449,6 +449,11 @@ textarea { resize: vertical; min-height: 80px; }
 .price-strike { text-decoration: line-through; color: var(--gray-400); font-size: 12px; }
 .promo-discount-badge { background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 
+/* ─── ITEM BADGES ─── */
+.item-badge { display:inline-block; padding:2px 10px; border-radius:999px; font-size:11px; font-weight:700; }
+.badge-ativo, .badge-disponivel { background:#D1FAE5; color:#065F46; }
+.badge-inativo, .badge-indisponivel { background:#FEE2E2; color:#991B1B; }
+
 /* ─── PHOTO UPLOAD MINI ─── */
 .ep-photo-upload-area {
   border: 2px dashed var(--gray-200); border-radius: var(--radius-md);
@@ -505,10 +510,20 @@ textarea { resize: vertical; min-height: 80px; }
 
 <!-- GATE: DENIED (not logged in) -->
 <div id="gate-denied" class="hidden">
+  <img src="logo.png" alt="Antas Digital" class="gate-logo">
   <div class="gate-icon">🔒</div>
-  <div class="gate-title">Acesso Restrito</div>
-  <p class="gate-sub">Você precisa estar logado e ter uma empresa aprovada para acessar este painel.</p>
-  <button class="gate-btn" onclick="window.location.href='index.html'">← Voltar ao site</button>
+  <div class="gate-title">Painel da Empresa</div>
+  <p class="gate-sub">Entre com o e-mail e senha da sua conta para acessar.</p>
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;margin-top:8px">
+    <input type="email" id="gate-email" placeholder="seu@email.com"
+      style="padding:12px 16px;border:1.5px solid #E5E7EB;border-radius:12px;font-size:15px;font-family:inherit;outline:none">
+    <input type="password" id="gate-password" placeholder="Senha"
+      style="padding:12px 16px;border:1.5px solid #E5E7EB;border-radius:12px;font-size:15px;font-family:inherit;outline:none"
+      onkeydown="if(event.key==='Enter')gateLogin()">
+    <button class="gate-btn" onclick="gateLogin()" id="gate-login-btn">Entrar</button>
+    <p id="gate-login-error" style="color:#EF4444;font-size:13px;display:none;text-align:center"></p>
+  </div>
+  <button style="margin-top:12px;background:none;border:none;color:#9CA3AF;font-size:13px;cursor:pointer" onclick="window.location.href='index.html'">← Voltar ao site</button>
 </div>
 
 <!-- GATE: PENDING (company not approved) -->
@@ -574,6 +589,18 @@ textarea { resize: vertical; min-height: 80px; }
       </button>
       <button class="ep-tab" onclick="switchTab('avaliacoes')" data-tab="avaliacoes">
         <span class="ep-tab-icon">⭐</span> Avaliações
+      </button>
+      <button class="ep-tab" onclick="switchTab('catalogo')" data-tab="catalogo">
+        <span class="ep-tab-icon">📋</span> Catálogo / Cardápio
+      </button>
+      <button class="ep-tab" onclick="switchTab('vagas')" data-tab="vagas">
+        <span class="ep-tab-icon">💼</span> Vagas
+      </button>
+      <button class="ep-tab" onclick="switchTab('promocao-dia')" data-tab="promocao-dia">
+        <span class="ep-tab-icon">🔥</span> Promo do Dia
+      </button>
+      <button class="ep-tab" onclick="switchTab('cupons')" data-tab="cupons">
+        <span class="ep-tab-icon">🎟️</span> Cupons
       </button>
       <button class="ep-tab" onclick="switchTab('estatisticas')" data-tab="estatisticas">
         <span class="ep-tab-icon">📊</span> Estatísticas
@@ -806,7 +833,7 @@ textarea { resize: vertical; min-height: 80px; }
       <div class="ep-card">
         <div class="ep-card-title" style="justify-content:space-between">
           <div style="display:flex;align-items:center;gap:8px"><span>🛍️</span> Meus Produtos</div>
-          <button class="ep-btn-add" onclick="openProdutoModal()">+ Novo Produto</button>
+          <button class="ep-btn-add" onclick="if(window.openProdutoModal)openProdutoModal();else alert('Carregando...')">+ Novo Produto</button>
         </div>
         <div id="produtos-list" class="items-list">
           <div class="list-empty"><div style="font-size:36px">🛍️</div><p>Nenhum produto cadastrado</p><p style="font-size:12px;margin-top:4px;color:var(--gray-400)">Clique em "+ Novo Produto" para começar</p></div>
@@ -819,7 +846,7 @@ textarea { resize: vertical; min-height: 80px; }
       <div class="ep-card">
         <div class="ep-card-title" style="justify-content:space-between">
           <div style="display:flex;align-items:center;gap:8px"><span>🏷️</span> Promoções Ativas</div>
-          <button class="ep-btn-add" onclick="openPromocaoModal()">+ Nova Promoção</button>
+          <button class="ep-btn-add" onclick="if(window.openPromocaoModal)openPromocaoModal();else alert('Carregando...')">+ Nova Promoção</button>
         </div>
         <p style="font-size:12px;color:var(--gray-400);margin-bottom:12px">As promoções ativas aparecem na seção <strong>Promoções da Cidade</strong> na página inicial.</p>
         <div id="promocoes-list" class="items-list">
@@ -833,7 +860,7 @@ textarea { resize: vertical; min-height: 80px; }
       <div class="ep-card">
         <div class="ep-card-title" style="justify-content:space-between">
           <div style="display:flex;align-items:center;gap:8px"><span>📌</span> Meus Classificados</div>
-          <button class="ep-btn-add" onclick="openClassificadoModal()">+ Novo Anúncio</button>
+          <button class="ep-btn-add" onclick="if(window.openClassificadoModal)openClassificadoModal();else alert('Carregando...')">+ Novo Anúncio</button>
         </div>
         <p style="font-size:12px;color:var(--gray-400);margin-bottom:12px">Anúncios ativos aparecem na seção de Classificados do portal.</p>
         <div id="classificados-list" class="items-list">
@@ -867,7 +894,7 @@ import {
   increment
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
-  getAuth, onAuthStateChanged, signOut
+  getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
@@ -883,6 +910,7 @@ const firebaseConfig = {
   appId: "1:475692348722:web:f03639854c7243e917932b",
   measurementId: "G-EW7598TPL2"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -1421,11 +1449,8 @@ window.switchTab = function(tab) {
 
   // Show/hide save bar
   const saveBar = document.getElementById('save-bar');
-  if (['avaliacoes','estatisticas','produtos','promocoes','classificados'].includes(tab)) {
-    saveBar.style.display = 'none';
-  } else {
-    saveBar.style.display = '';
-  }
+  const noSave = ['avaliacoes','estatisticas','produtos','promocoes','classificados','catalogo','vagas','promocao-dia','cupons'];
+  saveBar.style.display = noSave.includes(tab) ? 'none' : '';
 
   // Lazy load
   if (tab === 'avaliacoes') loadRatings();
@@ -1433,9 +1458,37 @@ window.switchTab = function(tab) {
   if (tab === 'produtos' && window._loadProdutos) window._loadProdutos();
   if (tab === 'promocoes' && window._loadPromocoes) window._loadPromocoes();
   if (tab === 'classificados' && window._loadClassificados) window._loadClassificados();
+  if (tab === 'catalogo' && window._loadCatalogo) window._loadCatalogo();
+  if (tab === 'vagas' && window._loadVagas) window._loadVagas();
+  if (tab === 'promocao-dia' && window._loadPromocaoDia) window._loadPromocaoDia();
+  if (tab === 'cupons' && window._loadCupons) window._loadCupons();
 };
 
 /* ─── LOGOUT ─── */
+window.gateLogin = async function() {
+  const email = document.getElementById('gate-email').value.trim();
+  const pass = document.getElementById('gate-password').value;
+  const errEl = document.getElementById('gate-login-error');
+  const btn = document.getElementById('gate-login-btn');
+  if (!email || !pass) { errEl.textContent = 'Preencha e-mail e senha.'; errEl.style.display='block'; return; }
+  btn.textContent = '⏳ Entrando...'; btn.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+    // onAuthStateChanged will handle the rest
+  } catch(e) {
+    const msgs = {
+      'auth/user-not-found':'Usuário não encontrado.',
+      'auth/wrong-password':'Senha incorreta.',
+      'auth/invalid-email':'E-mail inválido.',
+      'auth/too-many-requests':'Muitas tentativas. Tente mais tarde.',
+      'auth/invalid-credential':'E-mail ou senha incorretos.',
+    };
+    errEl.textContent = msgs[e.code] || 'Erro ao entrar. Tente novamente.';
+    errEl.style.display = 'block';
+  }
+  btn.textContent = 'Entrar'; btn.disabled = false;
+};
+
 window.doLogout = async function() {
   await signOut(auth);
   window.location.href = 'index.html';
@@ -1649,6 +1702,190 @@ window.showToast = function(msg, type = 'info', duration = 3000) {
   </div>
 </div>
 
+<!-- ══════ CATÁLOGO ══════ -->
+<div id="panel-catalogo" class="ep-panel">
+  <div class="ep-card">
+    <div class="ep-card-title" style="justify-content:space-between">
+      <span><span>📋</span> Catálogo — Cardápio / Produtos / Serviços</span>
+      <button class="ep-btn-add" onclick="openCatalogoModal()">+ Novo Item</button>
+    </div>
+    <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px">
+      ✅ <strong>Estes itens aparecem diretamente no portal Antas Digital</strong> quando alguém abre sua empresa. Cadastre seus pratos, produtos ou serviços aqui.
+    </p>
+    <div class="items-list" id="catalogo-list"><div class="list-empty">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ══════ VAGAS ══════ -->
+<div id="panel-vagas" class="ep-panel">
+  <div class="ep-card">
+    <div class="ep-card-title" style="justify-content:space-between">
+      <span><span>💼</span> Vagas de Emprego</span>
+      <button class="ep-btn-add" onclick="openVagaModal()">+ Nova Vaga</button>
+    </div>
+    <div class="items-list" id="vagas-list"><div class="list-empty">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ══════ PROMOÇÃO DO DIA ══════ -->
+<div id="panel-promocao-dia" class="ep-panel">
+  <div class="ep-card">
+    <div class="ep-card-title" style="justify-content:space-between">
+      <span><span>🔥</span> Promoção do Dia</span>
+      <button class="ep-btn-add" onclick="openPromoDiaModal()">+ Nova Promo</button>
+    </div>
+    <p style="font-size:13px;color:var(--gray-400);margin-bottom:16px">Ofertas relâmpago com validade. Aparecem em destaque no app.</p>
+    <div class="items-list" id="promo-dia-list"><div class="list-empty">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ══════ CUPONS ══════ -->
+<div id="panel-cupons" class="ep-panel">
+  <div class="ep-card">
+    <div class="ep-card-title" style="justify-content:space-between">
+      <span><span>🎟️</span> Cupons de Desconto</span>
+      <button class="ep-btn-add" onclick="openCupomModal()">+ Novo Cupom</button>
+    </div>
+    <div class="items-list" id="cupons-list"><div class="list-empty">Carregando...</div></div>
+  </div>
+</div>
+
+<!-- ══════ MODAL CATÁLOGO ══════ -->
+<div id="modal-catalogo-overlay" class="ep-modal-overlay hidden" onclick="closeCatalogoModal(event)">
+  <div class="ep-modal">
+    <div class="ep-modal-header">
+      <span class="ep-modal-title" id="catalogo-modal-title">Novo Item do Catálogo</span>
+      <button class="ep-modal-close" onclick="closeCatalogoModal()">✕</button>
+    </div>
+    <p style="font-size:12px;background:#DBEAFE;color:#1D4ED8;padding:8px 12px;border-radius:8px;margin-bottom:12px">
+      📲 Este item aparecerá no portal quando alguém abrir sua empresa.
+    </p>
+    <input type="hidden" id="catalogo-id">
+    <div class="ep-field"><label>Nome *</label><input type="text" id="catalogo-nome" placeholder="Ex: Pizza Margherita, Corte de Cabelo, Camiseta..."></div>
+    <div class="ep-field"><label>Tipo</label>
+      <select id="catalogo-tipo">
+        <option value="prato">🍽️ Prato / Alimento</option>
+        <option value="produto">🛍️ Produto</option>
+        <option value="servico">⚙️ Serviço</option>
+        <option value="outro">📦 Outro</option>
+      </select>
+    </div>
+    <div class="ep-field"><label>Descrição</label><textarea id="catalogo-descricao" rows="2" placeholder="Ingredientes, detalhes, observações..."></textarea></div>
+    <div class="ep-row">
+      <div class="ep-field"><label>Preço (R$)</label><input type="number" id="catalogo-valor" step="0.01" min="0" placeholder="0,00"></div>
+      <div class="ep-field"><label>Status</label>
+        <select id="catalogo-status"><option value="disponivel">✅ Disponível</option><option value="indisponivel">❌ Indisponível</option></select>
+      </div>
+    </div>
+    <div class="ep-field">
+      <label>Foto</label>
+      <div class="ep-photo-upload-area" onclick="document.getElementById('catalogo-foto-input').click()">
+        <span id="catalogo-foto-placeholder">📷 Clique para adicionar foto</span>
+        <img id="catalogo-foto-preview" style="display:none;max-height:120px;margin:0 auto;border-radius:8px">
+      </div>
+      <input type="file" id="catalogo-foto-input" accept="image/*" class="hidden" onchange="handleCatalogoFoto(this)">
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn-cancel" onclick="closeCatalogoModal()">Cancelar</button>
+      <button class="ep-btn-save" onclick="saveCatalogo()">💾 Salvar e Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL VAGA ══════ -->
+<div id="modal-vaga-overlay" class="ep-modal-overlay hidden" onclick="closeVagaModal(event)">
+  <div class="ep-modal">
+    <div class="ep-modal-header">
+      <span class="ep-modal-title" id="vaga-modal-title">Nova Vaga</span>
+      <button class="ep-modal-close" onclick="closeVagaModal()">✕</button>
+    </div>
+    <input type="hidden" id="vaga-id">
+    <div class="ep-field"><label>Cargo / Função *</label><input type="text" id="vaga-cargo" placeholder="Ex: Atendente, Cozinheiro, Vendedor..."></div>
+    <div class="ep-row">
+      <div class="ep-field"><label>Regime</label>
+        <select id="vaga-regime">
+          <option value="CLT">CLT</option>
+          <option value="PJ">PJ</option>
+          <option value="Temporário">Temporário</option>
+          <option value="Freelancer">Freelancer</option>
+          <option value="Estágio">Estágio</option>
+        </select>
+      </div>
+      <div class="ep-field"><label>Salário</label><input type="text" id="vaga-salario" placeholder="Ex: R$ 1.500 ou A combinar"></div>
+    </div>
+    <div class="ep-field"><label>Descrição *</label><textarea id="vaga-descricao" rows="3" placeholder="Requisitos, horário, benefícios..."></textarea></div>
+    <div class="ep-field"><label>WhatsApp para candidatura *</label><input type="tel" id="vaga-whatsapp" placeholder="(75) 99999-0000"></div>
+    <div class="ep-field"><label>Status</label>
+      <select id="vaga-status"><option value="ativa">🟢 Aberta</option><option value="encerrada">🔴 Encerrada</option></select>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn-cancel" onclick="closeVagaModal()">Cancelar</button>
+      <button class="ep-btn-save" onclick="saveVaga()">💾 Publicar Vaga</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL PROMO DO DIA ══════ -->
+<div id="modal-promo-dia-overlay" class="ep-modal-overlay hidden" onclick="closePromoDiaModal(event)">
+  <div class="ep-modal">
+    <div class="ep-modal-header">
+      <span class="ep-modal-title" id="promo-dia-modal-title">Nova Promoção do Dia</span>
+      <button class="ep-modal-close" onclick="closePromoDiaModal()">✕</button>
+    </div>
+    <input type="hidden" id="promo-dia-id">
+    <div class="ep-field"><label>Título da Promoção *</label><input type="text" id="promo-dia-titulo" placeholder="Ex: Frango grelhado com arroz — 50% OFF"></div>
+    <div class="ep-field"><label>Descrição</label><textarea id="promo-dia-descricao" rows="2" placeholder="Detalhes da promoção..."></textarea></div>
+    <div class="ep-row">
+      <div class="ep-field"><label>Preço Original (R$)</label><input type="number" id="promo-dia-valor-original" step="0.01" min="0" placeholder="0,00"></div>
+      <div class="ep-field"><label>Preço Promo (R$)</label><input type="number" id="promo-dia-valor-promo" step="0.01" min="0" placeholder="0,00"></div>
+    </div>
+    <div class="ep-field"><label>Válida até</label><input type="datetime-local" id="promo-dia-validade"></div>
+    <div class="ep-field">
+      <label>Foto</label>
+      <div class="ep-photo-upload-area" onclick="document.getElementById('promo-dia-foto-input').click()">
+        <span id="promo-dia-foto-placeholder">📷 Clique para adicionar foto</span>
+        <img id="promo-dia-foto-preview" style="display:none;max-height:120px;margin:0 auto;border-radius:8px">
+      </div>
+      <input type="file" id="promo-dia-foto-input" accept="image/*" class="hidden" onchange="handlePromoDiaFoto(this)">
+    </div>
+    <div class="ep-field"><label>Status</label>
+      <select id="promo-dia-status"><option value="ativa">🟢 Ativa</option><option value="inativa">🔴 Inativa</option></select>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn-cancel" onclick="closePromoDiaModal()">Cancelar</button>
+      <button class="ep-btn-save" onclick="savePromoDia()">🔥 Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MODAL CUPOM ══════ -->
+<div id="modal-cupom-overlay" class="ep-modal-overlay hidden" onclick="closeCupomModal(event)">
+  <div class="ep-modal">
+    <div class="ep-modal-header">
+      <span class="ep-modal-title" id="cupom-modal-title">Novo Cupom</span>
+      <button class="ep-modal-close" onclick="closeCupomModal()">✕</button>
+    </div>
+    <input type="hidden" id="cupom-id">
+    <div class="ep-field"><label>Código do Cupom *</label><input type="text" id="cupom-codigo" placeholder="Ex: PROMO10 ou DESCONTO20" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+    <div class="ep-row">
+      <div class="ep-field"><label>Desconto</label><input type="number" id="cupom-desconto" step="1" min="1" max="100" placeholder="Ex: 10"></div>
+      <div class="ep-field"><label>Tipo</label>
+        <select id="cupom-tipo"><option value="percentual">% Percentual</option><option value="fixo">R$ Valor fixo</option></select>
+      </div>
+    </div>
+    <div class="ep-field"><label>Descrição / Condição</label><input type="text" id="cupom-descricao" placeholder="Ex: Válido para pedidos acima de R$ 30"></div>
+    <div class="ep-field"><label>Usos máximos</label><input type="number" id="cupom-max-usos" placeholder="Deixe em branco para ilimitado" min="1"></div>
+    <div class="ep-field"><label>Válido até</label><input type="date" id="cupom-validade"></div>
+    <div class="ep-field"><label>Status</label>
+      <select id="cupom-status"><option value="ativo">🟢 Ativo</option><option value="inativo">🔴 Inativo</option></select>
+    </div>
+    <div class="ep-modal-actions">
+      <button class="ep-btn-cancel" onclick="closeCupomModal()">Cancelar</button>
+      <button class="ep-btn-save" onclick="saveCupom()">🎟️ Criar Cupom</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════ EXTRA FIREBASE LOGIC ══════ -->
 <script type="module">
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1659,16 +1896,9 @@ import {
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-// Re-use already-initialized app
-const firebaseConfig = {
-  apiKey: "AIzaSyDbMlnT8pO0_JECJsGrQn2CNfcsKA6uyGQ",
-  authDomain: "cidade-9528a.firebaseapp.com",
-  projectId: "cidade-9528a",
-  storageBucket: "cidade-9528a.firebasestorage.app",
-  messagingSenderId: "475692348722",
-  appId: "1:475692348722:web:f03639854c7243e917932b"
-};
-const app2 = getApps().length > 1 ? getApps()[1] : initializeApp(firebaseConfig, 'empresa-modules');
+
+// Reutiliza o app já inicializado no primeiro script — firebaseConfig não é acessível entre módulos ES
+const app2 = getApps()[0];
 const db2 = getFirestore(app2);
 const auth2 = getAuth(app2);
 const storage2 = getStorage(app2);
@@ -1790,15 +2020,19 @@ async function loadProdutos() {
   try {
     const snap = await getDocs(query(
       collection(db2, 'produtos'),
-      where('empresaId', '==', modCompanyId),
-      orderBy('createdAt', 'desc')
+      where('empresaId', '==', modCompanyId)
     ));
     const list = document.getElementById('produtos-list');
     if (snap.empty) {
       list.innerHTML = '<div class="list-empty"><div style="font-size:36px">🛍️</div><p>Nenhum produto cadastrado</p><p style="font-size:12px;margin-top:4px;color:var(--gray-400)">Clique em "+ Novo Produto" para começar</p></div>';
       return;
     }
-    list.innerHTML = snap.docs.map(d => {
+    const prodDocs = [...snap.docs].sort((a,b) => {
+      const ta = a.data().createdAt?.seconds || 0;
+      const tb = b.data().createdAt?.seconds || 0;
+      return tb - ta;
+    });
+    list.innerHTML = prodDocs.map(d => {
       const p = d.data();
       const badge = p.status === 'disponivel' ? 'badge-disponivel' : 'badge-indisponivel';
       const badgeTxt = p.status === 'disponivel' ? 'Disponível' : 'Indisponível';
@@ -1821,7 +2055,7 @@ async function loadProdutos() {
     }).join('');
     // store data for edit
     window._produtosData = {};
-    snap.docs.forEach(d => window._produtosData[d.id] = d.data());
+    prodDocs.forEach(d => window._produtosData[d.id] = d.data());
   } catch(e) { console.error(e); }
 }
 
@@ -1938,8 +2172,7 @@ async function loadPromocoes() {
   try {
     const snap = await getDocs(query(
       collection(db2, 'promocoes'),
-      where('empresaId', '==', modCompanyId),
-      orderBy('createdAt', 'desc')
+      where('empresaId', '==', modCompanyId)
     ));
     const list = document.getElementById('promocoes-list');
     if (snap.empty) {
@@ -1947,8 +2180,13 @@ async function loadPromocoes() {
       return;
     }
     window._promocoesData = {};
-    snap.docs.forEach(d => window._promocoesData[d.id] = d.data());
-    list.innerHTML = snap.docs.map(d => {
+    const promDocs = [...snap.docs].sort((a,b) => {
+      const ta = a.data().createdAt?.seconds || 0;
+      const tb = b.data().createdAt?.seconds || 0;
+      return tb - ta;
+    });
+    promDocs.forEach(d => window._promocoesData[d.id] = d.data());
+    list.innerHTML = promDocs.map(d => {
       const p = d.data();
       const badge = p.status === 'ativa' ? 'badge-ativo' : 'badge-inativo';
       const badgeTxt = p.status === 'ativa' ? 'Ativa' : 'Inativa';
@@ -2119,8 +2357,7 @@ async function loadClassificados() {
   try {
     const snap = await getDocs(query(
       collection(db2, 'classificados'),
-      where('empresaId', '==', modCompanyId),
-      orderBy('createdAt', 'desc')
+      where('empresaId', '==', modCompanyId)
     ));
     const list = document.getElementById('classificados-list');
     if (snap.empty) {
@@ -2128,8 +2365,13 @@ async function loadClassificados() {
       return;
     }
     window._classificadosData = {};
-    snap.docs.forEach(d => window._classificadosData[d.id] = d.data());
-    list.innerHTML = snap.docs.map(d => {
+    const classDocs = [...snap.docs].sort((a,b) => {
+      const ta = a.data().createdAt?.seconds || 0;
+      const tb = b.data().createdAt?.seconds || 0;
+      return tb - ta;
+    });
+    classDocs.forEach(d => window._classificadosData[d.id] = d.data());
+    list.innerHTML = classDocs.map(d => {
       const c = d.data();
       const badge = c.status === 'ativo' ? 'badge-ativo' : 'badge-inativo';
       const foto = c.fotos?.[0] ? `<img src="${c.fotos[0]}" alt="">` : '📌';
@@ -2185,6 +2427,475 @@ window.deleteClassificado = async function(id) {
 window._loadProdutos = loadProdutos;
 window._loadPromocoes = loadPromocoes;
 window._loadClassificados = loadClassificados;
+
+/* ══════════════════════════════════
+   CATÁLOGO
+══════════════════════════════════ */
+let _pendingCatalogoFoto = null;
+let _editingCatalogoId = null;
+let _catalogoData = {};
+
+window.openCatalogoModal = function(id) {
+  _editingCatalogoId = id || null;
+  _pendingCatalogoFoto = null;
+  document.getElementById('catalogo-id').value = id || '';
+  document.getElementById('catalogo-modal-title').textContent = id ? 'Editar Item' : 'Novo Item';
+  if (!id) {
+    ['catalogo-nome','catalogo-descricao','catalogo-valor'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('catalogo-tipo').value = 'produto';
+    document.getElementById('catalogo-status').value = 'disponivel';
+    document.getElementById('catalogo-foto-preview').style.display = 'none';
+    document.getElementById('catalogo-foto-placeholder').style.display = '';
+  }
+  document.getElementById('modal-catalogo-overlay').classList.remove('hidden');
+};
+window.closeCatalogoModal = function(e) {
+  if (e && e.target !== document.getElementById('modal-catalogo-overlay')) return;
+  document.getElementById('modal-catalogo-overlay').classList.add('hidden');
+};
+window.handleCatalogoFoto = function(input) {
+  const file = input.files[0]; if (!file) return;
+  if (file.size > 3*1024*1024) { showToast('Foto maior que 3MB','error'); return; }
+  _pendingCatalogoFoto = file;
+  const url = URL.createObjectURL(file);
+  const img = document.getElementById('catalogo-foto-preview');
+  img.src = url; img.style.display = 'block';
+  document.getElementById('catalogo-foto-placeholder').style.display = 'none';
+};
+window.saveCatalogo = async function() {
+  const nome = document.getElementById('catalogo-nome').value.trim();
+  if (!nome) { showToast('Informe o nome do item','error'); return; }
+  const btn = document.querySelector('#modal-catalogo-overlay .ep-btn-save');
+  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+  try {
+    let fotoUrl = _editingCatalogoId ? (_catalogoData[_editingCatalogoId]?.foto || '') : '';
+    if (_pendingCatalogoFoto) {
+      const pRef = ref(storage2, `empresas/${modCompanyId}/catalogo/${Date.now()}_${_pendingCatalogoFoto.name}`);
+      const snap = await uploadBytes(pRef, _pendingCatalogoFoto);
+      fotoUrl = await getDownloadURL(snap.ref);
+    }
+    const valorNum = parseFloat(document.getElementById('catalogo-valor').value) || 0;
+    const data = {
+      nome, fotoUrl,
+      tipo: document.getElementById('catalogo-tipo').value,
+      descricao: document.getElementById('catalogo-descricao').value.trim(),
+      valor: valorNum,
+      preco: valorNum,   // alias usado pelo index.html
+      price: valorNum,   // alias em inglês
+      status: document.getElementById('catalogo-status').value,
+      empresaId: modCompanyId,
+      empresaNome: window._companyName || '',
+      ownerUid: modUid,
+      updatedAt: serverTimestamp(),
+    };
+    if (_editingCatalogoId) {
+      await updateDoc(doc(db2,'catalogo',_editingCatalogoId), data);
+      showToast('Item atualizado! ✅','success');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db2,'catalogo'), data);
+      showToast('Item adicionado! ✅','success');
+    }
+    document.getElementById('modal-catalogo-overlay').classList.add('hidden');
+    loadCatalogo();
+  } catch(e) { console.error(e); showToast('Erro ao salvar','error'); }
+  btn.disabled = false; btn.textContent = '💾 Salvar';
+};
+async function loadCatalogo() {
+  if (!modCompanyId) return;
+  try {
+    const snap = await getDocs(query(collection(db2,'catalogo'), where('empresaId','==',modCompanyId)));
+    const list = document.getElementById('catalogo-list');
+    if (snap.empty) { list.innerHTML = '<div class="list-empty"><div style="font-size:36px">📋</div><p>Nenhum item no catálogo</p></div>'; return; }
+    _catalogoData = {};
+    snap.docs.forEach(d => _catalogoData[d.id] = d.data());
+    const tipoLabel = {produto:'🛍️ Produto',prato:'🍽️ Prato',servico:'⚙️ Serviço',outro:'📦 Outro'};
+    list.innerHTML = snap.docs.map(d => {
+      const c = d.data();
+      const badge = c.status === 'disponivel' ? 'badge-ativo' : 'badge-inativo';
+      const badgeTxt = c.status === 'disponivel' ? 'Disponível' : 'Indisponível';
+      const foto = c.fotoUrl ? `<img src="${c.fotoUrl}" alt="">` : '📋';
+      return `<div class="item-card">
+        <div class="item-thumb">${foto}</div>
+        <div class="item-info">
+          <div class="item-name">${c.nome}</div>
+          <div class="item-desc">${tipoLabel[c.tipo]||c.tipo} ${c.descricao ? '· ' + c.descricao.slice(0,40) : ''}</div>
+          <div class="item-meta">
+            <span class="item-price">R$ ${parseFloat(c.valor||0).toFixed(2).replace('.',',')}</span>
+            <span class="item-badge ${badge}">${badgeTxt}</span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="item-btn item-btn-edit" onclick="editCatalogo('${d.id}')">✏️</button>
+          <button class="item-btn item-btn-del" onclick="deleteCatalogo('${d.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+window.editCatalogo = function(id) {
+  const c = _catalogoData[id]; if (!c) return;
+  openCatalogoModal(id);
+  document.getElementById('catalogo-nome').value = c.nome || '';
+  document.getElementById('catalogo-descricao').value = c.descricao || '';
+  document.getElementById('catalogo-valor').value = c.valor || '';
+  document.getElementById('catalogo-tipo').value = c.tipo || 'produto';
+  document.getElementById('catalogo-status').value = c.status || 'disponivel';
+  if (c.fotoUrl) {
+    document.getElementById('catalogo-foto-placeholder').style.display = 'none';
+    const img = document.getElementById('catalogo-foto-preview');
+    img.src = c.fotoUrl; img.style.display = 'block';
+  }
+};
+window.deleteCatalogo = async function(id) {
+  if (!confirm('Remover este item do catálogo?')) return;
+  try { await deleteDoc(doc(db2,'catalogo',id)); showToast('Item removido','info'); loadCatalogo(); }
+  catch(e) { showToast('Erro ao remover','error'); }
+};
+
+/* ══════════════════════════════════
+   VAGAS
+══════════════════════════════════ */
+let _editingVagaId = null;
+let _vagasData = {};
+
+window.openVagaModal = function(id) {
+  _editingVagaId = id || null;
+  document.getElementById('vaga-id').value = id || '';
+  document.getElementById('vaga-modal-title').textContent = id ? 'Editar Vaga' : 'Nova Vaga';
+  if (!id) {
+    ['vaga-cargo','vaga-salario','vaga-descricao','vaga-whatsapp'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('vaga-regime').value = 'CLT';
+    document.getElementById('vaga-status').value = 'ativa';
+  }
+  document.getElementById('modal-vaga-overlay').classList.remove('hidden');
+};
+window.closeVagaModal = function(e) {
+  if (e && e.target !== document.getElementById('modal-vaga-overlay')) return;
+  document.getElementById('modal-vaga-overlay').classList.add('hidden');
+};
+window.saveVaga = async function() {
+  const cargo = document.getElementById('vaga-cargo').value.trim();
+  const descricao = document.getElementById('vaga-descricao').value.trim();
+  const whatsapp = document.getElementById('vaga-whatsapp').value.trim();
+  if (!cargo || !descricao) { showToast('Preencha cargo e descrição','error'); return; }
+  if (!whatsapp) { showToast('Informe o WhatsApp para candidatura','error'); return; }
+  const btn = document.querySelector('#modal-vaga-overlay .ep-btn-save');
+  btn.disabled = true; btn.textContent = '⏳ Publicando...';
+  try {
+    const data = {
+      cargo, descricao, whatsapp,
+      regime: document.getElementById('vaga-regime').value,
+      salario: document.getElementById('vaga-salario').value.trim(),
+      status: document.getElementById('vaga-status').value,
+      empresaId: modCompanyId,
+      companyName: window._companyName || '',
+      ownerUid: modUid,
+      updatedAt: serverTimestamp(),
+    };
+    if (_editingVagaId) {
+      await updateDoc(doc(db2,'vagas',_editingVagaId), data);
+      showToast('Vaga atualizada! ✅','success');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db2,'vagas'), data);
+      showToast('Vaga publicada! ✅','success');
+    }
+    document.getElementById('modal-vaga-overlay').classList.add('hidden');
+    loadVagas();
+  } catch(e) { console.error(e); showToast('Erro ao publicar vaga','error'); }
+  btn.disabled = false; btn.textContent = '💾 Publicar Vaga';
+};
+async function loadVagas() {
+  if (!modCompanyId) return;
+  try {
+    const snap = await getDocs(query(collection(db2,'vagas'), where('empresaId','==',modCompanyId)));
+    const list = document.getElementById('vagas-list');
+    if (snap.empty) { list.innerHTML = '<div class="list-empty"><div style="font-size:36px">💼</div><p>Nenhuma vaga publicada</p></div>'; return; }
+    _vagasData = {};
+    snap.docs.forEach(d => _vagasData[d.id] = d.data());
+    list.innerHTML = snap.docs.map(d => {
+      const v = d.data();
+      const badge = v.status === 'ativa' ? 'badge-ativo' : 'badge-inativo';
+      return `<div class="item-card">
+        <div class="item-thumb" style="font-size:28px;background:var(--blue-xlight)">💼</div>
+        <div class="item-info">
+          <div class="item-name">${v.cargo}</div>
+          <div class="item-desc">${v.regime} · ${v.salario||'A combinar'}</div>
+          <div class="item-desc" style="margin-top:2px;color:var(--gray-400)">${v.descricao?.slice(0,60)||''}${(v.descricao?.length||0)>60?'...':''}</div>
+          <div class="item-meta"><span class="item-badge ${badge}">${v.status==='ativa'?'Aberta':'Encerrada'}</span></div>
+        </div>
+        <div class="item-actions">
+          <button class="item-btn item-btn-edit" onclick="editVaga('${d.id}')">✏️</button>
+          <button class="item-btn item-btn-del" onclick="deleteVaga('${d.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+window.editVaga = function(id) {
+  const v = _vagasData[id]; if (!v) return;
+  openVagaModal(id);
+  document.getElementById('vaga-cargo').value = v.cargo || '';
+  document.getElementById('vaga-descricao').value = v.descricao || '';
+  document.getElementById('vaga-salario').value = v.salario || '';
+  document.getElementById('vaga-whatsapp').value = v.whatsapp || '';
+  document.getElementById('vaga-regime').value = v.regime || 'CLT';
+  document.getElementById('vaga-status').value = v.status || 'ativa';
+};
+window.deleteVaga = async function(id) {
+  if (!confirm('Excluir esta vaga?')) return;
+  try { await deleteDoc(doc(db2,'vagas',id)); showToast('Vaga excluída','info'); loadVagas(); }
+  catch(e) { showToast('Erro ao excluir','error'); }
+};
+
+/* ══════════════════════════════════
+   PROMOÇÃO DO DIA
+══════════════════════════════════ */
+let _pendingPromoDiaFoto = null;
+let _editingPromoDiaId = null;
+let _promoDiaData = {};
+
+window.openPromoDiaModal = function(id) {
+  _editingPromoDiaId = id || null;
+  _pendingPromoDiaFoto = null;
+  document.getElementById('promo-dia-id').value = id || '';
+  document.getElementById('promo-dia-modal-title').textContent = id ? 'Editar Promoção' : 'Nova Promoção do Dia';
+  if (!id) {
+    ['promo-dia-titulo','promo-dia-descricao','promo-dia-valor-original','promo-dia-valor-promo','promo-dia-validade'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('promo-dia-status').value = 'ativa';
+    document.getElementById('promo-dia-foto-preview').style.display = 'none';
+    document.getElementById('promo-dia-foto-placeholder').style.display = '';
+  }
+  document.getElementById('modal-promo-dia-overlay').classList.remove('hidden');
+};
+window.closePromoDiaModal = function(e) {
+  if (e && e.target !== document.getElementById('modal-promo-dia-overlay')) return;
+  document.getElementById('modal-promo-dia-overlay').classList.add('hidden');
+};
+window.handlePromoDiaFoto = function(input) {
+  const file = input.files[0]; if (!file) return;
+  if (file.size > 3*1024*1024) { showToast('Foto maior que 3MB','error'); return; }
+  _pendingPromoDiaFoto = file;
+  const url = URL.createObjectURL(file);
+  const img = document.getElementById('promo-dia-foto-preview');
+  img.src = url; img.style.display = 'block';
+  document.getElementById('promo-dia-foto-placeholder').style.display = 'none';
+};
+window.savePromoDia = async function() {
+  const titulo = document.getElementById('promo-dia-titulo').value.trim();
+  if (!titulo) { showToast('Informe o título da promoção','error'); return; }
+  const btn = document.querySelector('#modal-promo-dia-overlay .ep-btn-save');
+  btn.disabled = true; btn.textContent = '⏳ Publicando...';
+  try {
+    let fotoUrl = _editingPromoDiaId ? (_promoDiaData[_editingPromoDiaId]?.foto || '') : '';
+    if (_pendingPromoDiaFoto) {
+      const pRef = ref(storage2, `empresas/${modCompanyId}/promo-dia/${Date.now()}_${_pendingPromoDiaFoto.name}`);
+      const snap = await uploadBytes(pRef, _pendingPromoDiaFoto);
+      fotoUrl = await getDownloadURL(snap.ref);
+    }
+    const validadeRaw = document.getElementById('promo-dia-validade').value;
+    const data = {
+      titulo, fotoUrl,
+      descricao: document.getElementById('promo-dia-descricao').value.trim(),
+      valOriginal: parseFloat(document.getElementById('promo-dia-valor-original').value) || 0,
+      valPromo: parseFloat(document.getElementById('promo-dia-valor-promo').value) || 0,
+      validade: validadeRaw ? new Date(validadeRaw) : null,
+      status: document.getElementById('promo-dia-status').value,
+      empresaId: modCompanyId,
+      empresaNome: window._companyName || '',
+      ownerUid: modUid,
+      updatedAt: serverTimestamp(),
+    };
+    if (_editingPromoDiaId) {
+      await updateDoc(doc(db2,'promocoes',_editingPromoDiaId), data);
+      showToast('Promoção atualizada! ✅','success');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db2,'promocoes'), data);
+      showToast('Promoção publicada! 🔥','success');
+    }
+    document.getElementById('modal-promo-dia-overlay').classList.add('hidden');
+    loadPromoDia();
+  } catch(e) { console.error(e); showToast('Erro ao publicar','error'); }
+  btn.disabled = false; btn.textContent = '🔥 Publicar';
+};
+async function loadPromoDia() {
+  if (!modCompanyId) return;
+  try {
+    const snap = await getDocs(query(collection(db2,'promocoes'), where('empresaId','==',modCompanyId)));
+    const list = document.getElementById('promo-dia-list');
+    if (snap.empty) { list.innerHTML = '<div class="list-empty"><div style="font-size:36px">🔥</div><p>Nenhuma promoção publicada</p></div>'; return; }
+    _promoDiaData = {};
+    snap.docs.forEach(d => _promoDiaData[d.id] = d.data());
+    list.innerHTML = snap.docs.map(d => {
+      const p = d.data();
+      const badge = p.status === 'ativa' ? 'badge-ativo' : 'badge-inativo';
+      const valOrig = p.valOriginal || p.valorOriginal || 0;
+      const valPromo = p.valPromo || p.valorPromo || 0;
+      const disc = valOrig && valPromo ? Math.round(100-(valPromo/valOrig*100)) : 0;
+      const foto = p.fotoUrl || p.foto ? `<img src="${p.fotoUrl||p.foto}" alt="">` : '🔥';
+      const validade = p.validade?.toDate ? p.validade.toDate().toLocaleDateString('pt-BR') : '—';
+      return `<div class="item-card">
+        <div class="item-thumb">${foto}</div>
+        <div class="item-info">
+          <div class="item-name">${p.titulo}${disc>0?` <span style="background:#FEF3C7;color:#92400E;font-size:10px;padding:2px 6px;border-radius:999px;font-weight:700">-${disc}%</span>`:''}</div>
+          <div class="item-desc">${valPromo?`R$ ${parseFloat(valPromo).toFixed(2).replace('.',',')}`:''} ${valOrig?`<s style="color:var(--gray-400);font-size:11px">R$${valOrig}</s>`:''}</div>
+          <div class="item-meta">
+            <span style="font-size:11px;color:var(--gray-400)">Até ${validade}</span>
+            <span class="item-badge ${badge}">${p.status==='ativa'?'Ativa':'Inativa'}</span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="item-btn item-btn-edit" onclick="editPromoDia('${d.id}')">✏️</button>
+          <button class="item-btn item-btn-del" onclick="deletePromoDia('${d.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+window.editPromoDia = function(id) {
+  const p = _promoDiaData[id]; if (!p) return;
+  openPromoDiaModal(id);
+  document.getElementById('promo-dia-titulo').value = p.titulo || '';
+  document.getElementById('promo-dia-descricao').value = p.descricao || '';
+  document.getElementById('promo-dia-valor-original').value = p.valOriginal || p.valorOriginal || '';
+  document.getElementById('promo-dia-valor-promo').value = p.valPromo || p.valorPromo || '';
+  document.getElementById('promo-dia-status').value = p.status || 'ativa';
+  if (p.fotoUrl||p.foto) {
+    document.getElementById('promo-dia-foto-placeholder').style.display = 'none';
+    const img = document.getElementById('promo-dia-foto-preview');
+    img.src = p.fotoUrl||p.foto; img.style.display = 'block';
+  }
+};
+window.deletePromoDia = async function(id) {
+  if (!confirm('Excluir esta promoção?')) return;
+  try { await deleteDoc(doc(db2,'promocoes',id)); showToast('Promoção excluída','info'); loadPromoDia(); }
+  catch(e) { showToast('Erro ao excluir','error'); }
+};
+
+/* ══════════════════════════════════
+   CUPONS
+══════════════════════════════════ */
+let _editingCupomId = null;
+let _cuponsData = {};
+
+window.openCupomModal = function(id) {
+  _editingCupomId = id || null;
+  document.getElementById('cupom-id').value = id || '';
+  document.getElementById('cupom-modal-title').textContent = id ? 'Editar Cupom' : 'Novo Cupom';
+  if (!id) {
+    ['cupom-codigo','cupom-desconto','cupom-descricao','cupom-max-usos','cupom-validade'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('cupom-tipo').value = 'percentual';
+    document.getElementById('cupom-status').value = 'ativo';
+  }
+  document.getElementById('modal-cupom-overlay').classList.remove('hidden');
+};
+window.closeCupomModal = function(e) {
+  if (e && e.target !== document.getElementById('modal-cupom-overlay')) return;
+  document.getElementById('modal-cupom-overlay').classList.add('hidden');
+};
+window.saveCupom = async function() {
+  const codigo = document.getElementById('cupom-codigo').value.trim().toUpperCase();
+  const desconto = parseFloat(document.getElementById('cupom-desconto').value);
+  if (!codigo) { showToast('Informe o código do cupom','error'); return; }
+  if (!desconto || desconto <= 0) { showToast('Informe um desconto válido','error'); return; }
+  const btn = document.querySelector('#modal-cupom-overlay .ep-btn-save');
+  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+  try {
+    const validadeRaw = document.getElementById('cupom-validade').value;
+    const maxUsos = parseInt(document.getElementById('cupom-max-usos').value) || null;
+    const data = {
+      codigo, desconto,
+      tipo: document.getElementById('cupom-tipo').value,
+      descricao: document.getElementById('cupom-descricao').value.trim(),
+      maxUsos,
+      usosAtivos: _editingCupomId ? (_cuponsData[_editingCupomId]?.usosAtivos || 0) : 0,
+      validade: validadeRaw ? new Date(validadeRaw) : null,
+      status: document.getElementById('cupom-status').value,
+      empresaId: modCompanyId,
+      empresaNome: window._companyName || '',
+      ownerUid: modUid,
+      updatedAt: serverTimestamp(),
+    };
+    if (_editingCupomId) {
+      await updateDoc(doc(db2,'cupons',_editingCupomId), data);
+      showToast('Cupom atualizado! ✅','success');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(collection(db2,'cupons'), data);
+      showToast('Cupom criado! 🎟️','success');
+    }
+    document.getElementById('modal-cupom-overlay').classList.add('hidden');
+    loadCupons();
+  } catch(e) { console.error(e); showToast('Erro ao salvar cupom','error'); }
+  btn.disabled = false; btn.textContent = '🎟️ Criar Cupom';
+};
+async function loadCupons() {
+  if (!modCompanyId) return;
+  try {
+    const snap = await getDocs(query(collection(db2,'cupons'), where('empresaId','==',modCompanyId)));
+    const list = document.getElementById('cupons-list');
+    if (snap.empty) { list.innerHTML = '<div class="list-empty"><div style="font-size:36px">🎟️</div><p>Nenhum cupom criado</p></div>'; return; }
+    _cuponsData = {};
+    snap.docs.forEach(d => _cuponsData[d.id] = d.data());
+    list.innerHTML = snap.docs.map(d => {
+      const c = d.data();
+      const badge = c.status === 'ativo' ? 'badge-ativo' : 'badge-inativo';
+      const validade = c.validade?.toDate ? c.validade.toDate().toLocaleDateString('pt-BR') : 'Sem validade';
+      const descontoTxt = c.tipo === 'percentual' ? `${c.desconto}% OFF` : `R$ ${parseFloat(c.desconto).toFixed(2)} OFF`;
+      const usos = c.maxUsos ? `${c.usosAtivos||0}/${c.maxUsos} usos` : `${c.usosAtivos||0} usos`;
+      return `<div class="item-card">
+        <div class="item-thumb" style="background:var(--blue-xlight);font-size:24px;letter-spacing:-1px;font-weight:800;color:var(--blue);font-family:'Fraunces',serif;font-size:11px;padding:4px">${c.codigo}</div>
+        <div class="item-info">
+          <div class="item-name" style="font-family:'Fraunces',serif">${descontoTxt}</div>
+          <div class="item-desc">${c.descricao||'Sem condição especificada'}</div>
+          <div class="item-meta">
+            <span style="font-size:11px;color:var(--gray-400)">📅 ${validade} · ${usos}</span>
+            <span class="item-badge ${badge}">${c.status==='ativo'?'Ativo':'Inativo'}</span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="item-btn item-btn-edit" onclick="editCupom('${d.id}')">✏️</button>
+          <button class="item-btn item-btn-del" onclick="deleteCupom('${d.id}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+window.editCupom = function(id) {
+  const c = _cuponsData[id]; if (!c) return;
+  openCupomModal(id);
+  document.getElementById('cupom-codigo').value = c.codigo || '';
+  document.getElementById('cupom-desconto').value = c.desconto || '';
+  document.getElementById('cupom-descricao').value = c.descricao || '';
+  document.getElementById('cupom-max-usos').value = c.maxUsos || '';
+  document.getElementById('cupom-tipo').value = c.tipo || 'percentual';
+  document.getElementById('cupom-status').value = c.status || 'ativo';
+  if (c.validade?.toDate) {
+    const d = c.validade.toDate();
+    document.getElementById('cupom-validade').value = d.toISOString().split('T')[0];
+  }
+};
+window.deleteCupom = async function(id) {
+  if (!confirm('Excluir este cupom?')) return;
+  try { await deleteDoc(doc(db2,'cupons',id)); showToast('Cupom excluído','info'); loadCupons(); }
+  catch(e) { showToast('Erro ao excluir','error'); }
+};
+
+/* expose new loaders */
+window._loadCatalogo = loadCatalogo;
+window._loadVagas = loadVagas;
+window._loadPromocaoDia = loadPromoDia;
+window._loadCupons = loadCupons;
+
+// Also load on auth ready
+const _origWait = setInterval(() => {
+  if (window._companyId && !window.__newModulesLoaded) {
+    window.__newModulesLoaded = true;
+    clearInterval(_origWait);
+  }
+}, 300);
 </script>
 
 </body>

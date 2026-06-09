@@ -45,54 +45,24 @@
       onSnapshot, query, where, orderBy, limit, setDoc, increment, serverTimestamp, ref,
       uploadBytes, getDownloadURL, deleteObject
     };
-window.addEventListener('load', () => {
 
-  const { auth, onAuthStateChanged, doc, getDoc } = window._fb;
-
-  onAuthStateChanged(auth, async (user) => {
-
-    if (!user) {
-      if (window.showLogin) window.showLogin();
-      return;
-    }
-
-    try {
-
-      const snap = await getDoc(
-        doc(window._fb.db, 'admins', user.uid)
-      );
-
-      if (!snap.exists()) {
-        await window._fb.signOut(auth);
-        if (window.showLogin) {
-          window.showLogin('Acesso negado.');
+    // Auth state observer
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Check if admin
+        const snap = await getDoc(doc(db, 'admins', user.uid));
+        if (snap.exists()) {
+          window._currentUser = { ...user, role: 'admin', data: snap.data() };
+          showPanel();
+        } else {
+          await signOut(auth);
+          showLogin('Acesso negado. Você não é administrador.');
         }
-        return;
+      } else {
+        window._currentUser = null;
+        showLogin();
       }
-
-      window._currentUser = {
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        role: 'admin'
-      };
-
-      if (window.showPanel) {
-        window.showPanel();
-      }
-
-    } catch (err) {
-      console.error(err);
-    }
-
-  });
-
-});
-setTimeout(() => {
-  if (typeof window.showPanel === 'function') {
-    window.showPanel();
-  }
-}, 300);
+    });
   </script>
 </head>
 <body>
@@ -106,7 +76,7 @@ setTimeout(() => {
   </div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-icon"><img src="logo.png" alt="Antas Digital" width="100%"></div>
+      <div class="logo-icon"><img src="logo-antas.png" alt="" width="100%"></div>
       <div>
         <h1>Antas Digital</h1>
         <span>Painel Administrativo</span>
@@ -903,7 +873,7 @@ setTimeout(() => {
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
-
+<script src="admin.js"></script>
 <!-- AVISO DE NOTIFICAÇÕES -->
 <div id="cookie-notif" style="position:fixed;bottom:90px;left:16px;right:16px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.25);z-index:999999;display:none;">
   <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
@@ -922,7 +892,7 @@ setTimeout(() => {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="admin.js"></script>
+
 </body>
 </html>
 </body>

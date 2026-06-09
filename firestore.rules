@@ -1,0 +1,160 @@
+rules_version = '2';
+// ═══════════════════════════════════════════════════════════
+//  ANTAS DIGITAL — Firestore Security Rules
+//  Versão 2 — Produtos, Promoções, Classificados, IA, Firebase
+// ═══════════════════════════════════════════════════════════
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── HELPERS ───
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuth() &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Checks that the empresa (empresaId) belongs to the caller
+    function isCompanyOwner(empresaId) {
+      return isAuth() &&
+        get(/databases/$(database)/documents/empresas/$(empresaId)).data.ownerUid == request.auth.uid;
+    }
+
+    function isOwnerField() {
+      return isAuth() && request.resource.data.ownerUid == request.auth.uid;
+    }
+
+    function isDocOwner() {
+      return isAuth() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ─── EMPRESAS ───
+    match /empresas/{id} {
+      allow read: if true;  // público
+      allow create: if isAdmin();
+      allow update: if isAdmin() || (isAuth() && resource.data.ownerUid == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // ─── SOLICITAÇÕES EMPRESA ───
+    match /solicitacoes_empresas/{id} {
+      allow read: if isAdmin() || (isAuth() && resource.data.usuarioId == request.auth.uid);
+      allow create: if isAuth();
+      allow update, delete: if isAdmin();
+    }
+
+    // ─── PRODUTOS ───
+    // Empresa gerencia apenas seus próprios produtos (ownerUid ou empresaId)
+    match /produtos/{id} {
+      allow read: if true;
+      allow create: if isAuth() && isOwnerField();
+      allow update, delete: if isAdmin() || isDocOwner();
+    }
+
+    // ─── PROMOÇÕES ───
+    match /promocoes/{id} {
+      allow read: if true;
+      allow create: if isAuth() && isOwnerField();
+      allow update: if isAdmin() || isDocOwner();
+      allow delete: if isAdmin() || isDocOwner();
+    }
+
+    // ─── CLASSIFICADOS ───
+    match /classificados/{id} {
+      allow read: if true;
+      allow create: if isAuth() && isOwnerField();
+      allow update, delete: if isAdmin() || isDocOwner();
+    }
+
+    // ─── VAGAS ───
+    match /vagas/{id} {
+      allow read: if true;
+      allow create: if isAuth() && isOwnerField();
+      allow update, delete: if isAdmin() || isDocOwner();
+    }
+
+    // ─── NOTÍCIAS ───
+    match /noticias/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── EVENTOS ───
+    match /eventos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── UTILIDADES PÚBLICAS ───
+    match /utilidades/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── CATEGORIAS ───
+    match /categorias/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── CUPONS ───
+    match /cupons/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── PATROCINADOS ───
+    match /patrocinados/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ─── RATINGS / AVALIAÇÕES ───
+    match /ratings/{id} {
+      allow read: if true;
+      allow create: if isAuth() && isOwnerField();
+      allow update: if isAuth() && isDocOwner();
+      allow delete: if isAdmin();
+    }
+
+    // ─── FAVORITOS ───
+    match /favoritos/{id} {
+      allow read: if isAuth();
+      allow create: if isAuth() && isOwnerField();
+      allow delete: if isAuth() && isDocOwner();
+    }
+
+    // ─── USUÁRIOS ───
+    match /usuarios/{id} {
+      allow read: if isAdmin() || (isAuth() && request.auth.uid == id);
+      allow write: if isAuth() && request.auth.uid == id;
+    }
+
+    // ─── ADMINS (lista de UIDs admin) ───
+    match /admins/{id} {
+      allow read: if isAuth();
+      allow write: if isAdmin();  // somente admin pode promover outros
+    }
+
+    // ─── CONFIGURAÇÕES ───
+    // configuracoes/geral — leitura pública, escrita apenas admin
+    match /configuracoes/geral {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // configuracoes/ia — RESTRITO: apenas admin lê e escreve
+    // A API Key da Groq só fica no Firestore, nunca exposta no frontend público
+    match /configuracoes/ia {
+      allow read, write: if isAdmin();
+    }
+
+    // configuracoes/firebase — RESTRITO: apenas admin
+    match /configuracoes/firebase {
+      allow read, write: if isAdmin();
+    }
+
+  }
+}

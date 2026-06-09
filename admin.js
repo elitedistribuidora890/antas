@@ -5,7 +5,6 @@
 'use strict';
 
 // ─── HELPERS ───────────────────────────────────
-
 const fb = () => window._fb;
 const db = () => window._fb.db;
 
@@ -51,48 +50,16 @@ window.showLogin = function(err) {
     el.textContent = err; el.classList.remove('hidden');
   }
 };
-window.navTo = function(page) {
-  document.querySelectorAll('.page').forEach(p =>
-    p.classList.remove('active')
-  );
 
-  const pageEl = document.getElementById('page-' + page);
-  if (pageEl) pageEl.classList.add('active');
-
-  document.querySelectorAll('.nav-item').forEach(n => {
-    n.classList.toggle('active', n.dataset.page === page);
-  });
-
-  const breadcrumb = document.getElementById('breadcrumb');
-  if (breadcrumb) {
-    breadcrumb.textContent = PAGE_LABELS?.[page] || page;
-  }
-
-  // CHAMA O FIREBASE
-  if (window.PAGE_LOADERS && window.PAGE_LOADERS[page]) {
-    window.PAGE_LOADERS[page]();
-  }
-
-  console.log('Página aberta:', page);
-};
 window.showPanel = function() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('admin-panel').classList.remove('hidden');
 
-  const u = window._currentUser;
-  if (u) {
-    document.getElementById('sidebar-name').textContent =
-      u.displayName || u.email?.split('@')[0] || 'Admin';
-
-    document.getElementById('sidebar-avatar').textContent =
-      (u.displayName || u.email || 'A')[0].toUpperCase();
-  }
-
-  if (typeof window.navTo === 'function') {
-    window.navTo('dashboard');
-  } else {
-    console.error('Função navTo não carregou. Verifique erro acima no admin.js.');
-  }
+  setTimeout(() => {
+    if (typeof window.navTo === 'function') {
+      window.navTo('dashboard');
+    }
+  }, 100);
 
   startClock();
 };
@@ -137,14 +104,12 @@ document.getElementById('login-password')?.addEventListener('keydown', e => {
 });
 
 window.doLogout = async function() {
-  try {
-    await window._fb.signOut(window._fb.auth);
-  } catch (e) {
-    console.error('Erro ao sair:', e);
-    alert('Erro ao sair do painel.');
-  }
+  await fb().signOut(fb().auth);
 };
-
+window.loadPromocoesAdmin = () => {};
+window.loadClassificadosAdmin = () => {};
+window.loadIAConfig = () => {};
+window.loadFirebaseConfig = () => {};
 // ─── NAVIGATION ────────────────────────────────
 const PAGE_LABELS = {
   dashboard:'Dashboard', empresas:'Gerenciar Empresas', aprovacoes:'Aprovações Pendentes',
@@ -155,22 +120,32 @@ const PAGE_LABELS = {
   'config-ia':'Configurações da IA', 'config-firebase':'Configurações do Firebase'
 };
 window.PAGE_LOADERS = {
-  dashboard: () => loadDashboard(),
-  empresas: () => loadEmpresas(),
-  aprovacoes: () => loadAprovacoes(),
-  noticias: () => loadNoticias(),
-  eventos: () => loadEventos(),
-  utilidades: () => loadUtilidades(),
-  categorias: () => loadCategorias(),
-  cupons: () => loadCupons(),
-  patrocinados: () => loadPatrocinados(),
-  usuarios: () => loadUsuarios(),
-  configuracoes: () => loadConfiguracoes(),
+  dashboard: () => loadDashboard?.(),
+  empresas: () => loadEmpresas?.(),
+  aprovacoes: () => loadAprovacoes?.(),
+  noticias: () => loadNoticias?.(),
+  eventos: () => loadEventos?.(),
+  utilidades: () => loadUtilidades?.(),
+  categorias: () => loadCategorias?.(),
+  cupons: () => loadCupons?.(),
+  patrocinados: () => loadPatrocinados?.(),
+  usuarios: () => loadUsuarios?.(),
+  configuracoes: () => loadConfiguracoes?.(),
 
   'promocoes-admin': () => window.loadPromocoesAdmin?.(),
   'classificados-admin': () => window.loadClassificadosAdmin?.(),
   'config-ia': () => window.loadIAConfig?.(),
   'config-firebase': () => window.loadFirebaseConfig?.()
+};
+
+window.navTo = function(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.page === page);
+  });
+  document.getElementById('breadcrumb').textContent = PAGE_LABELS[page] || page;
+  if (PAGE_LOADERS[page]) PAGE_LOADERS[page]();
 };
 
 window.toggleSidebar = function() {
@@ -567,38 +542,15 @@ async function loadAprovacoes() {
 
 window.aprovarEmpresa = async function(solId) {
   const { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } = fb();
-
   try {
     const snap = await getDoc(doc(db(), 'solicitacoes_empresas', solId));
     if (!snap.exists()) return;
-
-    const s = snap.data();
-
-    const data = {
-      ...s,
-      status: 'ativa',
-
-      ownerUid: s.usuarioId || null,
-      usuarioId: s.usuarioId || null,
-
-      criadoEm: serverTimestamp(),
-      aprovadoEm: serverTimestamp()
-    };
-
+    const data = { ...snap.data(), status: 'ativa', criadoEm: serverTimestamp(), aprovadoEm: serverTimestamp() };
     await addDoc(collection(db(), 'empresas'), data);
-
-    await updateDoc(doc(db(), 'solicitacoes_empresas', solId), {
-      status: 'aprovada',
-      aprovadoEm: serverTimestamp()
-    });
-
-    toast('Empresa aprovada e painel liberado!', 'success');
+    await updateDoc(doc(db(), 'solicitacoes_empresas', solId), { status: 'aprovada' });
+    toast('Empresa aprovada e publicada!','success');
     loadAprovacoes();
-
-  } catch(e) {
-    console.error(e);
-    toast('Erro ao aprovar empresa.', 'error');
-  }
+  } catch(e) { console.error(e); toast('Erro ao aprovar.','error'); }
 };
 
 window.rejeitarEmpresa = async function(solId) {
@@ -767,6 +719,7 @@ window.deleteEvento = function(id) {
   });
 };
 
+// ══════════════════════════════════════════════════
 // UTILIDADES PÚBLICAS
 // ══════════════════════════════════════════════════
 let _utilidades = [];
@@ -1369,24 +1322,7 @@ window.loadFirebaseConfig = async function() {
     }
   } catch(e) { toast('Erro ao carregar config do Firebase', 'error'); }
 };
-window.saveFirebaseConfig = async function() {
-  const { doc, setDoc, serverTimestamp } = fb();
 
-  const data = {
-    apiKey: document.getElementById('fb-apiKey').value.trim(),
-    authDomain: document.getElementById('fb-authDomain').value.trim(),
-    projectId: document.getElementById('fb-projectId').value.trim(),
-    storageBucket: document.getElementById('fb-storageBucket').value.trim(),
-    messagingSenderId: document.getElementById('fb-messagingSenderId').value.trim(),
-    appId: document.getElementById('fb-appId').value.trim(),
-    measurementId: document.getElementById('fb-measurementId').value.trim(),
-    atualizadoEm: serverTimestamp()
-  };
-
-  await setDoc(doc(db(), 'configuracoes', 'firebase'), data, { merge: true });
-
-  toast('Configurações do Firebase salvas!', 'success');
-};
 window.saveFirebaseConfig = async function() {
   const { doc, setDoc, serverTimestamp } = fb();
   try {

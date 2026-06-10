@@ -829,39 +829,131 @@
     animateStats();
   }
 
+  function normalizePortalText(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function normalizeCompanyStatus(value) {
+    const s = normalizePortalText(value || 'ativa');
+    if (['ativa','ativo','active','aprovada','aprovado','approved'].includes(s)) return 'ativa';
+    if (['pendente','pending','em analise','em análise'].includes(s)) return 'pendente';
+    if (['inativa','inativo','inactive','rejeitada','rejeitado','bloqueada','bloqueado'].includes(s)) return 'inativa';
+    return s || 'ativa';
+  }
+
+  function normalizeCompanyCategory(value) {
+    const raw = String(value || '').trim();
+    const key = normalizePortalText(raw);
+
+    // Aceita categoria salva de vários jeitos no Firebase:
+    // "Alimentação", "alimentacao", "lanchonete", "restaurante", "hamburgueria", etc.
+    const rules = [
+      ['Alimentação', ['alimentacao','alimentos','comida','restaurante','restaurantes','lanchonete','lanches','lanche','hamburgueria','hamburguer','hamburgueres','pizza','pizzaria','sorveteria','acai','bar','padaria','mercado','delivery','pastelaria','churrasco','churrascaria','marmita']],
+      ['Beleza e Estética', ['beleza e estetica','beleza','estetica','barbearia','salao','cabeleireiro','manicure','unhas','sobrancelha']],
+      ['Consertos e Reparos', ['consertos e reparos','conserto','reparo','assistencia','mecanica','eletricista','encanador']],
+      ['Lojas', ['lojas','loja','moda','roupas','calcados','variedades','comercio']],
+      ['Material de Construção', ['material de construcao','construcao','materiais de construcao']],
+      ['Saúde', ['saude','farmacia','clinica','dentista','medico','hospital']],
+      ['Transporte', ['transporte','moto taxi','mototaxi','taxi','frete']],
+      ['Aniversário', ['aniversario','bolo','bolos','doces','festa infantil']],
+      ['Presentes', ['presentes','presente','floricultura']],
+      ['Empregos', ['empregos','emprego','vaga','vagas']],
+      ['Grupos', ['grupos','grupo','comunidade']],
+      ['Tecnologia e Informática', ['tecnologia e informatica','tecnologia','informatica','computador','celular','ti']],
+      ['Influenciadores', ['influenciadores','influencer','digital influencer']],
+      ['Artistas', ['artistas','artista','musico','cantor','banda']]
+    ];
+
+    for (const [canonical, aliases] of rules) {
+      if (aliases.some(alias => key === alias || key.includes(alias) || alias.includes(key))) {
+        return canonical;
+      }
+    }
+    return raw || 'Geral';
+  }
+
+  function sameCategory(a, b) {
+    return normalizeCompanyCategory(a) === normalizeCompanyCategory(b);
+  }
+
+  // Evita expor dados completos no HTML/console. Os cards usam só o ID.
+  function escHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function companyById(id) {
+    return (allCompanies || []).find(c => c.id === id);
+  }
+
+  window.openCompanyById = function(id) {
+    const company = companyById(id);
+    if (!company) {
+      showToast('Empresa não encontrada. Atualize a página e tente novamente.', 'error');
+      return;
+    }
+    openCompany(company);
+  };
+
+  function isCompanyVisible(data) {
+    const status = normalizeCompanyStatus(data.status || data.situacao || data.aprovacao || 'ativa');
+    const ativo = data.ativo;
+    const aprovado = data.aprovado;
+    // Só esconde quando estiver claramente inativa/rejeitada/excluída.
+    if (status === 'inativa' || status === 'pendente') return false;
+    if (ativo === false || aprovado === false) return false;
+    return true;
+  }
+
+
   async function loadCompanies() {
     try {
       const snap = await getDocs(collection(db,'empresas'));
 
-      allCompanies = snap.docs.map(d => {
-        const data = d.data();
-
-       return {
-  id: d.id,
-  name: data.name || data.nome || '',
-  category: data.category || data.categoria || '',
-  description: data.description || data.descricao || '',
-  address: data.address || data.endereco || '',
-  phone: data.phone || data.telefone || '',
-  whatsapp: data.whatsapp || '',
-  instagram: data.instagram || '',
-  logo: data.logo || data.logoUrl || '',
-  cover: data.cover || data.capaUrl || '',
-  lat: data.lat || null,
-  lng: data.lng || null,
-  rating: data.rating || 0,
-  views: data.views || 0,
-  sponsored: data.sponsored || data.patrocinada || false,
-  status: data.status || 'ativa',
-
-  services: data.services || data.servicos || [],
-  produtos: data.produtos || data.products || [],
-  palavrasChave: data.palavrasChave || data.keywords || []
-};
-      }).filter(c => c.status === 'ativa');
+      allCompanies = snap.docs
+        .filter(d => isCompanyVisible(d.data()))
+        .map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            name: data.name || data.nome || data.razaoSocial || data.empresa || 'Empresa sem nome',
+            category: normalizeCompanyCategory(data.category || data.categoria || data.tipoCategoria || ''),
+            description: data.description || data.descricao || data.sobre || '',
+            address: data.address || data.endereco || data.localizacao || '',
+            neighborhood: data.neighborhood || data.bairro || '',
+            hours: data.hours || data.horario || data.horarioFuncionamento || '',
+            horarios: data.horarios || data.openingHours || {},
+            phone: data.phone || data.telefone || data.whatsapp || '',
+            whatsapp: data.whatsapp || data.telefone || data.phone || '',
+            instagram: data.instagram || '',
+            logo: data.logo || data.logoUrl || data.fotoUrl || data.imagemUrl || '',
+            cover: data.cover || data.capaUrl || data.bannerUrl || data.logoUrl || data.fotoUrl || '',
+            gallery: data.gallery || data.galeria || data.fotos || data.photos || [],
+            lat: data.lat || data.latitude || null,
+            lng: data.lng || data.longitude || null,
+            rating: Number(data.rating || data.avaliacao || 0),
+            views: Number(data.views || data.visualizacoes || 0),
+            sponsored: data.sponsored || data.patrocinada || false,
+            status: normalizeCompanyStatus(data.status || data.situacao || 'ativa'),
+            services: data.services || data.servicos || [],
+            produtos: data.produtos || data.products || [],
+            palavrasChave: data.palavrasChave || data.keywords || []
+          };
+        });
+      // Carregamento concluído sem expor IDs ou dados sensíveis no console.
 
     } catch(e) {
-      console.error(e);
+      console.warn('Erro interno. Detalhes ocultos por segurança.');
       allCompanies = getDemoCompanies();
     }
 
@@ -1027,7 +1119,14 @@
     if (!name||!owner||!whatsapp||!category||!address||!description) {
       return showToast('Preencha todos os campos obrigatórios', 'error');
     }
+const user = window.currentUser;
 
+if (!user) {
+  showToast('Entre com sua conta antes de divulgar sua empresa.', 'error');
+  closeModal('business-modal');
+  openModal('auth-modal');
+  return;
+}
     const btn = document.querySelector('#business-modal .btn-primary');
     btn.textContent = 'Enviando...';
     btn.disabled = true;
@@ -1166,7 +1265,7 @@
   };
 
   function buildCategoryTabs(company) {
-    const cfg = CATEGORY_CONTENT[company.category];
+    const cfg = CATEGORY_CONTENT[normalizeCompanyCategory(company.category)];
     if (!cfg) return ''; // categoria sem aba extra
     return `
       <div style="margin-top:20px;border-top:1px solid #E5E7EB;padding-top:16px">
@@ -1180,19 +1279,27 @@
   }
 
   window.loadCompanyContent = async function(companyId, category) {
-    const cfg = CATEGORY_CONTENT[category];
+    const cfg = CATEGORY_CONTENT[normalizeCompanyCategory(category)];
     const container = document.getElementById(`cat-content-${companyId}`);
     if (!cfg || !container) return;
     try {
-      const snap = await getDocs(query(
-        collection(db, cfg.colecao),
-        where('empresaId', '==', companyId)
-      ));
-      if (snap.empty) {
+      const consultas = [
+        getDocs(query(collection(db, 'catalogo'), where('empresaId', '==', companyId))),
+        getDocs(query(collection(db, 'produtos'), where('empresaId', '==', companyId)))
+      ];
+      const snaps = await Promise.all(consultas);
+      const docsUnicos = new Map();
+      snaps.forEach(s => s.docs.forEach(d => docsUnicos.set(d.ref.path, d)));
+      const docs = [...docsUnicos.values()].filter(d => {
+        const item = d.data();
+        const st = normalizePortalText(item.status || 'disponivel');
+        return !['excluido','excluida','apagado','apagada'].includes(st);
+      });
+      if (!docs.length) {
         container.innerHTML = `<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px">Nenhum item cadastrado ainda.</p>`;
         return;
       }
-      const docs = [...snap.docs].sort((a,b) => {
+     docs.sort((a,b) => {
         const ta = a.data().createdAt?.seconds || 0;
         const tb = b.data().createdAt?.seconds || 0;
         return tb - ta;
@@ -1357,7 +1464,7 @@
     ).slice(0,5);
     if (!results.length) { sug.classList.add('hidden'); return; }
     sug.innerHTML = results.map(c=>`
-      <div class="suggestion-item" onclick="openCompany(${JSON.stringify(c).replace(/'/g,"\\'")}); document.getElementById('search-suggestions').classList.add('hidden')">
+      <div class="suggestion-item" onclick="openCompanyById('${c.id}'); document.getElementById('search-suggestions').classList.add('hidden')">
         <span class="sug-name">${c.name}</span>
         <span class="sug-cat">${c.category}</span>
       </div>`).join('');
@@ -1395,30 +1502,31 @@
 
   // ─── RENDER FUNCTIONS ───
   function renderHighlights() {
-    const sponsored = allCompanies.filter(c=>c.sponsored).concat(getDemoHighlights());
+    let sponsored = allCompanies.filter(c=>c.sponsored);
+    if (!sponsored.length) sponsored = allCompanies.slice(0, 6); // fallback: mostra as primeiras empresas
     const container = document.getElementById('highlights-scroll');
     if (!sponsored.length) { container.innerHTML = '<p class="text-muted text-center w-full py-4">Nenhum destaque cadastrado.</p>'; return; }
     container.innerHTML = sponsored.slice(0,6).map(c=>`
-      <div class="highlight-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <div class="highlight-card" onclick="openCompanyById('${c.id}')">
         <div class="highlight-badge-tag">⭐ Destaque</div>
-        <div class="highlight-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${c.name[0]}</span>`}</div>
-        <h3 class="highlight-name">${c.name}</h3>
-        <p class="highlight-cat">${c.category}</p>
+        <div class="highlight-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${escHtml((c.name||'E')[0])}</span>`}</div>
+        <h3 class="highlight-name">${escHtml(c.name)}</h3>
+        <p class="highlight-cat">${escHtml(c.category)}</p>
         <div class="highlight-rating">${renderStars(c.rating||0)} <span>${(c.rating||0).toFixed(1)}</span></div>
       </div>`).join('');
   }
 
   function renderPopular() {
-    const sorted = [...allCompanies].filter(c=>(c.views||0)>0).sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8);
+    const sorted = [...allCompanies].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,8);
     const container = document.getElementById('popular-grid');
     if (!sorted.length) { container.innerHTML='<p class="text-muted text-center py-4">Nenhuma empresa acessada ainda.</p>'; return; }
     container.innerHTML = sorted.map(c=>`
-      <div class="popular-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <div class="popular-card" onclick="openCompanyById('${c.id}')">
         <div class="popular-img" style="background-image:url('${c.cover||'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'}')">
           <div class="popular-overlay"></div>
           <div class="popular-info">
-            <h3>${c.name}</h3>
-            <p>${c.category}</p>
+            <h3>${escHtml(c.name)}</h3>
+            <p>${escHtml(c.category)}</p>
             <span class="views-badge">👁️ ${c.views||0}</span>
           </div>
         </div>
@@ -1516,11 +1624,11 @@
   };
 
   function companyCard(c) {
-    return `<div class="company-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
-      <div class="company-card-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${c.name[0]}</span>`}</div>
+    return `<div class="company-card" onclick="openCompanyById('${c.id}')">
+      <div class="company-card-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${escHtml((c.name||'E')[0])}</span>`}</div>
       <div class="company-card-body">
-        <h3 class="company-card-name">${c.name}</h3>
-        <p class="company-card-cat">${c.category}</p>
+        <h3 class="company-card-name">${escHtml(c.name)}</h3>
+        <p class="company-card-cat">${escHtml(c.category)}</p>
         ${c.neighborhood?`<p class="company-card-city">📍 ${c.neighborhood}</p>`:''}
         <div class="company-card-rating">${renderStars(c.rating||0)} <span>${(c.rating||0).toFixed(1)}</span></div>
       </div>
@@ -1564,7 +1672,7 @@
     const grid = document.getElementById('categories-grid');
     const show = categoriesExpanded ? CATEGORIES : CATEGORIES.slice(0,8);
     grid.innerHTML = show.map(cat=>{
-      const count = allCompanies.filter(c=>c.category===cat.name).length;
+const count = allCompanies.filter(c => sameCategory(c.category, cat.name)).length;
       return `<div class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
         <div class="cat-icon">${cat.icon}</div>
         <span class="cat-name">${cat.name}</span>
@@ -1581,7 +1689,7 @@
 
   window.showCategory = function(categoryName) {
     document.getElementById('category-page-title').textContent = CATEGORIES.find(c=>c.name===categoryName)?.icon + ' ' + categoryName;
-    window.currentCategoryCompanies = allCompanies.filter(c=>c.category===categoryName);
+window.currentCategoryCompanies = allCompanies.filter(c => sameCategory(c.category, categoryName));
     document.getElementById('category-page-count').textContent = `${window.currentCategoryCompanies.length} empresa(s) encontrada(s)`;
     renderCategoryCompanies(window.currentCategoryCompanies);
     showPage('category');
@@ -1609,7 +1717,7 @@
   // ─── UTILITIES ───
   const UTILITIES = [
     {name:'SAMU',phone:'192',icon:'🚑',color:'#EF4444',photo:'https://upload.wikimedia.org/wikipedia/commons/b/be/Samu192.png'},
-    {name:'Polícia Militar',phone:'190',icon:'👮',color:'#1D4ED8',photo:'Brasão_PMBA.png'},
+    {name:'Polícia Militar',phone:'190',icon:'👮',color:'#1D4ED8',photo:'https://images.tcdn.com.br/img/editor/up/598190/policiamilitardabahiapmba.png'},
     {name:'Bombeiros',phone:'193',icon:'🚒',color:'#DC2626',photo:'https://upload.wikimedia.org/wikipedia/commons/b/b3/DISTINTIVO_INSTITUCIONAL_CBMBA.png'},
     {name:'Hospital Municipal',phone:'(00) 0000-0000',icon:'🏥',color:'#059669',photo:''},
     {name:'Prefeitura',phone:'(00) 02400-0002',icon:'🏛️',color:'#7C3AED',photo:''},
@@ -1654,8 +1762,8 @@
       </div>
     `).join('');
   }
-  function renderUtilities() {
-    document.getElementById('utilities-grid').innerHTML = UTILITIES.map(u=>`
+ function renderUtilities() {
+  document.getElementById('utilities-grid').innerHTML = UTILITIES.map(u => `
       <a href="tel:${u.phone.replace(/\D/g,'')}" class="utility-photo-card">
         <div class="utility-photo-wrap">
           ${u.photo
@@ -1664,9 +1772,9 @@
           }
         </div>
         <p class="utility-photo-name">${u.name}</p>
-      </a>`).join('');
-  }
-
+      </a>
+  `).join('');
+}
   // ─── MAP ───
   window.mapInstance = null;
   let mapMarkers = [];
@@ -1700,11 +1808,10 @@
       !isNaN(c.lng)
   );
   allCompanies.forEach(c => {
-    console.log(c.name, c.lat, c.lng);
   });
     withCoords.forEach(c=>{
       const marker = L.marker([c.lat,c.lng]).addTo(mapInstance)
-        .bindPopup(`<b>${c.name}</b><br>${c.category}<br><button onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">Ver detalhes</button>`);
+        .bindPopup(`<b>${c.name}</b><br>${c.category}<br><button onclick="openCompanyById('${c.id}')">Ver detalhes</button>`);
       mapMarkers.push(marker);
     });
     const mapList = document.getElementById('map-list');
@@ -1814,39 +1921,80 @@ function getDemoHighlights() {
   // ─── BUSINESS HOURS HELPER ───
   function buildHoursHTML(horarios) {
     const DAYS = [
-      {key:'segunda',label:'Seg'},
-      {key:'terça',label:'Ter'},
-      {key:'quarta',label:'Qua'},
-      {key:'quinta',label:'Qui'},
-      {key:'sexta',label:'Sex'},
-      {key:'sábado',label:'Sáb'},
-      {key:'domingo',label:'Dom'},
+      {key:'segunda', aliases:['segunda','seg'], label:'Seg'},
+      {key:'terca', aliases:['terca','terça','ter'], label:'Ter'},
+      {key:'quarta', aliases:['quarta','qua'], label:'Qua'},
+      {key:'quinta', aliases:['quinta','qui'], label:'Qui'},
+      {key:'sexta', aliases:['sexta','sex'], label:'Sex'},
+      {key:'sabado', aliases:['sabado','sábado','sab'], label:'Sáb'},
+      {key:'domingo', aliases:['domingo','dom'], label:'Dom'},
     ];
+
     if (!horarios || !Object.keys(horarios).length) return '';
+
+    const clean = (v) => String(v || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+    const isOpenFlag = (v) => v === true || v === 'true' || v === 'on' || v === 1 || v === '1' || clean(v) === 'sim' || clean(v) === 'aberto';
+
+    function getDayHours(day) {
+      for (const alias of day.aliases) {
+        if (horarios[alias]) return horarios[alias];
+      }
+      const foundKey = Object.keys(horarios).find(k => day.aliases.includes(clean(k)));
+      return foundKey ? horarios[foundKey] : null;
+    }
+
+    function timeToMin(t, fallback) {
+      const raw = String(t || fallback || '').trim();
+      const m = raw.match(/(\d{1,2})[:h](\d{2})/i);
+      if (!m) return fallback === '23:59' ? 1439 : 0;
+      return Math.min(1439, Math.max(0, Number(m[1]) * 60 + Number(m[2])));
+    }
+
+    function getOpenClose(h) {
+      return {
+        abertura: h?.abertura || h?.abre || h?.inicio || h?.open || h?.from || '08:00',
+        fechamento: h?.fechamento || h?.fecha || h?.fim || h?.close || h?.to || '18:00'
+      };
+    }
+
     const now = new Date();
     const dayIndex = (now.getDay() + 6) % 7;
-    const todayKey = DAYS[dayIndex]?.key;
-    const todayH = horarios[todayKey];
+    const today = DAYS[dayIndex];
+    const todayH = getDayHours(today);
     let statusBadge = '';
+
     if (todayH) {
-      if (todayH.aberto) {
-        const [oh,om] = (todayH.abertura||'00:00').split(':').map(Number);
-        const [ch,cm] = (todayH.fechamento||'23:59').split(':').map(Number);
-        const cur = now.getHours()*60 + now.getMinutes();
-        if (cur >= oh*60+om && cur <= ch*60+cm) {
-          statusBadge = '<span style="display:inline-flex;align-items:center;gap:4px;background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🟢 Aberto agora</span>';
-        } else {
-          statusBadge = '<span style="display:inline-flex;align-items:center;gap:4px;background:#FEE2E2;color:#991B1B;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🔴 Fechado</span>';
-        }
+      if (isOpenFlag(todayH.aberto ?? todayH.ativo ?? todayH.open ?? todayH.enabled)) {
+        const { abertura, fechamento } = getOpenClose(todayH);
+        const openMin = timeToMin(abertura, '00:00');
+        const closeMin = timeToMin(fechamento, '23:59');
+        const cur = now.getHours() * 60 + now.getMinutes();
+        const isNowOpen = closeMin < openMin
+          ? (cur >= openMin || cur <= closeMin)
+          : (cur >= openMin && cur <= closeMin);
+
+        statusBadge = isNowOpen
+          ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🟢 Aberto agora</span>'
+          : '<span style="display:inline-flex;align-items:center;gap:4px;background:#FEF3C7;color:#92400E;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🟡 Abre hoje</span>';
       } else {
         statusBadge = '<span style="display:inline-flex;align-items:center;gap:4px;background:#FEE2E2;color:#991B1B;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🔴 Fechado hoje</span>';
       }
     }
+
     const rows = DAYS.map(d => {
-      const h = horarios[d.key];
-      if (!h || !h.aberto) return `<div style="display:flex;gap:8px;font-size:13px;padding:4px 0;color:#9CA3AF"><span style="width:28px;font-weight:600">${d.label}</span><span>Fechado</span></div>`;
-      return `<div style="display:flex;gap:8px;font-size:13px;padding:4px 0"><span style="width:28px;font-weight:600">${d.label}</span><span>${h.abertura} – ${h.fechamento}</span></div>`;
+      const h = getDayHours(d);
+      if (!h || !isOpenFlag(h.aberto ?? h.ativo ?? h.open ?? h.enabled)) {
+        return `<div style="display:flex;gap:8px;font-size:13px;padding:4px 0;color:#9CA3AF"><span style="width:28px;font-weight:600">${d.label}</span><span>Fechado</span></div>`;
+      }
+      const { abertura, fechamento } = getOpenClose(h);
+      return `<div style="display:flex;gap:8px;font-size:13px;padding:4px 0"><span style="width:28px;font-weight:600">${d.label}</span><span>${abertura} – ${fechamento}</span></div>`;
     }).join('');
+
     return `<div style="margin:16px 0;padding:14px;background:#F9FAFB;border-radius:14px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <strong style="font-size:14px">🕐 Horário de Funcionamento</strong>
@@ -1908,7 +2056,7 @@ function getDemoHighlights() {
 
       window[`_rating_${companyId}`] = userRating?.rating || 0;
     } catch(e) {
-      console.error(e);
+      console.warn('Erro interno. Detalhes ocultos por segurança.');
       if (container) container.innerHTML = '<p style="font-size:13px;color:#9CA3AF">Erro ao carregar avaliações.</p>';
     }
   };
@@ -1963,7 +2111,7 @@ function getDemoHighlights() {
       loadCompanyRatings(companyId);
     } catch(e) {
       showToast('Erro ao enviar avaliação', 'error');
-      console.error(e);
+      console.warn('Erro interno. Detalhes ocultos por segurança.');
     }
   };
 
@@ -2144,7 +2292,7 @@ function getDemoHighlights() {
     ).slice(0,5);
     if (matchedCompanies.length) {
       ctx += 'Empresas encontradas:\n' + matchedCompanies.map(c =>
-        `- ${c.name} (${c.category}) — ${c.address||''} — WhatsApp: ${c.whatsapp||'—'} — Descrição: ${c.description||''}`
+        `- ${c.name} (${c.category}) — ${c.address||''} — Descrição: ${c.description||''}`
       ).join('\n') + '\n\n';
     } else {
       ctx += 'Empresas cadastradas (amostra):\n' + allCompanies.slice(0,10).map(c=>`- ${c.name} (${c.category})`).join('\n') + '\n\n';
@@ -2195,9 +2343,8 @@ function getDemoHighlights() {
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <script src="app.js"></script>
   <script>
-  // Sobrescreve showPage do app.js para funcionar com IDs do index (page-xxx)
+  // showPage — controla páginas com classe .active
   window.showPage = function(pageId) {
     const prefixed = 'page-' + pageId;
     document.querySelectorAll('.page').forEach(p => {
@@ -2337,7 +2484,7 @@ function getDemoHighlights() {
       if (box) box.style.display = 'none';
       if (typeof showToast === 'function') showToast('Notificações ativadas!', 'success');
     } catch (e) {
-      console.error(e);
+      console.warn('Erro interno. Detalhes ocultos por segurança.');
       if (typeof showToast === 'function') showToast('Não foi possível ativar notificações.', 'error');
     }
   };

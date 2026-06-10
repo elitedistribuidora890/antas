@@ -939,60 +939,69 @@ const DAYS = [
 /* ─── AUTH GATE ─── */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    currentUser = null;
+    window._currentUser = null;
     showGate('denied');
     return;
   }
+
   currentUser = user;
+  window._currentUser = user;
 
   try {
-    // 1. Try to find company linked to this user (by ownerUid or usuarioId)
     let snap = await getDocs(
       query(collection(db, 'empresas'), where('ownerUid', '==', user.uid))
     );
 
-    // Fallback: check by usuarioId (from original registration)
     if (snap.empty) {
       snap = await getDocs(
         query(collection(db, 'empresas'), where('usuarioId', '==', user.uid))
       );
     }
 
-    if (snap.empty) {
-      // Check if there's a pending request
-      const reqSnap = await getDocs(
-        query(collection(db, 'solicitacoes_empresas'), where('usuarioId', '==', user.uid))
-      );
-      if (!reqSnap.empty) {
-        showGate('pending');
-      } else {
-        showGate('denied');
+    // Fallback: algumas empresas antigas foram criadas com e-mail, não com UID.
+    if (snap.empty && user.email) {
+      const camposEmail = ['email', 'ownerEmail', 'usuarioEmail', 'responsavelEmail'];
+      for (const campo of camposEmail) {
+        const s = await getDocs(query(collection(db, 'empresas'), where(campo, '==', user.email)));
+        if (!s.empty) { snap = s; break; }
       }
+    }
+
+    if (snap.empty) {
+      showGate('denied');
+      showToast('Nenhuma empresa vinculada a este usuário. Confira se o cadastro da empresa tem ownerUid/usuarioId ou o e-mail ' + (user.email || '') + '.', 'error');
       return;
     }
 
     companyDoc = snap.docs[0];
     companyId = companyDoc.id;
     companyData = companyDoc.data();
+    window._companyId = companyId;
+    window._companyName = companyData.name || companyData.nome || '';
+    window._companyData = companyData;
 
-    // Check status
     const status = companyData.status || 'pendente';
-    if (status !== 'ativa' && status !== 'active') {
-      if (status === 'pendente' || status === 'pending') {
-        showGate('pending');
-      } else {
-        showGate('denied');
-      }
+
+    if (status === 'pendente' || status === 'pending') {
+      showGate('pending');
       return;
     }
 
-    // All good — show panel
+    if (status !== 'ativa' && status !== 'active') {
+      showToast('Empresa não está ativa.', 'error');
+      return;
+    }
+
     loadPanel();
+    return;
+
   } catch (e) {
     console.error('Auth error:', e);
-    showGate('denied');
+    showToast(e.code || e.message || 'Erro ao carregar empresa', 'error');
+    return;
   }
 });
-
 function showGate(type) {
   document.getElementById('gate-loading').classList.add('hidden');
   document.getElementById('gate-denied').classList.add('hidden');
@@ -1018,8 +1027,10 @@ function loadPanel() {
   window._companyName = companyData.name || companyData.nome || '';
 
   // User name in header
-  document.getElementById('ep-user-name').textContent =
-    currentUser.displayName || currentUser.email?.split('@')[0] || 'Empresa';
+const user = currentUser || auth.currentUser;
+
+document.getElementById('ep-user-name').textContent =
+  user?.displayName || user?.email?.split('@')[0] || 'Empresa';
 
   // Hero
   renderHero();
@@ -1033,9 +1044,13 @@ function loadPanel() {
   // Render existing photos
   renderExistingPhotos();
 
-  // Load ratings when tab opened
-  // (lazy load)
+  // Pré-carrega o conteúdo para não parecer que fechou ou sumiu.
+  setTimeout(() => {
+    window._loadCatalogo?.();
+    window._loadProdutos?.();
+  }, 500);
 }
+
 
 /* ─── HERO ─── */
 function renderHero() {
@@ -1251,6 +1266,14 @@ window.saveAll = async function() {
   btn.disabled = true;
   btn.innerHTML = '⏳ Salvando...';
 
+  const user = currentUser || auth.currentUser;
+
+  if (!user) {
+    showToast('Aguarde o login carregar e tente novamente.', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '💾 Salvar Alterações';
+    return;
+  }
   try {
     // Validate required fields
     const name = document.getElementById('field-name').value.trim();
@@ -1319,7 +1342,7 @@ window.saveAll = async function() {
       fotos: finalGallery,
       horarios: collectHours(),
       updatedAt: new Date(),
-      ownerUid: currentUser.uid,
+      ownerUid: user.uid,
     };
 
     await updateDoc(doc(db, 'empresas', companyId), updates);
@@ -1913,10 +1936,25 @@ let editingProdutoId = null;
 let editingPromocaoId = null;
 let editingClassificadoId = null;
 
+function getEmpresaIdAtual() {
+  return modCompanyId || window._companyId || null;
+}
+
+function getUsuarioAtual() {
+  return auth2.currentUser || window._currentUser || null;
+}
+
+function getUidAtual() {
+  const user = getUsuarioAtual();
+  return modUid || user?.uid || window._companyData?.ownerUid || window._companyData?.usuarioId || null;
+}
+
 /* ─── WAIT FOR AUTH FROM PARENT MODULE ─── */
 onAuthStateChanged(auth2, async (user) => {
   if (!user) return;
   modUid = user.uid;
+  window._currentUser = user;
+  if (window._companyId) modCompanyId = window._companyId;
   // Wait for companyId to be set by parent module
   let tries = 0;
   const waitForCompany = setInterval(() => {
@@ -1982,7 +2020,7 @@ window.saveProduto = async function() {
       const allItems = document.querySelectorAll('#produtos-list .item-card');
     }
     if (pendingProdutoFoto) {
-      const pRef = ref(storage2, `empresas/${modCompanyId}/produtos/${Date.now()}_${pendingProdutoFoto.name}`);
+      const pRef = ref(storage2, `empresas/${getEmpresaIdAtual()}/produtos/${Date.now()}_${pendingProdutoFoto.name}`);
       const snap = await uploadBytes(pRef, pendingProdutoFoto);
       fotoUrl = await getDownloadURL(snap.ref);
     }
@@ -1992,8 +2030,8 @@ window.saveProduto = async function() {
       descricao: document.getElementById('produto-descricao').value.trim(),
       categoria: document.getElementById('produto-categoria').value,
       status: document.getElementById('produto-status').value,
-      empresaId: modCompanyId,
-      ownerUid: modUid,
+      empresaId: getEmpresaIdAtual(),
+      ownerUid: getUidAtual(),
       updatedAt: serverTimestamp(),
     };
     if (fotoUrl) data.foto = fotoUrl;
@@ -2027,7 +2065,7 @@ async function loadProdutos() {
       list.innerHTML = '<div class="list-empty"><div style="font-size:36px">🛍️</div><p>Nenhum produto cadastrado</p><p style="font-size:12px;margin-top:4px;color:var(--gray-400)">Clique em "+ Novo Produto" para começar</p></div>';
       return;
     }
-    const prodDocs = [...snap.docs].sort((a,b) => {
+    const prodDocs = snap.docs.sort((a,b) => {
       const ta = a.data().createdAt?.seconds || 0;
       const tb = b.data().createdAt?.seconds || 0;
       return tb - ta;
@@ -2133,7 +2171,7 @@ window.savePromocao = async function() {
   try {
     let fotoUrl = window._promocoesData?.[editingPromocaoId]?.foto || '';
     if (pendingPromocaoFoto) {
-      const pRef = ref(storage2, `empresas/${modCompanyId}/promocoes/${Date.now()}_${pendingPromocaoFoto.name}`);
+      const pRef = ref(storage2, `empresas/${getEmpresaIdAtual()}/promocoes/${Date.now()}_${pendingPromocaoFoto.name}`);
       const snap = await uploadBytes(pRef, pendingPromocaoFoto);
       fotoUrl = await getDownloadURL(snap.ref);
     }
@@ -2144,9 +2182,9 @@ window.savePromocao = async function() {
       descricao: document.getElementById('promocao-descricao').value.trim(),
       validade, status: document.getElementById('promocao-status').value,
       foto: fotoUrl,
-      empresaId: modCompanyId,
+      empresaId: getEmpresaIdAtual(),
       empresaNome: companyName,
-      ownerUid: modUid,
+      ownerUid: getUidAtual(),
       updatedAt: serverTimestamp(),
     };
 
@@ -2303,7 +2341,7 @@ window.saveClassificado = async function() {
   try {
     const uploadedFotos = [];
     for (const p of pendingClassificadoFotos) {
-      const pRef = ref(storage2, `empresas/${modCompanyId}/classificados/${Date.now()}_${p.file.name}`);
+      const pRef = ref(storage2, `empresas/${getEmpresaIdAtual()}/classificados/${Date.now()}_${p.file.name}`);
       const snap = await uploadBytes(pRef, p.file);
       uploadedFotos.push(await getDownloadURL(snap.ref));
     }
@@ -2329,9 +2367,9 @@ window.saveClassificado = async function() {
       localizacao: document.getElementById('classificado-localizacao').value.trim(),
       status: document.getElementById('classificado-status').value,
       fotos: finalFotos,
-      empresaId: modCompanyId,
+      empresaId: getEmpresaIdAtual(),
       empresaNome: window._companyName || '',
-      ownerUid: modUid,
+      ownerUid: getUidAtual(),
       updatedAt: serverTimestamp(),
     };
 
@@ -2462,49 +2500,90 @@ window.handleCatalogoFoto = function(input) {
   img.src = url; img.style.display = 'block';
   document.getElementById('catalogo-foto-placeholder').style.display = 'none';
 };
+
 window.saveCatalogo = async function() {
-  const nome = document.getElementById('catalogo-nome').value.trim();
-  if (!nome) { showToast('Informe o nome do item','error'); return; }
   const btn = document.querySelector('#modal-catalogo-overlay .ep-btn-save');
-  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Salvando...';
+  }
+
+  const user = getUsuarioAtual();
+  const uid = getUidAtual();
+  const empresaIdFinal = getEmpresaIdAtual();
+
+  if (!uid) {
+    showToast('Login ainda não carregou. Aguarde alguns segundos e tente novamente.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar'; }
+    return;
+  }
+
+  if (!empresaIdFinal) {
+    showToast('Empresa ainda não carregou. Aguarde alguns segundos e tente novamente.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar'; }
+    return;
+  }
+
+  const nome = document.getElementById('catalogo-nome').value.trim();
+  if (!nome) {
+    showToast('Informe o nome do item', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar'; }
+    return;
+  }
+
   try {
-    let fotoUrl = _editingCatalogoId ? (_catalogoData[_editingCatalogoId]?.foto || '') : '';
+    let fotoUrl = _editingCatalogoId ? (_catalogoData[_editingCatalogoId]?.fotoUrl || _catalogoData[_editingCatalogoId]?.foto || '') : '';
+
     if (_pendingCatalogoFoto) {
-      const pRef = ref(storage2, `empresas/${modCompanyId}/catalogo/${Date.now()}_${_pendingCatalogoFoto.name}`);
+      const pRef = ref(storage2, `empresas/${empresaIdFinal}/catalogo/${Date.now()}_${_pendingCatalogoFoto.name}`);
       const snap = await uploadBytes(pRef, _pendingCatalogoFoto);
       fotoUrl = await getDownloadURL(snap.ref);
     }
+
     const valorNum = parseFloat(document.getElementById('catalogo-valor').value) || 0;
     const data = {
-      nome, fotoUrl,
+      nome,
+      fotoUrl,
+      foto: fotoUrl,
       tipo: document.getElementById('catalogo-tipo').value,
       descricao: document.getElementById('catalogo-descricao').value.trim(),
       valor: valorNum,
-      preco: valorNum,   // alias usado pelo index.html
-      price: valorNum,   // alias em inglês
+      preco: valorNum,
+      price: valorNum,
       status: document.getElementById('catalogo-status').value,
-      empresaId: modCompanyId,
+      empresaId: empresaIdFinal,
       empresaNome: window._companyName || '',
-      ownerUid: modUid,
+      ownerUid: uid,
       updatedAt: serverTimestamp(),
     };
+
     if (_editingCatalogoId) {
-      await updateDoc(doc(db2,'catalogo',_editingCatalogoId), data);
-      showToast('Item atualizado! ✅','success');
+      await updateDoc(doc(db2, 'catalogo', _editingCatalogoId), data);
+      showToast('Item atualizado! ✅', 'success');
     } else {
       data.createdAt = serverTimestamp();
-      await addDoc(collection(db2,'catalogo'), data);
-      showToast('Item adicionado! ✅','success');
+      await addDoc(collection(db2, 'catalogo'), data);
+      showToast('Item adicionado! ✅', 'success');
     }
+
+    _pendingCatalogoFoto = null;
     document.getElementById('modal-catalogo-overlay').classList.add('hidden');
-    loadCatalogo();
-  } catch(e) { console.error(e); showToast('Erro ao salvar','error'); }
-  btn.disabled = false; btn.textContent = '💾 Salvar';
+    await loadCatalogo();
+  } catch(e) {
+    console.error('ERRO CATÁLOGO:', e);
+    showToast(e.code || e.message || 'Erro ao salvar catálogo', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '💾 Salvar';
+    }
+  }
 };
 async function loadCatalogo() {
-  if (!modCompanyId) return;
+  const empresaIdFinal = getEmpresaIdAtual();
+  if (!empresaIdFinal) return;
   try {
-    const snap = await getDocs(query(collection(db2,'catalogo'), where('empresaId','==',modCompanyId)));
+    const snap = await getDocs(query(collection(db2,'catalogo'), where('empresaId','==',empresaIdFinal)));
     const list = document.getElementById('catalogo-list');
     if (snap.empty) { list.innerHTML = '<div class="list-empty"><div style="font-size:36px">📋</div><p>Nenhum item no catálogo</p></div>'; return; }
     _catalogoData = {};
@@ -2588,9 +2667,9 @@ window.saveVaga = async function() {
       regime: document.getElementById('vaga-regime').value,
       salario: document.getElementById('vaga-salario').value.trim(),
       status: document.getElementById('vaga-status').value,
-      empresaId: modCompanyId,
+      empresaId: getEmpresaIdAtual(),
       companyName: window._companyName || '',
-      ownerUid: modUid,
+      ownerUid: getUidAtual(),
       updatedAt: serverTimestamp(),
     };
     if (_editingVagaId) {
@@ -2690,7 +2769,7 @@ window.savePromoDia = async function() {
   try {
     let fotoUrl = _editingPromoDiaId ? (_promoDiaData[_editingPromoDiaId]?.foto || '') : '';
     if (_pendingPromoDiaFoto) {
-      const pRef = ref(storage2, `empresas/${modCompanyId}/promo-dia/${Date.now()}_${_pendingPromoDiaFoto.name}`);
+      const pRef = ref(storage2, `empresas/${getEmpresaIdAtual()}/promo-dia/${Date.now()}_${_pendingPromoDiaFoto.name}`);
       const snap = await uploadBytes(pRef, _pendingPromoDiaFoto);
       fotoUrl = await getDownloadURL(snap.ref);
     }
@@ -2702,9 +2781,9 @@ window.savePromoDia = async function() {
       valPromo: parseFloat(document.getElementById('promo-dia-valor-promo').value) || 0,
       validade: validadeRaw ? new Date(validadeRaw) : null,
       status: document.getElementById('promo-dia-status').value,
-      empresaId: modCompanyId,
+      empresaId: getEmpresaIdAtual(),
       empresaNome: window._companyName || '',
-      ownerUid: modUid,
+      ownerUid: getUidAtual(),
       updatedAt: serverTimestamp(),
     };
     if (_editingPromoDiaId) {
@@ -2813,9 +2892,9 @@ window.saveCupom = async function() {
       usosAtivos: _editingCupomId ? (_cuponsData[_editingCupomId]?.usosAtivos || 0) : 0,
       validade: validadeRaw ? new Date(validadeRaw) : null,
       status: document.getElementById('cupom-status').value,
-      empresaId: modCompanyId,
+      empresaId: getEmpresaIdAtual(),
       empresaNome: window._companyName || '',
-      ownerUid: modUid,
+      ownerUid: getUidAtual(),
       updatedAt: serverTimestamp(),
     };
     if (_editingCupomId) {

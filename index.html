@@ -942,7 +942,7 @@
        return {
   id: d.id,
   name: data.name || data.nome || '',
-  category: data.category || data.categoria || '',
+  category: data.categoria || data.category || '',
   description: data.description || data.descricao || '',
   address: data.address || data.endereco || '',
   phone: data.phone || data.telefone || '',
@@ -1201,15 +1201,15 @@
           <button class="fav-btn ${isFav?'active':''}" onclick="toggleFavorite('${company.id}',this)">❤️</button>
         </div>
         <div class="company-stats-row">
-          <div class="cs-item">👁️ <span>${company.views||0} views</span></div>
-          <div class="cs-item">💬 <span>${company.whatsappClicks||0} contatos</span></div>
-          <div class="cs-item">⭐ <span>${(company.rating||0).toFixed(1)}</span></div>
+          <div class="cs-item"><span class="cs-icon">👁️</span> <span>${company.views||0} views</span></div>
+          <div class="cs-item"><span class="cs-icon">💬</span> <span>${company.whatsappClicks||0} contatos</span></div>
+          <div class="cs-item"><span class="cs-icon">⭐</span> <span>${(company.rating||0).toFixed(1)}</span></div>
         </div>
         ${company.description?`<p class="company-description">${company.description}</p>`:''}
         <div class="company-info-list">
-          ${company.address?`<div class="info-item">📍 <span>${company.address}</span></div>`:''}
-          ${company.hours?`<div class="info-item">🕐 <span>${company.hours}</span></div>`:''}
-          ${company.phone?`<div class="info-item">📞 <span>${company.phone}</span></div>`:''}
+          ${company.address?`<div class="info-item"><span class="info-icon">📍</span> <span>${company.address}</span></div>`:''}
+          ${company.hours?`<div class="info-item"><span class="info-icon">🕐</span> <span>${company.hours}</span></div>`:''}
+          ${company.phone?`<div class="info-item"><span class="info-icon">📞</span> <span>${company.phone}</span></div>`:''}
         </div>
         ${company.gallery&&company.gallery.length?`
           <h3 class="gallery-title">Galeria</h3>
@@ -1260,8 +1260,15 @@
     'Transporte':               { tipo: 'servicos',  label: '🚗 Serviços',     colecao: 'catalogo' },
   };
 
+  // Busca em CATEGORY_CONTENT ignorando espaços/maiúsc/acentuação (mesmo problema do normCat)
+  function getCategoryContent(category) {
+    if (CATEGORY_CONTENT[category]) return CATEGORY_CONTENT[category];
+    const key = Object.keys(CATEGORY_CONTENT).find(k => normCat(k) === normCat(category));
+    return key ? CATEGORY_CONTENT[key] : undefined;
+  }
+
   function buildCategoryTabs(company) {
-    const cfg = CATEGORY_CONTENT[company.category];
+    const cfg = getCategoryContent(company.category);
     if (!cfg) return ''; // categoria sem aba extra
     return `
       <div style="margin-top:20px;border-top:1px solid #E5E7EB;padding-top:16px">
@@ -1275,7 +1282,7 @@
   }
 
   window.loadCompanyContent = async function(companyId, category) {
-    const cfg = CATEGORY_CONTENT[category];
+    const cfg = getCategoryContent(category);
     const container = document.getElementById(`cat-content-${companyId}`);
     if (!cfg || !container) return;
     try {
@@ -1649,7 +1656,7 @@
   };
 
   function companyCard(c, matchedProducts) {
-    const catColor = (CATEGORIES.find(cat=>cat.name===c.category)||{}).color || '#1E4FD1';
+    const catColor = (CATEGORIES.find(cat=>normCat(cat.name)===normCat(c.category))||{}).color || '#1E4FD1';
     const coverStyle = c.cover
       ? `background-image:url('${c.cover}')`
       : `background:linear-gradient(135deg, ${catColor}CC, ${catColor}66)`;
@@ -1743,11 +1750,17 @@
 
   let categoriesExpanded = false;
 
+  // Compara categorias ignorando espaços extras, maiúsc/minúsc e diferenças
+  // de acentuação Unicode (ex.: "Alimentação" vs "alimentação " vs "Alimentação")
+  function normCat(s) {
+    return (s || '').normalize('NFC').trim().toLowerCase();
+  }
+
   function renderCategories() {
     const grid = document.getElementById('categories-grid');
     const show = categoriesExpanded ? CATEGORIES : CATEGORIES.slice(0,8);
     grid.innerHTML = show.map(cat=>{
-      const count = allCompanies.filter(c=>c.category===cat.name).length;
+      const count = allCompanies.filter(c=>normCat(c.category)===normCat(cat.name)).length;
       return `<div class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
         <div class="cat-icon"><i class="ti ti-${cat.icon}"></i></div>
         <span class="cat-name">${cat.name}</span>
@@ -1786,7 +1799,7 @@
   window.showCategory = function(categoryName) {
     const catInfo = CATEGORIES.find(c=>c.name===categoryName);
     document.getElementById('category-page-title').innerHTML = (catInfo ? `<i class="ti ti-${catInfo.icon}" style="color:${catInfo.color};margin-right:6px"></i>` : '') + categoryName;
-    window.currentCategoryCompanies = allCompanies.filter(c=>c.category===categoryName);
+    window.currentCategoryCompanies = allCompanies.filter(c=>normCat(c.category)===normCat(categoryName));
     document.getElementById('category-page-count').textContent = `${window.currentCategoryCompanies.length} empresa(s) encontrada(s)`;
     renderCategoryCompanies(window.currentCategoryCompanies);
     showPage('category');

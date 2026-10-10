@@ -1144,47 +1144,24 @@ background: linear-gradient(
 }
 .fav-btn.active, .fav-btn:hover { opacity: 1; transform: scale(1.06); }
 
-.company-stats-row {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
-  padding: 14px 4px; margin-bottom: 18px;
-  background: var(--gray-50); border: 1px solid var(--gray-100); border-radius: var(--radius-md);
+/* Linha compacta de info (endereço, horário, views) — discreta, não é o foco */
+.company-meta-line {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  font-size: 12.5px; color: var(--gray-500);
+  margin-bottom: 14px;
 }
-.cs-item {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  font-size: 11px; color: var(--gray-600); text-align: center;
-  padding: 0 6px; position: relative;
-}
-.cs-item:not(:last-child)::after {
-  content: ''; position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
-  width: 1px; height: 24px; background: var(--gray-200);
-}
-.cs-item span { font-weight: 700; font-size: 13px; color: var(--gray-800); }
-.cs-icon { font-size: 15px; margin-bottom: 1px; }
+.meta-piece { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
-.company-description {
-  font-size: 14px; line-height: 1.7; color: var(--gray-700);
-  margin-bottom: 20px; padding-bottom: 4px;
-}
-
-.company-info-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 22px; }
-.info-item {
-  display: flex; gap: 12px; align-items: center; font-size: 13.5px; color: var(--gray-700);
-  padding: 10px 12px; border-radius: var(--radius-sm);
-  transition: background var(--transition);
-}
-.info-item:hover { background: var(--gray-50); }
-.info-icon {
-  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
-  background: var(--purple-xlight);
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 15px;
+.company-description-sm {
+  font-size: 12.5px; line-height: 1.6; color: var(--gray-500);
+  margin: 18px 0 4px;
 }
 
 .gallery-title {
-  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 15px;
-  margin-bottom: 12px; letter-spacing: -.01em;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px;
+  margin: 18px 0 10px; letter-spacing: -.01em; color: var(--gray-600);
 }
-.gallery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 22px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
 .gallery-grid img {
   border-radius: var(--radius-sm); aspect-ratio: 1; object-fit: cover; cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition);
@@ -1193,11 +1170,76 @@ background: linear-gradient(
 .gallery-grid img:hover { transform: scale(1.03); box-shadow: var(--shadow-md); }
 
 .company-actions {
-  display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px;
-  padding-top: 18px; border-top: 1px solid var(--gray-100);
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;
 }
-.company-actions .btn-whatsapp { flex-basis: 100%; box-shadow: 0 8px 20px rgba(37,211,102,.25); }
-.company-actions .btn-route, .company-actions .btn-share { flex: 1; }
+.company-actions .btn-whatsapp { flex: 1; box-shadow: 0 8px 20px rgba(37,211,102,.25); }
+.company-actions .btn-route { flex: 0 0 auto; }
+.company-actions .btn-share { flex: 0 0 auto; padding: 14px 16px; }
+
+/* ─── CARDÁPIO / CATÁLOGO — estilo iFood ─── */
+.menu-section {
+  margin-top: 22px; padding-top: 18px; border-top: 6px solid var(--gray-50);
+  margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px;
+}
+.menu-section-header { margin-bottom: 8px; }
+.menu-section-title {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; font-size: 19px;
+  color: var(--gray-900); letter-spacing: -.01em;
+}
+.menu-group-title {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 13px;
+  text-transform: uppercase; letter-spacing: .04em; color: var(--purple);
+  margin: 18px 0 4px;
+}
+.menu-loading, .menu-empty { color: var(--gray-400); font-size: 13px; text-align: center; padding: 24px; }
+
+.menu-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid var(--gray-100);
+  cursor: pointer; transition: background var(--transition);
+}
+.menu-row:hover { background: var(--gray-50); margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: var(--radius-sm); }
+.menu-row:last-child { border-bottom: none; }
+.menu-row-unavailable { cursor: default; opacity: .55; }
+
+.menu-row-info { flex: 1; min-width: 0; }
+.menu-row-name {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 15px;
+  color: var(--gray-900); margin-bottom: 3px;
+}
+.menu-row-desc {
+  font-size: 12.5px; color: var(--gray-500); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 6px;
+}
+.menu-row-bottom { display: flex; align-items: center; gap: 8px; min-height: 18px; }
+.menu-row-price { font-weight: 800; font-size: 14px; color: var(--gray-800); }
+.menu-row-unavail-tag { font-size: 11px; font-weight: 700; color: var(--error); }
+
+.menu-row-thumb {
+  position: relative; flex-shrink: 0; width: 88px; height: 88px;
+  border-radius: var(--radius-md); overflow: visible;
+}
+.menu-row-thumb img {
+  width: 88px; height: 88px; border-radius: var(--radius-md);
+  object-fit: cover; display: block;
+}
+.menu-row-thumb-placeholder {
+  width: 88px; height: 88px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--purple-xlight), #F5F8FF);
+  display: flex; align-items: center; justify-content: center; font-size: 30px;
+}
+.menu-row-add {
+  position: absolute; right: -6px; bottom: -6px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--white); color: var(--purple);
+  border: 1.5px solid var(--purple-xlight);
+  box-shadow: var(--shadow-md);
+  font-size: 18px; font-weight: 700; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition);
+}
+.menu-row-add:hover { background: var(--purple); color: white; transform: scale(1.08); }
 
 
 /* ─── MODAL ─── */

@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin-app.css" />
 
   <!-- Firebase -->
   <script type="module">
@@ -103,7 +105,7 @@ window.addEventListener('load', () => {
   </div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-icon"><img src="logo.png" alt="Antas Digital" width="100%"></div>
+      <div class="logo-icon"><img src="logo-mark.png" alt="Antas Digital"></div>
       <div>
         <h1>Antas Digital</h1>
         <span>Painel Administrativo</span>
@@ -132,78 +134,78 @@ window.addEventListener('load', () => {
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">
-        <span class="logo-emoji">🏙️</span>
+        <img class="logo-emoji" src="logo-mark.png" alt="">
         <div>
           <strong>Antas Digital</strong>
-          <small>Admin Panel</small>
+          <small>Painel administrativo</small>
         </div>
       </div>
-      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Recolher menu"><i class="ti ti-layout-sidebar-left-collapse"></i></button>
     </div>
 
     <nav class="sidebar-nav">
-      <div class="nav-section-label">Principal</div>
+      <div class="nav-section-label">Visão geral</div>
       <a class="nav-item active" data-page="dashboard" onclick="navTo('dashboard')">
-        <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+        <i class="nav-icon ti ti-layout-dashboard"></i><span class="nav-label">Início</span>
       </a>
       <a class="nav-item" data-page="estatisticas" onclick="navTo('estatisticas')">
-        <span class="nav-icon">📈</span><span class="nav-label">Acessos do Site</span>
+        <i class="nav-icon ti ti-chart-line"></i><span class="nav-label">Acessos do site</span>
       </a>
 
-      <div class="nav-section-label">Cadastros</div>
-      <a class="nav-item" data-page="empresas" onclick="navTo('empresas')">
-        <span class="nav-icon">🏢</span><span class="nav-label">Empresas</span>
-        <span class="nav-badge" id="badge-pendentes">0</span>
-      </a>
+      <div class="nav-section-label">Empresas</div>
       <a class="nav-item" data-page="aprovacoes" onclick="navTo('aprovacoes')">
-        <span class="nav-icon">✅</span><span class="nav-label">Aprovações</span>
+        <i class="nav-icon ti ti-circle-check"></i><span class="nav-label">Aprovações</span>
+        <span class="nav-badge" id="badge-pendentes"></span>
       </a>
-      <a class="nav-item" data-page="noticias" onclick="navTo('noticias')">
-        <span class="nav-icon">📰</span><span class="nav-label">Notícias</span>
-      </a>
-      <a class="nav-item" data-page="eventos" onclick="navTo('eventos')">
-        <span class="nav-icon">🎉</span><span class="nav-label">Eventos</span>
-      </a>
-      <a class="nav-item" data-page="utilidades" onclick="navTo('utilidades')">
-        <span class="nav-icon">🔧</span><span class="nav-label">Utilidades</span>
+      <a class="nav-item" data-page="empresas" onclick="navTo('empresas')">
+        <i class="nav-icon ti ti-building-store"></i><span class="nav-label">Empresas</span>
       </a>
       <a class="nav-item" data-page="categorias" onclick="navTo('categorias')">
-        <span class="nav-icon">🏷️</span><span class="nav-label">Categorias</span>
+        <i class="nav-icon ti ti-category"></i><span class="nav-label">Categorias</span>
+      </a>
+      <a class="nav-item" data-page="avaliacoes" onclick="navTo('avaliacoes')">
+        <i class="nav-icon ti ti-star"></i><span class="nav-label">Avaliações</span>
+      </a>
+
+      <div class="nav-section-label">Conteúdo</div>
+      <a class="nav-item" data-page="noticias" onclick="navTo('noticias')">
+        <i class="nav-icon ti ti-news"></i><span class="nav-label">Notícias</span>
+      </a>
+      <a class="nav-item" data-page="eventos" onclick="navTo('eventos')">
+        <i class="nav-icon ti ti-calendar-event"></i><span class="nav-label">Eventos</span>
+      </a>
+      <a class="nav-item" data-page="promocoes-admin" onclick="navTo('promocoes-admin')">
+        <i class="nav-icon ti ti-discount-2"></i><span class="nav-label">Promoções</span>
+      </a>
+      <a class="nav-item" data-page="classificados-admin" onclick="navTo('classificados-admin')">
+        <i class="nav-icon ti ti-tag"></i><span class="nav-label">Classificados</span>
+      </a>
+      <a class="nav-item" data-page="utilidades" onclick="navTo('utilidades')">
+        <i class="nav-icon ti ti-phone-call"></i><span class="nav-label">Utilidades</span>
       </a>
 
       <div class="nav-section-label">Monetização</div>
-      <a class="nav-item" data-page="cupons" onclick="navTo('cupons')">
-        <span class="nav-icon">🎟️</span><span class="nav-label">Cupons</span>
-      </a>
       <a class="nav-item" data-page="patrocinados" onclick="navTo('patrocinados')">
-        <span class="nav-icon">⭐</span><span class="nav-label">Patrocinados</span>
+        <i class="nav-icon ti ti-crown"></i><span class="nav-label">Patrocinados</span>
       </a>
-
-      <div class="nav-section-label">Comercial</div>
-      <a class="nav-item" data-page="promocoes-admin" onclick="navTo('promocoes-admin')">
-        <span class="nav-icon">🏷️</span><span class="nav-label">Promoções</span>
-      </a>
-      <a class="nav-item" data-page="classificados-admin" onclick="navTo('classificados-admin')">
-        <span class="nav-icon">📌</span><span class="nav-label">Classificados</span>
+      <a class="nav-item" data-page="cupons" onclick="navTo('cupons')">
+        <i class="nav-icon ti ti-ticket"></i><span class="nav-label">Cupons</span>
       </a>
 
       <div class="nav-section-label">Sistema</div>
       <a class="nav-item" data-page="usuarios" onclick="navTo('usuarios')">
-        <span class="nav-icon">👥</span><span class="nav-label">Usuários</span>
+        <i class="nav-icon ti ti-users"></i><span class="nav-label">Usuários</span>
       </a>
       <a class="nav-item" data-page="configuracoes" onclick="navTo('configuracoes')">
-        <span class="nav-icon">⚙️</span><span class="nav-label">Configurações</span>
+        <i class="nav-icon ti ti-settings"></i><span class="nav-label">Configurações</span>
       </a>
       <a class="nav-item" data-page="config-ia" onclick="navTo('config-ia')">
-        <span class="nav-icon">🤖</span><span class="nav-label">Config. IA</span>
+        <i class="nav-icon ti ti-sparkles"></i><span class="nav-label">Assistente IA</span>
       </a>
       <a class="nav-item" data-page="config-firebase" onclick="navTo('config-firebase')">
-        <span class="nav-icon">🔥</span><span class="nav-label">Config. Firebase</span>
+        <i class="nav-icon ti ti-database"></i><span class="nav-label">Firebase</span>
       </a>
     </nav>
-<button class="nav-item" data-page="avaliacoes" onclick="navTo('avaliacoes')">
-  ⭐ Avaliações
-</button>
     <div class="sidebar-footer">
       <div class="user-info">
         <div class="user-avatar" id="sidebar-avatar">A</div>
@@ -216,19 +218,30 @@ window.addEventListener('load', () => {
     </div>
   </aside>
 
+  <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+  <!-- Barra inferior (celular) -->
+  <nav class="admin-tabbar" aria-label="Navegação rápida">
+    <button class="admin-tab active" data-page="dashboard" onclick="navTo('dashboard')"><i class="ti ti-layout-dashboard"></i><span>Início</span></button>
+    <button class="admin-tab" data-page="aprovacoes" onclick="navTo('aprovacoes')"><i class="ti ti-circle-check"></i><span>Aprovar</span><span class="admin-tab-dot" id="tab-dot-aprovacoes"></span></button>
+    <button class="admin-tab" data-page="empresas" onclick="navTo('empresas')"><i class="ti ti-building-store"></i><span>Empresas</span></button>
+    <button class="admin-tab" data-page="noticias" onclick="navTo('noticias')"><i class="ti ti-news"></i><span>Notícias</span></button>
+    <button class="admin-tab" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i><span>Mais</span></button>
+  </nav>
+
   <!-- Main -->
   <main class="main-content" id="main-content">
 
     <!-- Top Bar -->
     <header class="topbar">
       <div class="topbar-left">
-        <button class="topbar-menu" onclick="toggleSidebar()">☰</button>
+        <button class="topbar-menu" onclick="toggleSidebar()" aria-label="Abrir menu"><i class="ti ti-menu-2"></i></button>
         <div class="breadcrumb" id="breadcrumb">Dashboard</div>
       </div>
       <div class="topbar-right">
         <div class="topbar-time" id="topbar-time"></div>
-        <button class="topbar-notif" onclick="navTo('aprovacoes')">
-          🔔 <span class="notif-dot" id="notif-dot"></span>
+        <button class="topbar-notif" onclick="navTo('aprovacoes')" aria-label="Aprovações pendentes">
+          <i class="ti ti-bell"></i><span class="notif-dot" id="notif-dot"></span>
         </button>
       </div>
     </header>
@@ -628,14 +641,17 @@ window.addEventListener('load', () => {
           </table>
         </div>
       </section>
-<div id="page-avaliacoes" class="page">
+<section id="page-avaliacoes" class="page">
   <div class="page-header">
-    <h2>⭐ Avaliações dos Usuários</h2>
+    <div>
+      <h2>Avaliações</h2>
+      <span class="page-subtitle">O que os usuários disseram das empresas</span>
+    </div>
   </div>
-  <div style="background:#fff;border-radius:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden">
+  <div class="table-card">
     <div id="avaliacoes-list"></div>
   </div>
-</div>
+</section>
       <!-- ══════ CONFIG IA ══════ -->
       <section class="page" id="page-config-ia">
         <div class="page-header">
@@ -1030,7 +1046,5 @@ window.addEventListener('load', () => {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script src="admin.js"></script>
-</body>
-</html>
 </body>
 </html>

@@ -59,9 +59,13 @@ window.navTo = function(page) {
   const pageEl = document.getElementById('page-' + page);
   if (pageEl) pageEl.classList.add('active');
 
-  document.querySelectorAll('.nav-item').forEach(n => {
+  document.querySelectorAll('.nav-item, .admin-tab[data-page]').forEach(n => {
     n.classList.toggle('active', n.dataset.page === page);
   });
+
+  // No celular, fecha o menu lateral depois de escolher e volta ao topo
+  document.getElementById('sidebar')?.classList.remove('mobile-open');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   const breadcrumb = document.getElementById('breadcrumb');
   if (breadcrumb) {
@@ -147,7 +151,7 @@ window.doLogout = async function() {
 
 // ─── NAVIGATION ────────────────────────────────
 const PAGE_LABELS = {
-  dashboard:'Dashboard', empresas:'Gerenciar Empresas', aprovacoes:'Aprovações Pendentes',
+  dashboard:'Início', empresas:'Empresas', aprovacoes:'Aprovações Pendentes',
   noticias:'Notícias', eventos:'Eventos', utilidades:'Utilidades Públicas',
   categorias:'Categorias', cupons:'Cupons', patrocinados:'Patrocinados',
   usuarios:'Usuários', configuracoes:'Configurações',
@@ -255,6 +259,7 @@ async function loadDashboard() {
 
 const badgePendentes = document.getElementById('badge-pendentes');
 badgePendentes.textContent = pendDocs.size || '';
+document.getElementById('tab-dot-aprovacoes')?.classList.toggle('show', pendDocs.size > 0);
 
 document.getElementById('notif-dot').classList.toggle('show', pendDocs.size > 0);
 
@@ -1654,19 +1659,19 @@ window.loadAvaliacoesAdmin = async function() {
     container.innerHTML = ratings.map(r => {
       const date = r.createdAt?.toDate ? r.createdAt.toDate().toLocaleDateString('pt-BR') : '—';
       const stars = '★'.repeat(r.rating || 0) + '☆'.repeat(5 - (r.rating || 0));
-      return `<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid #F3F4F6;flex-wrap:wrap">
+      return `<div style="display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <div style="flex:1;min-width:200px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
             <strong style="font-size:14px">${r.userName || 'Usuário'}</strong>
             <span style="color:#D89B2E;font-size:15px;letter-spacing:1px">${stars}</span>
             <span style="font-size:12px;color:#9CA3AF">${date}</span>
           </div>
-          <p style="font-size:12px;color:#6B7280;margin:0 0 2px">Empresa ID: <code style="background:#F3F4F6;padding:2px 6px;border-radius:4px;font-size:11px">${r.companyId || '—'}</code></p>
-          ${r.comment ? `<p style="font-size:13px;color:#374151;margin-top:6px;background:#F9FAFB;padding:8px 12px;border-radius:8px;border-left:3px solid #E5E7EB">${r.comment}</p>` : '<p style="font-size:12px;color:#9CA3AF;margin-top:4px;font-style:italic">Sem comentário</p>'}
+          <p style="font-size:12px;color:#6B7280;margin:0 0 2px">Empresa ID: <code style="background:var(--bg3);color:var(--text-muted);padding:2px 6px;border-radius:4px;font-size:11px">${r.companyId || '—'}</code></p>
+          ${r.comment ? `<p style="font-size:13px;color:var(--text);margin-top:6px;background:var(--bg3);padding:8px 12px;border-radius:8px;border-left:3px solid var(--border3)">${r.comment}</p>` : '<p style="font-size:12px;color:#9CA3AF;margin-top:4px;font-style:italic">Sem comentário</p>'}
         </div>
         <button onclick="deleteAvaliacao('${r.id}','${r.companyId}')"
-          style="background:#FEE2E2;color:#DC2626;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
-          🗑️ Apagar
+          class="btn-danger btn-sm" style="flex-shrink:0">
+          Apagar
         </button>
       </div>`;
     }).join('');

@@ -1,0 +1,103 @@
+/* ═══════════════════════════════════════════════
+   PAINEL DA EMPRESA — CAMADA "CARA DE APLICATIVO"
+   Carregado depois do <style> interno do empresa-antas.html.
+   Tela inicial com atalhos; cada seção abre com barra "voltar".
+═══════════════════════════════════════════════ */
+
+body { background: #F4F6FB; }
+
+/* As abas horizontais foram trocadas pelos atalhos da tela inicial */
+.ep-tabs { display: none; }
+
+/* ─── Cabeçalho ─── */
+.ep-header { box-shadow: none; }
+.ep-header-inner { height: 58px; }
+.ep-back {
+  width: 40px; height: 40px; padding: 0; justify-content: center;
+  border-radius: 12px; background: var(--gray-100); color: var(--gray-800);
+}
+.ep-back i { font-size: 20px; }
+.ep-back:hover { background: var(--gray-200); }
+.ep-logout { border-radius: 999px; }
+
+/* ─── Cartão da empresa (só na tela inicial) ─── */
+.ep-hero { padding: 20px 16px 52px; border-radius: 0 0 26px 26px; }
+.ep-company-logo-wrap { width: 60px; height: 60px; border-radius: 18px; }
+.ep-company-name { font-size: 20px; }
+
+/* ─── Números rápidos (sobrepõem o cartão) ─── */
+.ep-quickstats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+  margin: -56px 0 8px; position: relative; z-index: 2;
+  background: var(--gray-200); border-radius: 18px; overflow: hidden;
+  box-shadow: 0 6px 20px rgba(16,19,30,.08);
+}
+.ep-qs {
+  background: white; padding: 12px 6px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.ep-qs i { font-size: 18px; color: var(--blue); }
+.ep-qs strong { font-size: 19px; font-weight: 800; color: var(--gray-900); line-height: 1.15; }
+.ep-qs span { font-size: 11px; font-weight: 600; color: var(--gray-400); }
+
+/* ─── Grupos de atalhos ─── */
+.ep-group-title {
+  font-size: 13px; font-weight: 800; color: var(--gray-600);
+  text-transform: uppercase; letter-spacing: .06em;
+  margin: 22px 2px 10px;
+}
+.ep-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 560px) { .ep-tiles { grid-template-columns: repeat(3, 1fr); } }
+.ep-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 14px; text-align: left; border-radius: 18px; background: white;
+  border: 1px solid var(--gray-200);
+  transition: transform .12s ease, border-color .2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.ep-tile:active { transform: scale(.97); }
+.ep-tile:hover { border-color: var(--t); }
+.ep-tile-icon {
+  width: 42px; height: 42px; border-radius: 13px; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--t) 12%, white); color: var(--t);
+}
+.ep-tile-icon i { font-size: 22px; line-height: 1; }
+.ep-tile-label { font-size: 14.5px; font-weight: 700; color: var(--gray-900); }
+.ep-tile small { font-size: 12px; color: var(--gray-400); line-height: 1.3; }
+
+/* ─── Barra da seção ─── */
+.ep-subbar {
+  position: sticky; top: 58px; z-index: 90;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 900px; margin: 0 auto; padding: 10px 16px;
+  background: rgba(244,246,251,.94); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.ep-subbar-back {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: white; border: 1px solid var(--gray-200); color: var(--gray-800);
+}
+.ep-subbar-back i { font-size: 20px; }
+.ep-subbar-title { font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: var(--gray-900); }
+
+/* Dentro de uma seção o conteúdo começa logo abaixo da barra */
+.ep-in-section .ep-main { padding-top: 4px; }
+.ep-in-section body > .ep-panel,
+body.ep-in-section > .ep-panel { padding-top: 4px; }
+
+/* Os painéis soltos (catálogo, vagas…) repetem o título; a barra já mostra */
+.ep-in-section .cat-head .cat-title { display: none; }
+
+/* ─── Cartões das seções ─── */
+.ep-card { border-radius: 18px; box-shadow: none; }
+
+/* ─── Barra de salvar: largura do conteúdo, cantos arredondados ─── */
+.ep-save-bar {
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -6px 20px rgba(16,19,30,.06);
+}
+.ep-save-btn { border-radius: 14px; }
+
+/* Dentro de uma seção só fica a seta da barra (volta ao início do painel) */
+.ep-in-section .ep-back { display: none; }

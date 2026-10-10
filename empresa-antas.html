@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="shortcut icon" href="logo.png" type="image/x-icon">
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
 /* ══════════════════════════════════════════
    EMPRESA-ANTAS — PAINEL DA EMPRESA
@@ -662,6 +663,7 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
 .vg-info { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; font-size: 12.5px; color: var(--gray-600); overflow-wrap: anywhere; }
 .vg-info b { font-weight: 700; color: var(--gray-800); }
 </style>
+<link rel="stylesheet" href="empresa-app.css">
 </head>
 <body>
 
@@ -704,9 +706,9 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
   <!-- HEADER -->
   <header class="ep-header">
     <div class="ep-header-inner">
-      <a href="index.html" class="ep-back">← Voltar</a>
+      <a href="index.html" class="ep-back" aria-label="Voltar ao site"><i class="ti ti-arrow-left"></i></a>
       <div class="ep-header-logo">
-        <img src="logo.png" alt="Antas Digital">
+        <img src="logo-mark.png" alt="Antas Digital">
         <span>Antas Digital</span>
       </div>
       <div class="ep-header-user">
@@ -772,11 +774,54 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
     </div>
   </nav>
 
+  <!-- BARRA DA SEÇÃO (aparece fora da tela inicial) -->
+  <div class="ep-subbar hidden" id="ep-subbar">
+    <button class="ep-subbar-back" onclick="switchTab('inicio')" aria-label="Voltar ao início"><i class="ti ti-arrow-left"></i></button>
+    <h1 class="ep-subbar-title" id="ep-subbar-title">Empresa</h1>
+  </div>
+
   <!-- MAIN -->
   <main class="ep-main">
 
+    <!-- ══════ INÍCIO (atalhos) ══════ -->
+    <div id="panel-inicio" class="ep-panel active">
+      <div class="ep-quickstats">
+        <div class="ep-qs"><i class="ti ti-eye"></i><strong id="home-stat-views">—</strong><span>Visitas</span></div>
+        <div class="ep-qs"><i class="ti ti-brand-whatsapp"></i><strong id="home-stat-whatsapp">—</strong><span>WhatsApp</span></div>
+        <div class="ep-qs"><i class="ti ti-star"></i><strong id="home-stat-rating">—</strong><span>Nota</span></div>
+      </div>
+
+      <h2 class="ep-group-title">Minha empresa</h2>
+      <div class="ep-tiles">
+        <button class="ep-tile" style="--t:#1E4FD1" onclick="switchTab('dados')"><span class="ep-tile-icon"><i class="ti ti-building-store"></i></span><span class="ep-tile-label">Dados</span><small>Nome, contato, redes</small></button>
+        <button class="ep-tile" style="--t:#0891B2" onclick="switchTab('horarios')"><span class="ep-tile-icon"><i class="ti ti-clock"></i></span><span class="ep-tile-label">Horários</span><small>Aberto / fechado</small></button>
+        <button class="ep-tile" style="--t:#7C3AED" onclick="switchTab('fotos')"><span class="ep-tile-icon"><i class="ti ti-photo"></i></span><span class="ep-tile-label">Fotos</span><small>Galeria da página</small></button>
+      </div>
+
+      <h2 class="ep-group-title">Vender</h2>
+      <div class="ep-tiles">
+        <button class="ep-tile" style="--t:#0F9D6B" onclick="switchTab('catalogo')"><span class="ep-tile-icon"><i class="ti ti-list-details"></i></span><span class="ep-tile-label">Catálogo</span><small>Cardápio e serviços</small></button>
+        <button class="ep-tile" style="--t:#2563EB" onclick="switchTab('produtos')"><span class="ep-tile-icon"><i class="ti ti-shopping-bag"></i></span><span class="ep-tile-label">Produtos</span><small>Itens à venda</small></button>
+        <button class="ep-tile" style="--t:#DC2626" onclick="switchTab('promocoes')"><span class="ep-tile-icon"><i class="ti ti-discount-2"></i></span><span class="ep-tile-label">Promoções</span><small>Ofertas na home</small></button>
+        <button class="ep-tile" style="--t:#EA580C" onclick="switchTab('promocao-dia')"><span class="ep-tile-icon"><i class="ti ti-flame"></i></span><span class="ep-tile-label">Promo do dia</span><small>Oferta de hoje</small></button>
+        <button class="ep-tile" style="--t:#C6922A" onclick="switchTab('cupons')"><span class="ep-tile-icon"><i class="ti ti-ticket"></i></span><span class="ep-tile-label">Cupons</span><small>Descontos</small></button>
+      </div>
+
+      <h2 class="ep-group-title">Divulgar</h2>
+      <div class="ep-tiles">
+        <button class="ep-tile" style="--t:#0F766E" onclick="switchTab('classificados')"><span class="ep-tile-icon"><i class="ti ti-pin"></i></span><span class="ep-tile-label">Classificados</span><small>Anúncios</small></button>
+        <button class="ep-tile" style="--t:#6D28D9" onclick="switchTab('vagas')"><span class="ep-tile-icon"><i class="ti ti-briefcase"></i></span><span class="ep-tile-label">Vagas</span><small>Contratar</small></button>
+      </div>
+
+      <h2 class="ep-group-title">Resultados</h2>
+      <div class="ep-tiles">
+        <button class="ep-tile" style="--t:#D97706" onclick="switchTab('avaliacoes')"><span class="ep-tile-icon"><i class="ti ti-star"></i></span><span class="ep-tile-label">Avaliações</span><small>O que dizem</small></button>
+        <button class="ep-tile" style="--t:#1E4FD1" onclick="switchTab('estatisticas')"><span class="ep-tile-icon"><i class="ti ti-chart-bar"></i></span><span class="ep-tile-label">Estatísticas</span><small>Visitas e contatos</small></button>
+      </div>
+    </div>
+
     <!-- ══════ DADOS DA EMPRESA ══════ -->
-    <div id="panel-dados" class="ep-panel active">
+    <div id="panel-dados" class="ep-panel">
 
       <!-- Logo -->
       <div class="ep-card">
@@ -1036,7 +1081,7 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
   </main>
 
   <!-- SAVE BAR (shown on dados, horarios, fotos tabs) -->
-  <div class="ep-save-bar" id="save-bar">
+  <div class="ep-save-bar" id="save-bar" style="display:none">
     <span class="ep-save-indicator hidden" id="save-indicator">✓ Salvo!</span>
     <button class="ep-save-btn" id="save-btn" onclick="saveAll()">
       💾 Salvar Alterações
@@ -1201,6 +1246,7 @@ function loadPanel() {
 
   // Hero
   renderHero();
+  renderHomeStats();
 
   // Fill forms
   fillForms();
@@ -1213,6 +1259,14 @@ function loadPanel() {
 
   // Load ratings when tab opened
   // (lazy load)
+}
+
+/* ─── NÚMEROS DA TELA INICIAL ─── */
+function renderHomeStats() {
+  document.getElementById('home-stat-views').textContent = companyData.views || 0;
+  document.getElementById('home-stat-whatsapp').textContent = companyData.whatsappClicks || 0;
+  document.getElementById('home-stat-rating').textContent =
+    companyData.rating ? parseFloat(companyData.rating).toFixed(1) : '—';
 }
 
 /* ─── HERO ─── */
@@ -1630,8 +1684,22 @@ window.switchTab = function(tab) {
 
   // Show/hide save bar
   const saveBar = document.getElementById('save-bar');
-  const noSave = ['avaliacoes','estatisticas','produtos','promocoes','classificados','catalogo','vagas','promocao-dia','cupons'];
+  const noSave = ['inicio','avaliacoes','estatisticas','produtos','promocoes','classificados','catalogo','vagas','promocao-dia','cupons'];
   saveBar.style.display = noSave.includes(tab) ? 'none' : '';
+
+  // Tela inicial mostra o cartão da empresa; as seções mostram só a barra com "voltar"
+  const TAB_TITLES = {
+    dados: 'Dados da empresa', horarios: 'Horários', fotos: 'Fotos', produtos: 'Produtos',
+    promocoes: 'Promoções', classificados: 'Classificados', avaliacoes: 'Avaliações',
+    catalogo: 'Catálogo', vagas: 'Vagas', 'promocao-dia': 'Promo do dia', cupons: 'Cupons',
+    estatisticas: 'Estatísticas'
+  };
+  const isHome = tab === 'inicio';
+  document.querySelector('.ep-hero')?.classList.toggle('hidden', !isHome);
+  document.getElementById('ep-subbar')?.classList.toggle('hidden', isHome);
+  document.getElementById('ep-subbar-title').textContent = TAB_TITLES[tab] || '';
+  document.body.classList.toggle('ep-in-section', !isHome);
+  window.scrollTo({ top: 0, behavior: 'instant' });
 
   // Lazy load
   if (tab === 'avaliacoes') loadRatings();

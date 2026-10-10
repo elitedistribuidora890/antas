@@ -1,0 +1,87 @@
+/* ═══════════════════════════════════════════════
+   ADMIN — AJUSTES DE NAVEGAÇÃO
+   Carregado depois do admin.css. Ícones Tabler no menu,
+   marca no topo e barra inferior no celular.
+═══════════════════════════════════════════════ */
+
+/* Marca */
+.logo-emoji { background: white; object-fit: contain; padding: 3px; }
+.logo-icon { background: white; padding: 5px; overflow: hidden; }
+.logo-icon img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Menu lateral */
+.nav-icon { font-size: 18px; width: 20px; color: inherit; opacity: .9; }
+.nav-item { padding: .55rem .85rem; }
+.nav-section-label { padding-top: 1.1rem; }
+.sidebar-toggle i, .topbar-menu i, .topbar-notif i { font-size: 19px; line-height: 1; display: block; }
+.topbar-notif { color: var(--text-muted); }
+
+/* Títulos das telas */
+.page-header h2 { font-size: 1.25rem; }
+
+/* Conteúdo nunca fica mais largo que a tela (tabelas rolam por dentro) */
+.main-content, .pages-container, .page { min-width: 0; max-width: 100%; }
+
+/* Fundo escuro atrás do menu aberto (celular) */
+.sidebar-backdrop { display: none; }
+
+/* Barra inferior: só no celular */
+.admin-tabbar { display: none; }
+
+@media (max-width: 768px) {
+  .sidebar { z-index: 300; box-shadow: 0 0 40px rgba(0,0,0,.6); }
+  .sidebar.mobile-open ~ .sidebar-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 250;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(2px);
+  }
+  .sidebar-toggle { display: none; }
+
+  .topbar { padding: 0 1rem; }
+  .topbar-time { display: none; }
+  .breadcrumb { font-size: 15px; font-weight: 700; }
+
+  .pages-container { padding: 1rem 1rem calc(84px + env(safe-area-inset-bottom, 0px)); }
+
+  .admin-tabbar {
+    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 150;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(15,17,23,.96); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--border2);
+  }
+  .admin-tab {
+    flex: 1; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    background: none; border: 0; color: var(--text-muted);
+    font-family: var(--font); font-size: 10.5px; font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .admin-tab i { font-size: 21px; line-height: 1; }
+  .admin-tab.active { color: #60a5fa; }
+  .admin-tab-dot {
+    position: absolute; top: 10px; left: calc(50% + 8px);
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--danger); border: 2px solid var(--bg2); display: none;
+  }
+  .admin-tab-dot.show { display: block; }
+
+  /* Tabelas largas rolam de lado em vez de estourar a tela */
+  .table-card, .table-wrap { overflow-x: auto; }
+  .data-table { min-width: 560px; }
+
+  /* Cabeçalho da tela: botão de ação ocupa a largura */
+  .page-header > .btn-primary, .page-header > .btn-ghost { width: 100%; justify-content: center; }
+
+  /* O título já aparece na barra do topo */
+  .page-header { margin-bottom: .9rem; }
+  .page-header h2, .page-header .page-subtitle { display: none; }
+
+  /* Indicadores em 2 colunas, compactos */
+  .stats-grid { grid-template-columns: 1fr 1fr !important; gap: .6rem; }
+  .stat-card { flex-direction: column; align-items: flex-start; gap: .35rem; padding: .85rem; }
+  .stat-icon { font-size: 1.3rem; }
+  .stat-value { font-size: 1.4rem; }
+  .stat-label { font-size: 11.5px; line-height: 1.3; }
+
+  .admin-toast { bottom: calc(76px + env(safe-area-inset-bottom, 0px)); left: 1rem; right: 1rem; max-width: none; }
+}

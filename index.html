@@ -10,9 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app-ui.css">
   <link rel="shortcut icon" href="logo.png" type="image/x-icon">
   </head>
-  <body>
+  <body data-page="home">
 
   <!-- ===== DESKTOP GATE (só aparece em tela grande) ===== -->
   <div id="desktop-gate" class="desktop-gate">
@@ -142,12 +143,6 @@
     <button class="btn-primary w-full mt-3" onclick="submitBusiness()">Enviar Solicitação</button>
   </div>
 
-  <!-- Company Detail Modal -->
-  <div id="company-modal" class="modal modal-lg hidden">
-    <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('company-modal')">✕</button>
-    <div id="company-modal-content"></div>
-  </div>
 
   <!-- Purchase Modal -->
   <div id="purchase-modal" class="modal hidden" style="max-width:480px">
@@ -203,27 +198,24 @@
     <div id="event-modal-content"></div>
   </div>
 
-  <!-- ===== NAVBAR ===== -->
-  <header class="navbar" id="navbar">
+  <!-- ===== CABEÇALHO DO APP ===== -->
+  <header class="navbar appbar" id="navbar">
     <div class="nav-container">
-      <a href="#" class="nav-logo" onclick="showPage('home')">
+      <a href="#" class="nav-logo" onclick="showPage('home');return false">
         <div class="logo-mark"><img src="logo-mark.png" alt=""></div>
-        <span>Antas Digital</span>
+        <div class="appbar-brand">
+          <span>Antas Digital</span>
+          <small><i class="ti ti-map-pin"></i> Antas, BA</small>
+        </div>
       </a>
-      <nav class="nav-links desktop-only">
-        <a href="#" class="nav-link" onclick="showPage('home')">Início</a>
-        <a href="#" class="nav-link" onclick="showPage('map')">Mapa</a>
-        <a href="#" class="nav-link" onclick="showPage('news')">Notícias</a>
-        <a href="#" class="nav-link" onclick="showPage('events')">Eventos</a>
-      </nav>
       <div class="nav-actions">
-        <button class="btn-outline-sm desktop-only" onclick="openModal('auth-modal')" id="btn-login">Entrar</button>
+        <button class="appbar-btn" onclick="handleProfileMenuClick('notificacoes')" aria-label="Notificações"><i class="ti ti-bell"></i></button>
+        <button class="appbar-btn appbar-btn--solid" onclick="openModal('auth-modal')" id="btn-login" aria-label="Entrar"><i class="ti ti-user"></i></button>
         <div class="user-avatar hidden" id="user-menu" onclick="showPage('profile')">
           <span id="user-initials">U</span>
         </div>
       </div>
     </div>
-   
   </header>
 
   <!-- ===== PAGES ===== -->
@@ -232,41 +224,54 @@
   <!-- HOME PAGE -->
   <div id="page-home" class="page active">
 
-    <!-- Hero -->
-    <section class="hero">
-      <div class="hero-bg"></div>
-      <div class="hero-particles" id="particles"></div>
-      <svg class="hero-skyline" viewBox="0 0 1200 90" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0,90 L0,58 L40,58 L40,40 L60,40 L60,58 L90,58 L90,30 L110,30 L110,58 L150,58 L150,45 L172,45 L172,58 L210,58 L210,20 L215,20 L215,10 L220,10 L220,20 L225,20 L225,58 L260,58 L260,35 L285,35 L285,58 L330,58 L330,48 L350,48 L350,58 L400,58 L400,25 L415,25 L415,15 L430,15 L430,25 L445,25 L445,58 L500,58 L500,42 L520,42 L520,58 L560,58 L560,55 C560,42 575,30 600,30 C625,30 640,42 640,55 L640,58 L690,58 L690,38 L710,38 L710,58 L760,58 L760,20 L765,20 L765,8 L772,8 L772,20 L778,20 L778,58 L820,58 L820,44 L845,44 L845,58 L890,58 L890,48 L905,48 L905,58 L950,58 L950,28 L965,28 L965,58 L1010,58 L1010,50 L1035,50 L1035,58 L1080,58 L1080,32 L1100,32 L1100,58 L1150,58 L1150,42 L1170,42 L1170,58 L1200,58 L1200,90 Z" fill="rgba(255,255,255,.07)"/>
-      </svg>
-      <div class="hero-content">
-        <div class="hero-top-row">
-          <div class="hero-badge">📍 Antas, Bahia</div>
-          <div class="hero-stats-inline">
-            <span class="stat-num" id="stat-companies">0</span> empresas
-            <i class="dot">•</i>
-            <span class="stat-num" id="stat-events">0</span> eventos
-            <span class="stat-num hidden" id="stat-categories">12</span>
-          </div>
-        </div>
-        <h1 class="hero-title">Encontre tudo <span class="hero-accent">em Antas</span></h1>
+    <!-- Busca -->
+    <section class="home-search">
+      <div class="container">
         <div class="search-bar">
-          <div class="search-icon">🔍</div>
-          <input type="text" id="hero-search" placeholder="Buscar empresa, serviço, bairro..." autocomplete="off" oninput="handleSearch(this.value)" onkeyup="if(event.key==='Enter')doSearch()">
+          <div class="search-icon"><i class="ti ti-search"></i></div>
+          <input type="search" id="hero-search" placeholder="O que você procura?" autocomplete="off" enterkeyhint="search" oninput="handleSearch(this.value)" onkeyup="if(event.key==='Enter')doSearch()">
           <span class="search-clear" id="hero-search-clear" onclick="clearHeroSearch()" role="button" aria-label="Limpar busca">✕</span>
-          <button class="search-btn" onclick="doSearch()" aria-label="Buscar"><span class="search-btn-text">Buscar</span></button>
         </div>
         <div id="search-suggestions" class="search-suggestions hidden"></div>
+        <div class="hidden" aria-hidden="true">
+          <span id="stat-companies">0</span><span id="stat-events">0</span><span id="stat-categories">12</span>
+        </div>
       </div>
     </section>
 
-    <!-- Ads Carousel -->
+    <!-- Categorias -->
+    <section class="app-block">
+      <div class="container">
+        <div class="app-block-header">
+          <div>
+            <h2 class="app-block-title">Explore por categoria</h2>
+            <p class="app-block-sub">Encontre serviços e negócios do seu jeito.</p>
+          </div>
+        </div>
+        <div class="categories-grid" id="categories-grid"></div>
+      </div>
+    </section>
+
+    <!-- Negócios em destaque -->
+    <section class="app-block">
+      <div class="container">
+        <div class="app-block-header">
+          <div>
+            <h2 class="app-block-title">Negócios em destaque</h2>
+            <p class="app-block-sub">Conheça quem está movimentando a cidade.</p>
+          </div>
+        </div>
+        <div class="biz-scroll" id="highlights-scroll"></div>
+      </div>
+    </section>
+
+    <!-- Publicidade -->
     <section class="ads-carousel-section">
       <div class="container">
         <div class="ads-carousel" id="ads-carousel"
              onmouseenter="pauseAdsCarousel()" onmouseleave="resumeAdsCarousel()">
           <span class="ads-carousel-label">Publicidade</span>
-          <div class="ads-carousel-track" id="ads-carousel-track"><!-- JS rendered --></div>
+          <div class="ads-carousel-track" id="ads-carousel-track"></div>
           <button class="ads-carousel-arrow ads-carousel-prev" onclick="goToAd(currentAdIndex - 1)" aria-label="Anúncio anterior">‹</button>
           <button class="ads-carousel-arrow ads-carousel-next" onclick="goToAd(currentAdIndex + 1)" aria-label="Próximo anúncio">›</button>
           <div class="ads-carousel-dots" id="ads-carousel-dots"></div>
@@ -274,184 +279,161 @@
       </div>
     </section>
 
-    <!-- Sticky quick-filter chips (app-style) -->
-    <div class="category-chips-bar" id="category-chips-bar">
-      <!-- JS rendered -->
-    </div>
-
-    <!-- Categories -->
-    <section class="section">
+    <!-- Eventos -->
+    <section class="app-block">
       <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Explorar Categorias</h2>
-          <button class="btn-link-blue" id="btn-see-more" onclick="toggleCategories()">Mostrar mais ›</button>
+        <div class="app-block-header">
+          <div>
+            <h2 class="app-block-title">Acontece em Antas</h2>
+            <p class="app-block-sub">Festas, shows e eventos da região.</p>
+          </div>
+          <button class="app-block-link" onclick="showPage('events')">Ver todos</button>
         </div>
-        <div class="categories-grid" id="categories-grid">
-          <!-- JS rendered -->
-        </div>
-      </div>
-    </section>
-    <!-- Highlights -->
-    <section class="section section-alt">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Destaques da região 🔥</h2>
-          <div class="highlight-badge">⭐ Patrocinado</div>
-        </div>
-        <div class="highlights-scroll" id="highlights-scroll">
-          <!-- JS rendered -->
-        </div>
+        <div class="events-scroll" id="events-scroll"></div>
       </div>
     </section>
 
-    <!-- Bus Schedule -->
-    <section class="section section-bus">
+    <!-- Notícias -->
+    <section class="app-block">
       <div class="container">
-        <div class="bus-header">
-          <h2 class="section-title" style="color:white">Ônibus em Antas</h2>
-          <button class="btn-bus-all" onclick="alert('Em breve')">Ver todos ›</button>
+        <div class="app-block-header">
+          <div>
+            <h2 class="app-block-title">Notícias</h2>
+            <p class="app-block-sub">O que está acontecendo na cidade.</p>
+          </div>
+          <button class="app-block-link" onclick="showPage('news')">Ver todas</button>
         </div>
-        <div class="bus-scroll" id="bus-scroll">
-          <!-- JS rendered -->
-        </div>
+        <div class="news-grid" id="news-grid"></div>
       </div>
     </section>
 
-
-   
-
-
-    <!-- Taxi e Moto-táxi -->
-    <section class="section">
+    <!-- Divulgar negócio -->
+    <section class="app-block">
       <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">🛵 Táxi e Moto-táxi</h2>
-        </div>
-        <div class="utilities-grid" id="taxi-moto-grid">
-          <!-- JS rendered -->
-        </div>
-      </div>
-    </section>
-
-
-    <!-- News -->
-    <section class="section section-alt">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Últimas Notícias</h2>
-          <button class="btn-ghost" onclick="showPage('news')">Ver todas</button>
-        </div>
-        <div class="news-grid" id="news-grid">
-          <!-- JS rendered -->
-        </div>
-      </div>
-    </section>
-
-    <!-- Events -->
-    <section class="section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">O que fazer na cidade</h2>
-          <button class="btn-ghost" onclick="showPage('events')">Ver todos</button>
-        </div>
-        <div class="events-scroll" id="events-scroll">
-          <!-- JS rendered -->
-        </div>
-      </div>
-    </section>
-
-    <!-- Promoções da Cidade -->
-    <section class="section" id="section-promocoes">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">🏷️ Promoções da Cidade</h2>
-          <button class="btn-ghost" onclick="showPage('classificados')">Ver mais</button>
-        </div>
-        <div class="highlights-scroll" id="promocoes-scroll">
-          <p class="text-muted text-center w-full py-4">Carregando promoções...</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Classificados -->
-    <section class="section section-alt">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">📋 Classificados</h2>
-          <button class="btn-ghost" onclick="showPage('classificados')">Ver todos</button>
-        </div>
-        <div class="classified-filter-chips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-          <button class="filter-chip active" onclick="filterClassificados('all',this)">Todos</button>
-          <button class="filter-chip" onclick="filterClassificados('venda-carro',this)">🚗 Carros</button>
-          <button class="filter-chip" onclick="filterClassificados('aluguel-casa',this)">🏠 Imóveis</button>
-          <button class="filter-chip" onclick="filterClassificados('terrenos',this)">🌳 Terrenos</button>
-          <button class="filter-chip" onclick="filterClassificados('empregos',this)">💼 Empregos</button>
-        </div>
-        <div id="classificados-home-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
-          <p class="text-muted">Carregando...</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Vagas de Emprego -->
-    <section class="section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">💼 Vagas de Emprego</h2>
-        </div>
-        <div id="vagas-home-list">
-          <p class="text-muted">Carregando vagas...</p>
-        </div>
-      </div>
-    </section>
-
-
-
-    <!-- Public Utilities -->
-    <section class="section section-alt">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="section-title">Utilidade Pública</h2>
-        </div>
-        <div class="utilities-grid" id="utilities-grid">
-          <!-- JS rendered -->
-        </div>
+        <button class="promo-banner" onclick="openBusinessModal()">
+          <span class="promo-banner-icon"><i class="ti ti-building-store"></i></span>
+          <span class="promo-banner-text">
+            <strong>Tem um negócio em Antas?</strong>
+            <small>Coloque sua empresa no guia</small>
+          </span>
+          <i class="ti ti-chevron-right promo-banner-arrow"></i>
+        </button>
       </div>
     </section>
 
   </div><!-- /page-home -->
 
-  <!-- BUS PAGE -->
-  <div id="page-bus" class="page">
+  <!-- TODAS AS CATEGORIAS -->
+  <div id="page-categorias" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">
-        ← Voltar
-      </button>
-
-      <h1 class="page-title">
-        Horários de Ônibus
-      </h1>
+      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div><h1 class="page-title">Categorias</h1></div>
     </div>
-
-    <div class="container">
-      <div id="bus-page-list"></div>
+    <div class="container page-body">
+      <div class="categories-grid categories-grid--all" id="all-categories-grid"></div>
     </div>
   </div>
-  <script>function renderBusPage() {
-    document.getElementById('bus-page-list').innerHTML =
-      BUS_ROUTES.map(r => `
-        <div class="bus-card">
-          <strong>${r.bairro}</strong>
-          <p>Destino: ${r.destino}</p>
-          <p>Horário: ${r.horario}</p>
-        </div>
-      `).join('');
-  }</script>
+
+  <!-- UTILIDADES (aba da barra inferior) -->
+  <div id="page-utilidades" class="page">
+    <div class="page-header page-header--tab">
+      <div><h1 class="page-title">Utilidades</h1></div>
+    </div>
+    <div class="container page-body">
+      <p class="page-lead">Serviços do dia a dia em Antas.</p>
+      <div class="util-grid">
+        <button class="util-tile" style="--t:#1E4FD1" onclick="showPage('bus')"><span class="util-emoji">🚌</span><strong>Ônibus</strong><small>Horários das linhas</small></button>
+        <button class="util-tile" style="--t:#D97706" onclick="showPage('servicos')"><span class="util-emoji">🚕</span><strong>Táxi e moto-táxi</strong><small>Chame uma corrida</small></button>
+        <button class="util-tile" style="--t:#DC2626" onclick="showPage('servicos')"><span class="util-emoji">🚑</span><strong>Emergência</strong><small>SAMU, polícia, bombeiros</small></button>
+        <button class="util-tile" style="--t:#0891B2" onclick="showPage('map')"><span class="util-emoji">🗺️</span><strong>Mapa da cidade</strong><small>Empresas perto de você</small></button>
+        <button class="util-tile" style="--t:#7C3AED" onclick="showPage('vagas')"><span class="util-emoji">💼</span><strong>Vagas</strong><small>Empregos na região</small></button>
+        <button class="util-tile" style="--t:#0F9D6B" onclick="showPage('classificados')"><span class="util-emoji">🏷️</span><strong>Classificados</strong><small>Carros, imóveis e mais</small></button>
+        <button class="util-tile" style="--t:#E11D48" onclick="showPage('promocoes')"><span class="util-emoji">🔥</span><strong>Promoções</strong><small>Ofertas das lojas</small></button>
+        <button class="util-tile" style="--t:#163B9E" onclick="toggleAIChat()"><span class="util-emoji">✨</span><strong>Assistente</strong><small>Pergunte à IA</small></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA DA EMPRESA (tela cheia) -->
+  <div id="page-company" class="page">
+    <div class="company-topbar">
+      <button class="back-btn" onclick="closeCompanyPage()" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <h1 class="company-topbar-title" id="company-topbar-title"></h1>
+      <button class="round-btn" id="company-fav-btn" aria-label="Favoritar"><i class="ti ti-heart"></i></button>
+      <button class="round-btn round-btn--soft" id="company-share-btn" aria-label="Compartilhar"><i class="ti ti-share"></i></button>
+    </div>
+    <div id="company-modal-content"></div>
+    <div class="company-actionbar hidden" id="company-actionbar"></div>
+  </div>
+
+  <!-- ÔNIBUS -->
+  <div id="page-bus" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="showPage('utilidades')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div>
+        <h1 class="page-title">Ônibus</h1>
+        <p class="page-subtitle">Horários de saída por linha</p>
+      </div>
+    </div>
+    <div class="container page-body">
+      <div id="bus-scroll" class="bus-routes"></div>
+      <p class="page-note">Os horários podem mudar. Confirme com a empresa antes de viajar.</p>
+    </div>
+  </div>
+
+  <!-- TELEFONES ÚTEIS (emergência + táxi) -->
+  <div id="page-servicos" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="showPage('utilidades')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div>
+        <h1 class="page-title">Telefones úteis</h1>
+        <p class="page-subtitle">Toque para ligar</p>
+      </div>
+    </div>
+    <div class="container page-body">
+      <h2 class="app-block-title page-section-title">Emergência</h2>
+      <div class="utilities-grid" id="utilities-grid"></div>
+      <h2 class="app-block-title page-section-title">Táxi e moto-táxi</h2>
+      <div class="utilities-grid" id="taxi-moto-grid"></div>
+    </div>
+  </div>
+
+  <!-- PROMOÇÕES -->
+  <div id="page-promocoes" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="showPage('utilidades')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div>
+        <h1 class="page-title">Promoções</h1>
+        <p class="page-subtitle">Ofertas das empresas de Antas</p>
+      </div>
+    </div>
+    <div class="container page-body">
+      <div class="promo-grid" id="promocoes-scroll">
+        <p class="text-muted text-center w-full py-4">Carregando promoções...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- VAGAS -->
+  <div id="page-vagas" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="showPage('utilidades')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div>
+        <h1 class="page-title">Vagas de emprego</h1>
+        <p class="page-subtitle">Oportunidades na região</p>
+      </div>
+    </div>
+    <div class="container page-body">
+      <div id="vagas-home-list">
+        <p class="text-muted">Carregando vagas...</p>
+      </div>
+    </div>
+  </div>
 
   <!-- CATEGORY PAGE -->
   <div id="page-category" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
       <div>
         <h1 id="category-page-title" class="page-title"></h1>
         <p id="category-page-count" class="page-subtitle"></p>
@@ -475,19 +457,24 @@
   <!-- SEARCH PAGE -->
   <div id="page-search" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">← Voltar</button>
+      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
       <div>
-        <h1 class="page-title">Resultados da busca</h1>
+        <h1 class="page-title">Buscar</h1>
         <p id="search-result-info" class="page-subtitle"></p>
       </div>
     </div>
     <div class="container">
       <div class="search-page-bar">
-        <input type="text" id="search-page-input" placeholder="Buscar..." oninput="handlePageSearch(this.value)">
-        <button onclick="doPageSearch()">Buscar</button>
+        <i class="ti ti-search"></i>
+        <input type="search" id="search-page-input" placeholder="Empresa, produto ou serviço" enterkeyhint="search" oninput="handlePageSearch(this.value)" onkeyup="if(event.key==='Enter')doPageSearch()">
       </div>
+      <h2 class="app-block-title search-chips-title">Explore categorias</h2>
+      <div class="chip-row" id="search-cat-chips"></div>
       <div id="search-results-container">
-        <!-- JS rendered -->
+        <div class="empty-hint">
+          <h3>O que você procura?</h3>
+          <p>Busque pelo nome, produto ou escolha uma categoria acima.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -495,8 +482,8 @@
   <!-- MAP PAGE -->
   <div id="page-map" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">← Voltar</button>
-      <h1 class="page-title">Mapa da Cidade</h1>
+      <button class="back-btn" onclick="showPage('utilidades')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div><h1 class="page-title">Mapa</h1></div>
     </div>
     <div class="map-wrapper">
       <div class="map-sidebar" id="map-sidebar">
@@ -515,8 +502,8 @@
   <!-- NEWS PAGE -->
   <div id="page-news" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">← Voltar</button>
-      <h1 class="page-title">Notícias Regionais</h1>
+      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <h1 class="page-title">Notícias</h1>
     </div>
     <div class="container">
       <div class="news-grid-full" id="news-page-grid">
@@ -528,11 +515,11 @@
   <!-- EVENTS PAGE -->
   <div id="page-events" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">← Voltar</button>
-      <h1 class="page-title">Eventos & Agenda</h1>
+      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <h1 class="page-title">Eventos</h1>
     </div>
     <div class="container">
-      <div class="events-filter">
+      <div class="events-filter chip-row">
         <button class="filter-chip active" onclick="filterEvents('all',this)">Todos</button>
         <button class="filter-chip" onclick="filterEvents('today',this)">Hoje</button>
         <button class="filter-chip" onclick="filterEvents('week',this)">Esta semana</button>
@@ -547,11 +534,11 @@
   <!-- CLASSIFICADOS PAGE -->
   <div id="page-classificados" class="page">
     <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')">← Voltar</button>
-      <h1 class="page-title">📋 Classificados</h1>
+      <button class="back-btn" onclick="showPage('utilidades')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div><h1 class="page-title">Classificados</h1><p class="page-subtitle">Carros, imóveis, terrenos e empregos</p></div>
     </div>
     <div class="container">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+      <div class="chip-row">
         <button class="filter-chip active" onclick="filterClassificadosPage('all',this)">Todos</button>
         <button class="filter-chip" onclick="filterClassificadosPage('venda-carro',this)">🚗 Carros</button>
         <button class="filter-chip" onclick="filterClassificadosPage('aluguel-casa',this)">🏠 Imóveis</button>
@@ -663,33 +650,23 @@
 
   </main><!-- /app -->
 
-  <!-- ===== FIXED BUTTON ===== -->
-  <button class="fab" onclick="openBusinessModal()" title="Divulgar meu negócio">
-    <span class="fab-icon">+</span>
-    <span class="fab-label">Divulgar Negócio</span>
-  </button>
 
   <!-- ===== BOTTOM NAV (Mobile) ===== -->
   <nav class="bottom-nav">
-    <button class="bottom-nav-item active" onclick="showPage('home');setActiveNav(this)">
-      <span class="bnav-icon"><i class="ti ti-home"></i></span>
-      <span>Início</span>
+    <button class="bottom-nav-item active" data-nav="home" onclick="showPage('home')">
+      <span class="bnav-icon"><i class="ti ti-home"></i></span><span>Início</span>
     </button>
-    <button class="bottom-nav-item" onclick="showPage('map');setActiveNav(this)">
-      <span class="bnav-icon"><i class="ti ti-map-2"></i></span>
-      <span>Mapa</span>
+    <button class="bottom-nav-item" data-nav="events" onclick="showPage('events')">
+      <span class="bnav-icon"><i class="ti ti-calendar-event"></i></span><span>Eventos</span>
     </button>
-    <button class="bottom-nav-item" onclick="showPage('news');setActiveNav(this)">
-      <span class="bnav-icon"><i class="ti ti-news"></i></span>
-      <span>Notícias</span>
+    <button class="bottom-nav-item" data-nav="utilidades" onclick="showPage('utilidades')">
+      <span class="bnav-icon"><i class="ti ti-building-bank"></i></span><span>Utilidades</span>
     </button>
-    <button class="bottom-nav-item" onclick="showPage('events');setActiveNav(this)">
-      <span class="bnav-icon"><i class="ti ti-calendar-event"></i></span>
-      <span>Eventos</span>
+    <button class="bottom-nav-item" data-nav="news" onclick="showPage('news')">
+      <span class="bnav-icon"><i class="ti ti-news"></i></span><span>Notícias</span>
     </button>
-    <button class="bottom-nav-item" onclick="showPage('profile');setActiveNav(this)">
-      <span class="bnav-icon"><i class="ti ti-user"></i></span>
-      <span>Perfil</span>
+    <button class="bottom-nav-item" data-nav="profile" onclick="showPage('profile')">
+      <span class="bnav-icon"><i class="ti ti-user"></i></span><span>Perfil</span>
     </button>
   </nav>
 
@@ -948,6 +925,12 @@
   phone: data.phone || data.telefone || '',
   whatsapp: data.whatsapp || '',
   instagram: data.instagram || '',
+  facebook: data.facebook || '',
+  tiktok: data.tiktok || '',
+  website: data.website || '',
+  neighborhood: data.bairro || data.neighborhood || '',
+  gallery: data.gallery || data.fotos || [],
+  horarios: data.horarios || {},
   logo: data.logo || data.logoUrl || '',
   cover: data.cover || data.capaUrl || '',
   lat: data.lat || null,
@@ -1184,59 +1167,74 @@
     } catch(e){}
 
     const isFav = (window.userFavorites||[]).includes(company.id);
-    const stars = renderStars(company.rating||0);
-    
+    const catColor = (CATEGORIES.find(cat=>normCat(cat.name)===normCat(company.category))||{}).color || '#1E4FD1';
+    const gallery = company.gallery || [];
+    const cover = company.cover || gallery[0] || company.logo || '';
+    const phone = (company.phone||'').replace(/\D/g,'');
+    const place = company.neighborhood || company.category || '';
+    const clean = v => (v||'').replace(/^@/,'').trim();
+    const links = [
+      company.instagram && { icon:'brand-instagram', label:'@'+clean(company.instagram), url:'https://instagram.com/'+clean(company.instagram) },
+      company.facebook && { icon:'brand-facebook', label:clean(company.facebook), url:/^https?:/.test(company.facebook) ? company.facebook : 'https://facebook.com/'+clean(company.facebook) },
+      company.tiktok && { icon:'brand-tiktok', label:'@'+clean(company.tiktok), url:'https://tiktok.com/@'+clean(company.tiktok) },
+      company.website && { icon:'world', label:company.website.replace(/^https?:\/\//,''), url:company.website },
+    ].filter(Boolean);
+    const hours = buildHoursHTML(company.horarios||{});
+
+    document.getElementById('company-topbar-title').textContent = company.name;
+    const favBtn = document.getElementById('company-fav-btn');
+    favBtn.classList.toggle('active', isFav);
+    favBtn.onclick = () => toggleFavorite(company.id, favBtn);
+    document.getElementById('company-share-btn').onclick = () => shareCompany(company.name, window.location.href);
+
     document.getElementById('company-modal-content').innerHTML = `
-      <div class="company-cover" style="background-image:url('${company.cover||'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800'}')">
-        <div class="company-cover-overlay"></div>
-      </div>
-      <div class="company-detail">
-        <div class="company-detail-top">
-          <div class="company-logo-lg">${company.logo ? `<img src="${company.logo}" alt="${company.name}">` : `<span>${company.name[0]}</span>`}</div>
-          <div class="company-detail-info">
-            <h2 class="company-detail-name">${company.name}</h2>
-            <p class="company-category-tag">${company.category}</p>
-            <div class="rating-row">${stars} <span class="rating-num">${(company.rating||0).toFixed(1)}</span></div>
+      <div class="cp-cover" style="${cover ? `background-image:url('${cover}')` : `background:linear-gradient(135deg, ${catColor}, ${catColor}88)`}"></div>
+      <div class="cp-body">
+        <div class="cp-head">
+          <div class="cp-logo">${company.logo ? `<img src="${company.logo}" alt="">` : `<span>${company.name[0]}</span>`}</div>
+          <div class="cp-head-info">
+            <h2 class="cp-name">${company.name}</h2>
+            ${place ? `<p class="cp-place"><i class="ti ti-map-pin"></i> ${place}</p>` : ''}
+            ${company.sponsored ? '<span class="badge-sponsor"><i class="ti ti-star-filled"></i> Patrocinado</span>' : ''}
           </div>
-          <button class="fav-btn ${isFav?'active':''}" onclick="toggleFavorite('${company.id}',this)">❤️</button>
         </div>
-        <div class="company-stats-row">
-          <div class="cs-item"><span class="cs-icon">👁️</span> <span>${company.views||0} views</span></div>
-          <div class="cs-item"><span class="cs-icon">💬</span> <span>${company.whatsappClicks||0} contatos</span></div>
-          <div class="cs-item"><span class="cs-icon">⭐</span> <span>${(company.rating||0).toFixed(1)}</span></div>
-        </div>
-        ${company.description?`<p class="company-description">${company.description}</p>`:''}
-        <div class="company-info-list">
-          ${company.address?`<div class="info-item"><span class="info-icon">📍</span> <span>${company.address}</span></div>`:''}
-          ${company.hours?`<div class="info-item"><span class="info-icon">🕐</span> <span>${company.hours}</span></div>`:''}
-          ${company.phone?`<div class="info-item"><span class="info-icon">📞</span> <span>${company.phone}</span></div>`:''}
-        </div>
-        ${company.gallery&&company.gallery.length?`
-          <h3 class="gallery-title">Galeria</h3>
-          <div class="gallery-grid">
-            ${company.gallery.map(img=>`<img src="${img}" alt="foto" onclick="openImageModal('${img}')">`).join('')}
-          </div>`:''}
-        <!-- Business Hours -->
-        ${buildHoursHTML(company.horarios||{})}
-        <div class="company-actions">
-          ${company.whatsapp?`<button class="btn-whatsapp" onclick="handleWhatsApp('${company.id}','${company.whatsapp}')">
-            <svg viewBox="0 0 24 24" width="18" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-            Falar no WhatsApp
-          </button>`:''}
-          ${company.lat&&company.lng?`<button class="btn-route" onclick="openRoute(${company.lat},${company.lng})">🗺️ Ver rota</button>`:''}
-          <button class="btn-share" onclick="shareCompany('${company.name}','${window.location.href}')">↗️ Compartilhar</button>
-        </div>
-        <!-- Rating Section -->
-        <!-- Abas de conteúdo por categoria -->
-        ${buildCategoryTabs(company)}
-        <div class="rating-section" id="rating-section-${company.id}" style="margin-top:20px;padding-top:16px;border-top:1px solid #E5E7EB">
-          <h3 style="font-size:15px;font-weight:700;margin-bottom:12px">⭐ Avalie esta empresa</h3>
+
+        ${company.description ? `<section class="cp-section"><h3>Sobre</h3><p class="cp-text">${company.description}</p></section>` : ''}
+
+        ${hours ? `<section class="cp-section">${hours}</section>` : ''}
+
+        <section class="cp-section cp-catalog">${buildCategoryTabs(company)}</section>
+
+        ${gallery.length ? `<section class="cp-section"><h3>Fotos</h3>
+          <div class="cp-gallery">${gallery.map(img=>`<img src="${img}" alt="" loading="lazy" onclick="openImageModal('${img}')">`).join('')}</div>
+        </section>` : ''}
+
+        <section class="cp-section" id="rating-section-${company.id}">
+          <h3>Avaliações</h3>
           <div id="rating-ui-${company.id}">Carregando avaliações...</div>
-        </div>
+        </section>
+
+        ${links.length ? `<section class="cp-section"><h3>Redes e links</h3>
+          ${links.map(l=>`<a class="cp-link" href="${l.url}" target="_blank" rel="noopener"><i class="ti ti-${l.icon}"></i><span>${l.label}</span></a>`).join('')}
+        </section>` : ''}
+
+        ${company.address ? `<section class="cp-section"><h3>Endereço</h3>
+          <p class="cp-text">${company.address}</p>
+          <button class="btn-outline-route" onclick="${company.lat&&company.lng ? `openRoute(${company.lat},${company.lng})` : `openAddress('${company.address.replace(/'/g,"\\'")}')`}"><i class="ti ti-navigation"></i> Como chegar</button>
+        </section>` : ''}
       </div>
     `;
+
+    // Barra fixa de contato
+    const bar = document.getElementById('company-actionbar');
+    bar.innerHTML = `
+      ${company.whatsapp ? `<button class="cta-whatsapp" onclick="handleWhatsApp('${company.id}','${company.whatsapp}')"><i class="ti ti-brand-whatsapp"></i> WhatsApp</button>` : ''}
+      ${phone ? `<a class="cta-call" href="tel:${phone}"><i class="ti ti-phone"></i> Ligar</a>` : ''}`;
+    bar.classList.toggle('hidden', !company.whatsapp && !phone);
+
     window._currentCompanyWhatsapp = company.whatsapp || '';
-    openModal('company-modal');
+    window._returnScroll = window.scrollY;
+    showPage('company');
     loadCompanyRatings(company.id);
     loadCompanyContent(company.id, company.category);
   };
@@ -1271,12 +1269,12 @@
     const cfg = getCategoryContent(company.category);
     if (!cfg) return ''; // categoria sem aba extra
     return `
-      <div style="margin-top:20px;border-top:1px solid #E5E7EB;padding-top:16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <h3 style="font-size:15px;font-weight:700">${cfg.label}</h3>
+      <div class="menu-section">
+        <div class="menu-section-header">
+          <h3 class="menu-section-title">${cfg.label.split(' ').slice(1).join(' ')}</h3>
         </div>
-        <div id="cat-content-${company.id}" style="min-height:60px">
-          <div style="color:#9CA3AF;font-size:13px;text-align:center;padding:20px">Carregando...</div>
+        <div id="cat-content-${company.id}" class="menu-list">
+          <div class="menu-loading">Carregando...</div>
         </div>
       </div>`;
   }
@@ -1291,7 +1289,7 @@
         where('empresaId', '==', companyId)
       ));
       if (snap.empty) {
-        container.innerHTML = `<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px">Nenhum item cadastrado ainda.</p>`;
+        container.innerHTML = `<p class="menu-empty">Nenhum item cadastrado ainda.</p>`;
         return;
       }
       const docs = [...snap.docs].sort((a,b) => {
@@ -1307,35 +1305,42 @@
         } catch(e) {}
       }
 
-      container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">` +
-        docs.map(d => {
-          const item = d.data();
-          const foto = item.fotoUrl || item.foto || '';
-          const nome = item.nome || item.titulo || item.name || '—';
-          const preco = item.preco || item.valor || item.price || 0;
-          const precoFmt = preco > 0 ? `R$ ${parseFloat(preco).toFixed(2).replace('.',',')}` : '';
-          const desc = item.descricao || item.description || '';
-          const disponivel = item.status !== 'indisponivel' && item.status !== 'inativo';
-          const itemDataJson = JSON.stringify({nome, preco, precoFmt, foto, desc}).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-          return `<div style="background:#F9FAFB;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;opacity:${disponivel?1:0.5};display:flex;flex-direction:column">
-            ${foto
-              ? `<img src="${foto}" alt="${nome}" style="width:100%;height:100px;object-fit:cover">`
-              : `<div style="width:100%;height:100px;background:linear-gradient(135deg,#EAF0FE,#EFF6FF);display:flex;align-items:center;justify-content:center;font-size:32px">${cfg.label.split(' ')[0]}</div>`
-            }
-            <div style="padding:8px;flex:1;display:flex;flex-direction:column;gap:2px">
-              <div style="font-size:13px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nome}</div>
-              ${desc ? `<div style="font-size:11px;color:#6B7280;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${desc}</div>` : ''}
-              ${precoFmt ? `<div style="font-size:13px;font-weight:700;color:#1E4FD1;margin-top:2px">${precoFmt}</div>` : ''}
-              ${!disponivel
-                ? `<div style="font-size:10px;color:#EF4444;font-weight:600;margin-top:4px">Indisponível</div>`
-                : `<button onclick="openPurchaseModal(${itemDataJson})" style="margin-top:6px;width:100%;padding:6px 0;background:#1E4FD1;color:white;border-radius:8px;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:background .2s" onmouseover="this.style.background='#163B9E'" onmouseout="this.style.background='#1E4FD1'">🛒 Comprar</button>`
-              }
-            </div>
-          </div>`;
-        }).join('') + `</div>`;
+      // Agrupa por "tipo" (ex: Lanches, Bebidas, Sobremesas) quando houver mais de um grupo
+      const groups = {};
+      docs.forEach(d => {
+        const item = d.data();
+        const tipo = (item.tipo || '').trim() || 'Itens';
+        (groups[tipo] = groups[tipo] || []).push(item);
+      });
+      const groupNames = Object.keys(groups);
+      const showGroupHeaders = groupNames.length > 1;
+
+      // Cartões lado a lado (foto, nome, preço); toque abre o pedido
+      const renderItem = (item) => {
+        const foto = item.fotoUrl || item.foto || '';
+        const nome = item.nome || item.titulo || item.name || '—';
+        const preco = item.preco || item.valor || item.price || 0;
+        const precoFmt = preco > 0 ? `R$ ${parseFloat(preco).toFixed(2).replace('.',',')}` : '';
+        const desc = item.descricao || item.description || '';
+        const disponivel = item.status !== 'indisponivel' && item.status !== 'inativo';
+        const itemDataJson = JSON.stringify({nome, preco, precoFmt, foto, desc}).replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        return `<div class="product-card ${disponivel?'':'is-unavailable'}" ${disponivel?`onclick="openPurchaseModal(${itemDataJson})"`:''}>
+          <div class="product-card-img">${foto ? `<img src="${foto}" alt="" loading="lazy">` : `<span>${cfg.label.split(' ')[0]}</span>`}</div>
+          <div class="product-card-body">
+            <p class="product-card-name">${nome}</p>
+            ${precoFmt ? `<p class="product-card-price">${precoFmt}</p>` : '<p class="product-card-price product-card-price--muted">Consultar preço</p>'}
+            ${!disponivel ? '<span class="product-card-tag">Indisponível</span>' : ''}
+          </div>
+        </div>`;
+      };
+
+      container.innerHTML = groupNames.map(g => `
+        ${showGroupHeaders ? `<div class="menu-group-title">${g}</div>` : ''}
+        <div class="product-scroll">${groups[g].map(renderItem).join('')}</div>
+      `).join('');
     } catch(e) {
       console.warn('Conteúdo da empresa:', e.code);
-      container.innerHTML = `<p style="color:#9CA3AF;font-size:13px;text-align:center;padding:16px">Nenhum item encontrado.</p>`;
+      container.innerHTML = `<p class="menu-empty">Nenhum item encontrado.</p>`;
     }
   };
 
@@ -1409,6 +1414,24 @@
     showToast('Pedido enviado! 🎉', 'success');
   };
 
+  window.openAddress = function(address) {
+    window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address + ', Antas - BA'), '_blank');
+  };
+
+  // Foto da galeria em tela cheia (toque para fechar)
+  window.openImageModal = function(src) {
+    const el = document.createElement('div');
+    el.className = 'image-viewer';
+    el.innerHTML = `<img src="${src}" alt=""><button aria-label="Fechar"><i class="ti ti-x"></i></button>`;
+    el.onclick = () => el.remove();
+    document.body.appendChild(el);
+  };
+
+  window.closeCompanyPage = function() {
+    showPage(window._lastPage || 'home');
+    window.scrollTo({ top: window._returnScroll || 0, behavior: 'instant' });
+  };
+
   window.openRoute = function(lat, lng) {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
   };
@@ -1472,7 +1495,7 @@
     if (!companyResults.length && !productMatches.length) { sug.classList.add('hidden'); return; }
 
     const companyHtml = companyResults.slice(0,5).map(c=>`
-      <div class="suggestion-item" onclick="openCompany(${JSON.stringify(c).replace(/'/g,"\\'")}); document.getElementById('search-suggestions').classList.add('hidden')">
+      <div class="suggestion-item" onclick="openCompanyById('${c.id}'); document.getElementById('search-suggestions').classList.add('hidden')">
         <span class="sug-name">${c.name}</span>
         <span class="sug-cat">${c.category}</span>
       </div>`).join('');
@@ -1481,7 +1504,7 @@
       const preco = parseFloat(produto.valor || 0);
       const precoFmt = preco > 0 ? `R$ ${preco.toFixed(2).replace('.',',')}` : '';
       return `
-      <div class="suggestion-item" onclick="openCompany(${JSON.stringify(empresa).replace(/'/g,"\\'")}); document.getElementById('search-suggestions').classList.add('hidden')">
+      <div class="suggestion-item" onclick="openCompanyById('${empresa.id}'); document.getElementById('search-suggestions').classList.add('hidden')">
         <span class="sug-name">🛍️ ${produto.nome} <span style="color:#9CA3AF;font-weight:400">em</span> ${empresa.name}</span>
         <span class="sug-cat">${precoFmt ? `<strong style="color:#1E4FD1">${precoFmt}</strong>` : empresa.category}</span>
       </div>`;
@@ -1551,19 +1574,36 @@
   };
 
   // ─── RENDER FUNCTIONS ───
-  function renderHighlights() {
-    const sponsored = allCompanies.filter(c=>c.sponsored).concat(getDemoHighlights());
-    const container = document.getElementById('highlights-scroll');
-    if (!sponsored.length) { container.innerHTML = '<p class="text-muted text-center w-full py-4">Nenhum destaque cadastrado.</p>'; return; }
-    container.innerHTML = sponsored.slice(0,6).map(c=>`
-      <div class="highlight-card" onclick="openCompany(${JSON.stringify(c).replace(/"/g,'&quot;')})">
-        <div class="highlight-badge-tag">⭐ Destaque</div>
-        <div class="highlight-logo">${c.logo?`<img src="${c.logo}" alt="${c.name}">`:`<span>${c.name[0]}</span>`}</div>
-        <h3 class="highlight-name">${c.name}</h3>
-        <p class="highlight-cat">${c.category}</p>
-        <div class="highlight-rating">${renderStars(c.rating||0)} <span>${(c.rating||0).toFixed(1)}</span></div>
-      </div>`).join('');
+  // Cartão de empresa no estilo app: foto, selo, nome, categoria e bairro
+  function bizCard(c) {
+    const catColor = (CATEGORIES.find(cat=>normCat(cat.name)===normCat(c.category))||{}).color || '#1E4FD1';
+    const photo = c.cover || (c.gallery||[])[0] || c.logo || '';
+    const place = c.neighborhood || (c.address||'').split(',').slice(-2).join(',').trim();
+    return `<button class="biz-card" onclick="openCompanyById('${c.id}')">
+      <div class="biz-card-photo" style="${photo ? `background-image:url('${photo}')` : `background:linear-gradient(135deg, ${catColor}, ${catColor}99)`}">
+        ${photo ? '' : `<span>${(c.name||'?')[0]}</span>`}
+      </div>
+      ${c.sponsored ? '<span class="badge-sponsor"><i class="ti ti-star-filled"></i> Patrocinado</span>' : ''}
+      <h3 class="biz-card-name">${c.name}</h3>
+      <p class="biz-card-cat">${c.category || 'Empresa'}</p>
+      ${place ? `<p class="biz-card-place"><i class="ti ti-map-pin"></i> ${place}</p>` : ''}
+    </button>`;
   }
+
+  function renderHighlights() {
+    const container = document.getElementById('highlights-scroll');
+    // Patrocinadas primeiro; completa com as mais vistas para o bloco nunca ficar vazio
+    const sponsored = allCompanies.filter(c=>c.sponsored).concat(getDemoHighlights());
+    const others = allCompanies.filter(c=>!c.sponsored).sort((a,b)=>(b.views||0)-(a.views||0));
+    const list = sponsored.concat(others).slice(0,8);
+    container.closest('section')?.classList.toggle('hidden', !list.length);
+    container.innerHTML = list.map(bizCard).join('');
+  }
+
+  window.openCompanyById = function(id) {
+    const c = allCompanies.find(x => x.id === id) || getDemoHighlights().find(x => x.id === id);
+    if (c) openCompany(c);
+  };
 
   function renderNews() {
     const container = document.getElementById('news-grid');
@@ -1726,26 +1766,26 @@
       grid.innerHTML=''; empty?.classList.remove('hidden');
     } else {
       empty?.classList.add('hidden');
-      grid.innerHTML = favCompanies.map(c=>companyCard(c)).join('');
+      grid.innerHTML = favCompanies.map(bizCard).join('');
     }
   }
 
   // ─── CATEGORIES ───
   const CATEGORIES = [
-    {name:'Alimentação',icon:'chef-hat',color:'#D89B2E'},
-    {name:'Beleza e Estética',icon:'sparkles',color:'#EC4899'},
-    {name:'Consertos e Reparos',icon:'tools',color:'#6B7280'},
-    {name:'Lojas',icon:'shopping-bag',color:'#10B981'},
-    {name:'Material de Construção',icon:'building-warehouse',color:'#F97316'},
-    {name:'Saúde',icon:'heartbeat',color:'#EF4444'},
-    {name:'Transporte',icon:'car',color:'#3B82F6'},
-    {name:'Aniversário',icon:'cake',color:'#8B5CF6'},
-    {name:'Presentes',icon:'gift',color:'#EF4444'},
-    {name:'Empregos',icon:'briefcase',color:'#0EA5E9'},
-    {name:'Grupos',icon:'users',color:'#14B8A6'},
-    {name:'Tecnologia e Informática',icon:'device-laptop',color:'#7C3AED'},
-    {name:'Influenciadores',icon:'speakerphone',color:'#E1306C'},
-    {name:'Artistas',icon:'palette',color:'#A855F7'},
+    {name:'Alimentação',icon:'chef-hat',emoji:'🍔',color:'#F59E0B'},
+    {name:'Beleza e Estética',icon:'sparkles',emoji:'💇‍♀️',color:'#EC4899'},
+    {name:'Consertos e Reparos',icon:'tools',emoji:'🔧',color:'#64748B'},
+    {name:'Lojas',icon:'shopping-bag',emoji:'🛍️',color:'#10B981'},
+    {name:'Material de Construção',icon:'building-warehouse',emoji:'🧱',color:'#F97316'},
+    {name:'Saúde',icon:'heartbeat',emoji:'🩺',color:'#EF4444'},
+    {name:'Transporte',icon:'car',emoji:'🚗',color:'#3B82F6'},
+    {name:'Aniversário',icon:'cake',emoji:'🎂',color:'#8B5CF6'},
+    {name:'Presentes',icon:'gift',emoji:'🎁',color:'#E11D48'},
+    {name:'Empregos',icon:'briefcase',emoji:'💼',color:'#0EA5E9'},
+    {name:'Grupos',icon:'users',emoji:'👥',color:'#14B8A6'},
+    {name:'Tecnologia e Informática',icon:'device-laptop',emoji:'💻',color:'#7C3AED'},
+    {name:'Influenciadores',icon:'speakerphone',emoji:'📣',color:'#DB2777'},
+    {name:'Artistas',icon:'palette',emoji:'🎨',color:'#A855F7'},
   ];
 
   let categoriesExpanded = false;
@@ -1756,17 +1796,28 @@
     return (s || '').normalize('NFC').trim().toLowerCase();
   }
 
+  function categoryTile(cat, withCount) {
+    const count = allCompanies.filter(c=>normCat(c.category)===normCat(cat.name)).length;
+    return `<button class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
+      <span class="cat-icon">${cat.emoji}</span>
+      <span class="cat-name">${cat.name}</span>
+      ${withCount ? `<span class="cat-count">${count} ${count===1?'empresa':'empresas'}</span>` : ''}
+    </button>`;
+  }
+
   function renderCategories() {
+    // Home: 7 categorias + "Ver todas"
     const grid = document.getElementById('categories-grid');
-    const show = categoriesExpanded ? CATEGORIES : CATEGORIES.slice(0,8);
-    grid.innerHTML = show.map(cat=>{
-      const count = allCompanies.filter(c=>normCat(c.category)===normCat(cat.name)).length;
-      return `<div class="category-card" onclick="showCategory('${cat.name}')" style="--cat-color:${cat.color}">
-        <div class="cat-icon"><i class="ti ti-${cat.icon}"></i></div>
-        <span class="cat-name">${cat.name}</span>
-        <span class="cat-count">${count} ${count===1?'empresa':'empresas'}</span>
-      </div>`;
-    }).join('');
+    if (grid) grid.innerHTML = CATEGORIES.slice(0,7).map(cat=>categoryTile(cat)).join('') +
+      `<button class="category-card" onclick="showPage('categorias')" style="--cat-color:#1E4FD1">
+        <span class="cat-icon"><i class="ti ti-layout-grid"></i></span>
+        <span class="cat-name">Ver todas</span>
+      </button>`;
+    const all = document.getElementById('all-categories-grid');
+    if (all) all.innerHTML = CATEGORIES.map(cat=>categoryTile(cat, true)).join('');
+    const chips = document.getElementById('search-cat-chips');
+    if (chips) chips.innerHTML = CATEGORIES.map(cat=>
+      `<button class="filter-chip" onclick="showCategory('${cat.name}')">${cat.emoji} ${cat.name}</button>`).join('');
   }
 
   function renderCategoryChips() {
@@ -1798,7 +1849,7 @@
 
   window.showCategory = function(categoryName) {
     const catInfo = CATEGORIES.find(c=>c.name===categoryName);
-    document.getElementById('category-page-title').innerHTML = (catInfo ? `<i class="ti ti-${catInfo.icon}" style="color:${catInfo.color};margin-right:6px"></i>` : '') + categoryName;
+    document.getElementById('category-page-title').textContent = (catInfo ? catInfo.emoji + ' ' : '') + categoryName;
     window.currentCategoryCompanies = allCompanies.filter(c=>normCat(c.category)===normCat(categoryName));
     document.getElementById('category-page-count').textContent = `${window.currentCategoryCompanies.length} empresa(s) encontrada(s)`;
     renderCategoryCompanies(window.currentCategoryCompanies);
@@ -1808,7 +1859,7 @@
   function renderCategoryCompanies(companies) {
     const grid = document.getElementById('category-companies-grid');
     if (!companies.length) { grid.innerHTML='<div class="empty-state"><p>Nenhuma empresa nesta categoria ainda.</p></div>'; return; }
-    grid.innerHTML = companies.map(c=>companyCard(c)).join('');
+    grid.innerHTML = companies.map(bizCard).join('');
   }
 
   window.filterCategoryCompanies = function(val) {
@@ -1870,18 +1921,34 @@
 
   function renderBusSchedule() {
     const container = document.getElementById('bus-scroll');
-
     if (!container) return;
 
-    container.innerHTML = BUS_ROUTES.map(r => `
-      <div class="bus-card">
-        <p class="bus-from">${r.bairro}</p>
-        <p class="bus-destino">→ ${r.destino}</p>
-        <p class="bus-hora">${r.horario}</p>
-        ${r.empresa ? `<p class="bus-empresa">${r.empresa}</p>` : ''}
-        ${r.preco ? `<p class="bus-preco">${r.preco}</p>` : ''}
-      </div>
-    `).join('');
+    // Agrupa por linha (origem → destino) e destaca o próximo horário de hoje
+    const routes = {};
+    BUS_ROUTES.forEach(r => {
+      const key = `${r.bairro}→${r.destino}`;
+      (routes[key] = routes[key] || { ...r, horarios: [] }).horarios.push(r.horario);
+    });
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const toMin = h => { const [hh, mm] = h.split(':').map(Number); return hh * 60 + mm; };
+
+    container.innerHTML = Object.values(routes).map(r => {
+      const sorted = r.horarios.slice().sort((a, b) => toMin(a) - toMin(b));
+      const next = sorted.find(h => toMin(h) >= nowMin);
+      return `
+      <div class="bus-route">
+        <div class="bus-route-head">
+          <span class="bus-route-icon"><i class="ti ti-bus"></i></span>
+          <div class="bus-route-info">
+            <p class="bus-route-name">${r.bairro} <i class="ti ti-arrow-right"></i> ${r.destino}</p>
+            <p class="bus-route-meta">${r.empresa || ''}${r.preco ? ` · ${r.preco}` : ''}</p>
+          </div>
+          ${next ? `<span class="bus-route-next">Próximo<strong>${next}</strong></span>` : ''}
+        </div>
+        <div class="bus-times">${sorted.map(h => `<span class="bus-time${h === next ? ' is-next' : ''}">${h}</span>`).join('')}</div>
+      </div>`;
+    }).join('');
   }
   function renderUtilities() {
     document.getElementById('utilities-grid').innerHTML = UTILITIES.map(u=>`
@@ -2299,7 +2366,7 @@ function getDemoHighlights() {
     const lista = document.getElementById('vagas-home-list');
     if (!lista) return;
     if (!allVagas.length) { lista.innerHTML='<p class="text-muted">Nenhuma vaga disponível no momento.</p>'; return; }
-    lista.innerHTML = allVagas.slice(0,4).map(v=>`
+    lista.innerHTML = allVagas.map(v=>`
       <div style="background:white;border-radius:14px;border:1px solid #E5E7EB;padding:16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <div>
           <div style="font-weight:700;font-size:15px">💼 ${v.cargo}</div>
@@ -2314,7 +2381,7 @@ function getDemoHighlights() {
     const container = document.getElementById('promocoes-scroll');
     if (!container) return;
     if (!allPromocoes.length) { container.innerHTML='<p class="text-muted text-center w-full py-4">Nenhuma promoção no momento.</p>'; return; }
-    container.innerHTML = allPromocoes.slice(0,8).map(p=>{
+    container.innerHTML = allPromocoes.map(p=>{
       const valOrig = p.valOriginal || p.valorOriginal || 0;
       const valPromo = p.valPromo || p.valorPromo || 0;
       const disc = valOrig && valPromo ? Math.round(100-(valPromo/valOrig*100)) : 0;
@@ -2538,6 +2605,13 @@ function getDemoHighlights() {
       page.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'instant' });
       if (pageId === 'map' && typeof window.initMap === 'function') window.initMap();
+      document.body.dataset.page = pageId;
+      if (pageId !== 'company') window._lastPage = pageId;
+      // Telas internas marcam a aba de onde vieram
+      const UTIL_PAGES = ['utilidades','bus','servicos','promocoes','vagas','classificados','map'];
+      const navKey = UTIL_PAGES.includes(pageId) ? 'utilidades'
+        : ['news','events','profile'].includes(pageId) ? pageId : 'home';
+      document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === navKey));
     } else {
       console.warn('Pagina nao encontrada:', pageId);
     }
@@ -2644,9 +2718,6 @@ function getDemoHighlights() {
     window._toastTimer = setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.style.cssText='display:none',300); }, ms);
   };
   </script>
-  <button class="ai-float-btn" onclick="toggleAIChat()">
-  🤖
-</button>
 
 <div id="ai-floating-chat" class="ai-floating-chat hidden">
   <div class="ai-floating-header">    <span>IA Antas Digital</span>

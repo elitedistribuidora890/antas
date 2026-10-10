@@ -1,0 +1,441 @@
+/* ═══════════════════════════════════════════════
+   ANTAS DIGITAL — VISUAL DE APLICATIVO
+   Carregado depois do styles.css. Só cuida do visual.
+═══════════════════════════════════════════════ */
+
+:root {
+  --app-bg: #F5F6FB;
+  --app-blue: #1E4FD1;
+  --app-blue-dark: #163B9E;
+  --app-soft: #EEF2FD;
+  --app-text: #151A2D;
+  --app-muted: #6B7287;
+  --app-line: #E6E8F0;
+  --app-card-shadow: 0 1px 2px rgba(16,19,30,.04), 0 6px 18px rgba(16,19,30,.06);
+}
+
+body { background: var(--app-bg); color: var(--app-text); }
+
+/* O cabeçalho azul só aparece no Início; as outras telas têm a própria barra */
+body:not([data-page="home"]) { --navbar-h: 0px; }
+body:not([data-page="home"]) .navbar { display: none; }
+
+/* ─── Cabeçalho azul ─── */
+.navbar.appbar {
+  height: auto; background: var(--app-blue); border: 0; box-shadow: none;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.appbar .nav-container { height: var(--navbar-h); }
+.appbar .nav-logo { gap: 10px; color: white; text-decoration: none; }
+.appbar .logo-mark {
+  width: 40px; height: 40px; border-radius: 12px; background: white; padding: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+.appbar .logo-mark img { width: 100%; height: 100%; object-fit: contain; }
+.appbar-brand { display: flex; flex-direction: column; line-height: 1.15; }
+.appbar-brand span { font-size: 19px; font-weight: 800; letter-spacing: -.02em; color: white; }
+.appbar-brand small { font-size: 12.5px; font-weight: 500; color: rgba(255,255,255,.82); display: flex; align-items: center; gap: 3px; margin-top: 2px; }
+.appbar-brand small i { font-size: 14px; }
+.appbar .nav-actions { gap: 10px; }
+.appbar-btn {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.16); color: white;
+}
+.appbar-btn i { font-size: 22px; }
+.appbar-btn--solid { background: white; color: var(--app-blue); }
+.appbar .user-avatar {
+  width: 44px; height: 44px; background: white; color: var(--app-blue);
+  font-weight: 800; font-size: 17px; border: 0;
+}
+
+/* ─── Busca da home ─── */
+.home-search { padding: 18px 0 4px; }
+.home-search .container { position: relative; }
+.home-search .search-bar {
+  border-radius: 18px; border: 1.5px solid var(--app-line);
+  box-shadow: 0 4px 16px rgba(30,79,209,.08);
+}
+.home-search .search-bar:focus-within { border-color: var(--app-blue); box-shadow: 0 0 0 4px rgba(30,79,209,.12); transform: none; }
+.home-search .search-icon { left: 18px; color: var(--app-blue); font-size: 22px; display: flex; }
+.home-search .search-bar input { padding: 17px 12px 17px 52px; font-size: 16px; }
+.home-search .search-bar input::placeholder { font-size: 16px; color: var(--app-muted); }
+.home-search .search-suggestions { left: 16px; right: 16px; }
+
+/* ─── Blocos ─── */
+.app-block { padding: 26px 0 0; }
+.app-block:last-child { padding-bottom: 28px; }
+.app-block-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 12px; margin-bottom: 16px;
+}
+.app-block-title { font-size: 21px; font-weight: 800; color: var(--app-text); letter-spacing: -.02em; line-height: 1.2; }
+.app-block-sub { font-size: 14px; color: var(--app-muted); margin-top: 4px; }
+.app-block-link { font-size: 14px; font-weight: 700; color: var(--app-blue); padding: 4px 0; white-space: nowrap; background: none; }
+
+/* ─── Categorias (quadrados suaves com ícone) ─── */
+.categories-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px 8px; }
+.category-card {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: none; border: 0; padding: 0; overflow: visible; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.category-card::before { display: none; }
+.category-card:hover { transform: none; box-shadow: none; border: 0; }
+.category-card .cat-icon {
+  width: 64px; height: 64px; margin: 0; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; line-height: 1;
+  background: color-mix(in srgb, var(--cat-color) 13%, white);
+  transition: transform .15s ease;
+}
+.category-card .cat-icon i { font-size: 28px; color: var(--cat-color); }
+.category-card:active .cat-icon { transform: scale(.92); }
+.category-card .cat-name {
+  font-size: 12.5px; font-weight: 600; color: var(--app-text);
+  text-align: center; line-height: 1.25;
+}
+.category-card:hover .cat-name { color: var(--app-text); }
+.category-card .cat-count { margin: 0; font-size: 11px; background: none; padding: 0; color: var(--app-muted); }
+.categories-grid--all { grid-template-columns: repeat(3, 1fr); gap: 22px 10px; }
+.categories-grid--all .cat-icon { width: 76px; height: 76px; border-radius: 50%; font-size: 36px; }
+
+/* ─── Cartões "Negócios em destaque" ─── */
+.biz-scroll {
+  display: flex; gap: 14px; overflow-x: auto;
+  margin: 0 -16px; padding: 2px 16px 12px;
+  scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none;
+}
+.biz-scroll::-webkit-scrollbar { display: none; }
+.biz-card {
+  flex: 0 0 78%; max-width: 300px; scroll-snap-align: start;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  padding: 12px 12px 16px; text-align: left;
+  background: white; border-radius: 22px; border: 1px solid var(--app-line);
+  box-shadow: var(--app-card-shadow);
+  -webkit-tap-highlight-color: transparent;
+}
+.biz-card:active { transform: scale(.98); }
+.biz-card-photo {
+  width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; margin-bottom: 8px;
+  background-size: cover; background-position: center; background-color: var(--app-soft);
+  display: flex; align-items: center; justify-content: center;
+}
+.biz-card-photo span { font-size: 40px; font-weight: 800; color: white; }
+.biz-card-name { font-size: 17px; font-weight: 800; color: var(--app-text); letter-spacing: -.01em; margin-top: 4px; }
+.biz-card-cat { font-size: 13.5px; color: var(--app-muted); }
+.biz-card-place { font-size: 13.5px; color: var(--app-muted); display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.biz-card-place i { font-size: 16px; }
+
+.badge-sponsor {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px;
+  background: #FEF3C7; color: #92400E; font-size: 12.5px; font-weight: 700;
+}
+.badge-sponsor i { color: #F59E0B; font-size: 14px; }
+
+/* ─── Publicidade ─── */
+.ads-carousel-section { padding: 26px 0 0; }
+.ads-carousel { border-radius: 22px; }
+
+/* ─── Eventos ─── */
+.events-scroll {
+  gap: 14px; margin: 0 -16px; padding: 2px 16px 12px;
+  scroll-snap-type: x mandatory; scroll-padding: 0 16px;
+}
+.event-card {
+  width: 240px; border-radius: 22px; scroll-snap-align: start;
+  border: 1px solid var(--app-line); box-shadow: var(--app-card-shadow);
+}
+.event-img { height: 130px; }
+.event-body { padding: 12px 14px 14px; }
+.event-title { font-size: 15px; }
+
+/* ─── Notícias ─── */
+.news-grid { gap: 12px; }
+.news-card { border-radius: 20px; gap: 12px; border: 1px solid var(--app-line); box-shadow: none; }
+.news-img { width: 96px; min-height: 96px; }
+.news-body { padding: 12px 12px 12px 0; }
+.news-grid .news-summary, .news-card .news-read { display: none; }
+.news-grid-full { padding: 0; }
+
+/* ─── Banner "Divulgar negócio" ─── */
+.promo-banner {
+  width: 100%; display: flex; align-items: center; gap: 14px; text-align: left;
+  padding: 18px; border-radius: 22px; color: var(--app-text);
+  background: var(--app-soft); border: 1px solid #DCE4FB;
+}
+.promo-banner-icon {
+  width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: white; color: var(--app-blue);
+}
+.promo-banner-icon i { font-size: 24px; }
+.promo-banner-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.promo-banner-text strong { font-size: 16px; }
+.promo-banner-text small { font-size: 13.5px; color: var(--app-muted); }
+.promo-banner-arrow { font-size: 20px; color: var(--app-blue); }
+
+/* ─── Barra das telas internas (voltar + título centralizado) ─── */
+.page-header {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 64px; padding: calc(10px + env(safe-area-inset-top, 0px)) 72px 10px;
+  background: rgba(245,246,251,.94); border: 0;
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.page-header > div { text-align: center; min-width: 0; }
+.page-header .back-btn { position: absolute; left: 16px; bottom: 9px; }
+.back-btn {
+  width: 46px; height: 46px; padding: 0; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 14px; background: white; border: 1px solid var(--app-line); color: var(--app-text);
+}
+.back-btn:hover { background: white; }
+.back-btn i { font-size: 22px; }
+.page-title { font-size: 18px; font-weight: 800; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-subtitle { font-size: 12.5px; color: var(--app-muted); }
+.page-header--tab { justify-content: flex-start; padding-left: 16px; }
+.page-header--tab > div { text-align: left; }
+.page-header--tab .page-title { font-size: 26px; }
+
+.page-body { padding-top: 12px; padding-bottom: 28px; }
+.page > .container:not(.page-body) { padding-top: 12px; padding-bottom: 28px; }
+.page-lead { font-size: 14.5px; color: var(--app-muted); margin-bottom: 18px; }
+.page-section-title { margin: 6px 0 12px; font-size: 18px; }
+.page-section-title ~ .page-section-title { margin-top: 26px; }
+.page-note { font-size: 12.5px; color: var(--app-muted); text-align: center; margin-top: 16px; }
+
+/* Filtros em linha única rolável */
+.chip-row {
+  display: flex; gap: 8px; overflow-x: auto; flex-wrap: nowrap;
+  margin: 0 -16px 16px; padding: 2px 16px; scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0; white-space: nowrap;
+  height: 40px; padding: 0 16px; border-radius: 999px;
+  background: white; border: 1.5px solid var(--app-line); color: var(--app-text);
+  font-size: 14px; font-weight: 600;
+}
+.filter-chip.active { background: var(--app-blue); border-color: var(--app-blue); color: white; }
+
+/* ─── Utilidades ─── */
+.util-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.util-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 16px; text-align: left; border-radius: 22px;
+  background: white; border: 1px solid var(--app-line);
+  -webkit-tap-highlight-color: transparent;
+}
+.util-tile:active { transform: scale(.97); }
+.util-emoji {
+  width: 52px; height: 52px; border-radius: 16px; margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+  background: color-mix(in srgb, var(--t) 12%, white);
+}
+.util-tile strong { font-size: 15px; color: var(--app-text); }
+.util-tile small { font-size: 12.5px; color: var(--app-muted); line-height: 1.3; }
+
+#page-servicos .utilities-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.utility-photo-card { border-radius: 20px; }
+
+/* Promoções */
+.promo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.promo-grid .highlight-card { width: auto; border-radius: 20px; box-shadow: none; border: 1px solid var(--app-line); }
+.promo-grid > p { grid-column: 1 / -1; }
+
+/* Ônibus */
+.bus-routes { display: flex; flex-direction: column; gap: 12px; }
+.bus-route { background: white; border-radius: 22px; padding: 16px; border: 1px solid var(--app-line); }
+.bus-route-head { display: flex; align-items: center; gap: 12px; }
+.bus-route-icon {
+  width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--app-soft); color: var(--app-blue);
+}
+.bus-route-icon i { font-size: 22px; }
+.bus-route-info { flex: 1; min-width: 0; }
+.bus-route-name { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.bus-route-name i { font-size: 14px; color: var(--app-muted); }
+.bus-route-meta { font-size: 12.5px; color: var(--app-muted); margin-top: 1px; }
+.bus-route-next { display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; font-weight: 600; color: var(--app-muted); flex-shrink: 0; }
+.bus-route-next strong { font-size: 19px; color: var(--app-blue); line-height: 1.1; }
+.bus-times { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.bus-time { padding: 6px 12px; border-radius: 999px; background: var(--app-bg); font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bus-time.is-next { background: var(--app-blue); color: white; }
+
+/* ─── Busca ─── */
+.search-page-bar {
+  position: relative; display: flex; align-items: center; margin-bottom: 22px; padding: 0;
+  background: white; border: 1.5px solid var(--app-line); border-radius: 18px;
+}
+.search-page-bar:focus-within { border-color: var(--app-blue); }
+.search-page-bar > i { position: absolute; left: 18px; font-size: 22px; color: var(--app-muted); }
+.search-page-bar input { border: 0; background: transparent; padding: 16px 16px 16px 52px; border-radius: 18px; }
+.search-page-bar input:focus { box-shadow: none; }
+.search-chips-title { font-size: 18px; margin-bottom: 12px; }
+.empty-hint { text-align: center; padding: 48px 20px; }
+.empty-hint h3 { font-size: 17px; font-weight: 800; margin-bottom: 6px; }
+.empty-hint p { font-size: 14px; color: var(--app-muted); }
+
+/* Lista de empresas (categoria, favoritos) */
+.companies-grid { gap: 14px; }
+.company-card { border-radius: 22px; border: 1px solid var(--app-line); box-shadow: none; }
+.filter-bar { margin-top: 0; }
+
+/* ─── Página da empresa ─── */
+#page-company { padding-bottom: 96px; background: var(--app-bg); }
+.company-topbar {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+  background: rgba(245,246,251,.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.company-topbar .back-btn { background: var(--app-soft); border: 0; }
+.company-topbar-title {
+  flex: 1; min-width: 0; text-align: center;
+  font-size: 17px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.round-btn {
+  width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: white; border: 1px solid var(--app-line); color: var(--app-blue);
+}
+.round-btn i { font-size: 22px; }
+.round-btn--soft { border-radius: 14px; background: var(--app-soft); border: 0; }
+#company-fav-btn.active { color: #E11D48; background: #FFE4E9; border-color: #FFE4E9; }
+
+.cp-cover { height: 240px; background-size: cover; background-position: center; }
+.cp-body { padding: 0 16px; }
+.cp-head { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+.cp-logo {
+  width: 76px; height: 76px; border-radius: 22px; overflow: hidden; flex-shrink: 0;
+  background: var(--app-soft); display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--app-card-shadow);
+}
+.cp-logo img { width: 100%; height: 100%; object-fit: cover; }
+.cp-logo span { font-size: 30px; font-weight: 800; color: var(--app-blue); }
+.cp-head-info { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.cp-name { font-size: 22px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.cp-place { font-size: 14px; color: var(--app-muted); display: flex; align-items: center; gap: 4px; }
+.cp-place i { font-size: 17px; }
+
+.cp-section { margin-top: 26px; }
+.cp-section > h3 { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
+.cp-text { font-size: 15px; color: var(--app-muted); line-height: 1.6; white-space: pre-line; }
+.cp-catalog:empty { display: none; }
+.cp-catalog .menu-section { margin: 0; padding: 0; border: 0; }
+.cp-catalog .menu-section-title { font-size: 18px; font-weight: 800; }
+.cp-section > div[style*="background:#F9FAFB"] {
+  margin: 0 !important; background: white !important;
+  border: 1px solid var(--app-line); border-radius: 18px !important;
+}
+
+.cp-gallery { display: flex; gap: 10px; overflow-x: auto; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+.cp-gallery::-webkit-scrollbar { display: none; }
+.cp-gallery img { width: 150px; height: 150px; object-fit: cover; border-radius: 18px; flex-shrink: 0; cursor: pointer; }
+
+.cp-link {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  font-size: 15px; color: var(--app-blue); text-decoration: none; word-break: break-all;
+}
+.cp-link:hover { text-decoration: none; }
+.cp-link i { font-size: 24px; flex-shrink: 0; }
+
+.btn-outline-route {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+  height: 50px; padding: 0 22px; border-radius: 16px;
+  border: 2px solid var(--app-blue); color: var(--app-blue); background: white;
+  font-size: 15px; font-weight: 700;
+}
+.btn-outline-route i { font-size: 20px; }
+
+.company-actionbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: flex; gap: 12px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255,255,255,.96); border-top: 1px solid var(--app-line);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.cta-whatsapp, .cta-call {
+  height: 56px; border-radius: 18px; font-size: 16px; font-weight: 800;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
+}
+.cta-whatsapp i, .cta-call i { font-size: 24px; }
+.cta-whatsapp { flex: 1; background: var(--app-blue); color: white; }
+.cta-call { flex: 0 0 auto; padding: 0 22px; border: 2px solid var(--app-blue); color: var(--app-blue); background: white; }
+.cta-call:hover { text-decoration: none; }
+.company-actionbar .cta-call:only-child { flex: 1; }
+
+/* Na página da empresa a barra de contato substitui a barra inferior */
+body[data-page="company"] .bottom-nav { display: none; }
+body:not([data-page="company"]) .company-actionbar { display: none; }
+
+.image-viewer {
+  position: fixed; inset: 0; z-index: 100000; background: rgba(0,0,0,.92);
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.image-viewer img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+.image-viewer button {
+  position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: 16px;
+  width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.15); color: white;
+}
+.image-viewer button i { font-size: 22px; }
+
+/* ─── Barra inferior: ícone simples, aba ativa em azul ─── */
+.bottom-nav {
+  height: calc(var(--bottom-nav-h) + 4px + env(safe-area-inset-bottom, 0px));
+  background: rgba(255,255,255,.97); box-shadow: none; border-top: 1px solid var(--app-line);
+}
+.bottom-nav-item { font-size: 11.5px; font-weight: 600; color: #8A90A2; gap: 4px; }
+.bottom-nav-item.active { color: var(--app-blue); transform: none; }
+.bottom-nav-item .bnav-icon,
+.bottom-nav-item.active .bnav-icon {
+  width: auto; height: auto; background: none; box-shadow: none; transform: none; color: inherit;
+}
+.bnav-icon i { font-size: 26px; }
+.bottom-nav-item.active span:last-child { font-weight: 700; }
+
+/* ─── Chat da IA abre acima da barra inferior ─── */
+.ai-floating-chat {
+  bottom: calc(var(--bottom-nav-h) + 12px + env(safe-area-inset-bottom, 0px));
+  left: 12px; right: 12px; width: auto; max-width: none;
+}
+
+/* Catálogo da empresa: cartões lado a lado */
+.product-scroll { display: flex; gap: 12px; overflow-x: auto; margin: 0 -16px 6px; padding: 2px 16px 10px; scrollbar-width: none; }
+.product-scroll::-webkit-scrollbar { display: none; }
+.product-card {
+  flex: 0 0 160px; background: white; border: 1px solid var(--app-line);
+  border-radius: 20px; overflow: hidden; cursor: pointer;
+}
+.product-card:active { transform: scale(.98); }
+.product-card.is-unavailable { opacity: .55; cursor: default; }
+.product-card-img {
+  height: 120px; background: var(--app-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 34px;
+}
+.product-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.product-card-body { padding: 10px 12px 12px; }
+.product-card-name { font-size: 14px; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.product-card-price { font-size: 15px; font-weight: 800; color: var(--app-blue); margin-top: 4px; }
+.product-card-price--muted { font-size: 13px; }
+.product-card-tag { display: inline-block; margin-top: 4px; font-size: 11px; font-weight: 700; color: #B91C1C; }
+.cp-catalog .menu-group-title { font-size: 13px; font-weight: 700; color: var(--app-muted); margin: 6px 0 8px; }
+.cp-catalog .menu-list { display: block; }
+
+/* Lista de empresas da categoria e favoritos: mesmos cartões da home, em coluna */
+.companies-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.companies-grid .biz-card { flex: none; max-width: none; width: 100%; }
+#page-category .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; }
+#page-category .filter-input { flex: 1; border-radius: 16px; }
+#page-category .filter-select { flex: 0 0 auto; width: auto; max-width: 150px; border-radius: 16px; }
+
+/* Resultados da busca: produtos como cartões */
+.search-result-block { background: white; border: 1px solid var(--app-line); border-radius: 22px; padding: 14px; }
+.product-col { background: var(--app-bg); border-radius: 16px; overflow: hidden; padding-bottom: 10px; }
+.product-col-img, .product-col-noimg { border-radius: 0; }
+.product-col-noimg { display: flex; align-items: center; justify-content: center; font-size: 30px; background: var(--app-soft); }
+.product-col-price, .product-col-name { padding: 0 10px; }
+.product-col-price { color: var(--app-blue); }

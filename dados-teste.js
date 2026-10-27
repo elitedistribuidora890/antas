@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   DADOS DE TESTE — Antas Digital
+   DADOS DE TESTE — Achei Fácil
    Cria empresas de todas as categorias, com cardápio ou catálogo,
    promoções e notícias, para ver o app funcionando.
    Tudo leva "teste: true" e "[TESTE]" no nome, e o botão
@@ -10,7 +10,7 @@
 (function () {
   const foto = (id, w = 800) => `https://images.unsplash.com/photo-${id}?w=${w}&q=70&auto=format&fit=crop`;
   const TAG = '[TESTE] ';
-  const AVISO = 'Empresa fictícia criada para teste do Antas Digital. Não é um estabelecimento real.';
+  const AVISO = 'Empresa fictícia criada para teste do Achei Fácil. Não é um estabelecimento real.';
   const AVISO_ITEM = 'Item de teste. ';
 
   // Fotos conferidas (Unsplash)
@@ -276,7 +276,7 @@
       ] },
 
     // ── Influenciadores ──
-    { nome: 'Vivi Antas Digital', categoria: 'Influenciadores', descricao: 'Divulgação de comércios locais no Instagram.',
+    { nome: 'Vivi Achei Fácil', categoria: 'Influenciadores', descricao: 'Divulgação de comércios locais no Instagram.',
       logo: F.celular2, horarios: COMERCIAL, itens: [
         i('Divulgação', 'Stories (3 sequências)', 'Com link para o seu perfil.', 50, F.celular2),
         i('Divulgação', 'Post no feed', 'Foto e legenda.', 80),
@@ -516,7 +516,7 @@
       resP.forEach(r => r.status === 'rejected' && erros.push(`promoção: ${r.reason?.code || r.reason}`));
       const resN = await Promise.allSettled(NOTICIAS.map(nt => addDoc(collection(db, 'noticias'), {
         titulo: TAG + nt.titulo, categoria: nt.categoria,
-        autor: 'Antas Digital (teste)', texto: nt.texto, imagemUrl: '',
+        autor: 'Achei Fácil (teste)', texto: nt.texto, imagemUrl: '',
         teste: true, criadoEm: serverTimestamp(),
       })));
       resN.forEach(r => r.status === 'rejected' && erros.push(`notícia: ${r.reason?.code || r.reason}`));

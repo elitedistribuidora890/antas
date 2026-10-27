@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   DIAGNÓSTICO DO BANCO — Antas Digital (admin)
+   DIAGNÓSTICO DO BANCO — Achei Fácil (admin)
    1) Testa a leitura de cada coleção que o app e o painel usam
       e explica cada erro em português.
    2) Guarda os erros que acontecem enquanto o painel está aberto

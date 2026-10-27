@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   SACOLA — Antas Digital
+   SACOLA — Achei Fácil
    Fluxo de pedido no estilo dos apps de delivery:
    toca no item → escolhe quantidade/observação → "Adicionar"
    → barra "Ver sacola" → revisa, escolhe entrega/retirada e pagamento
@@ -28,6 +28,35 @@
   // Observação e troco do pedido atual (não ficam salvos entre pedidos)
   const rascunho = { obs: '', troco: '' };
   window.guardarRascunho = (campo, valor) => { rascunho[campo] = valor; };
+
+  // ─── Conta obrigatória para pedir ───
+  // Sem login, abre o cadastro/entrada e, depois que a pessoa entrar,
+  // continua de onde parou (o index chama window._acaoAposLogin).
+  function exigirLogin(acao, msg) {
+    if (window.currentUser) return true;
+    window._acaoAposLogin = acao;
+    toast(msg || 'Crie sua conta ou entre para fazer o pedido', 'info', 4000);
+    if (window.openModal) window.openModal('auth-modal');
+    return false;
+  }
+
+  // Salva o pedido no Firebase (coleção "pedidos") para contar no painel admin.
+  // Não segura o envio: o WhatsApp abre na hora e o registro vai em segundo plano.
+  function registrarPedido(dados) {
+    try {
+      const u = window.currentUser;
+      if (!u || !window.DB || !window.FB?.addDoc) return;
+      const { collection, addDoc, serverTimestamp } = window.FB;
+      addDoc(collection(window.DB, 'pedidos'), {
+        ...dados,
+        clienteUid: u.uid,
+        clienteEmail: u.email || '',
+        clienteConta: u.displayName || '',
+        status: 'enviado',
+        criadoEm: serverTimestamp ? serverTimestamp() : new Date(),
+      }).catch(e => console.warn('Não foi possível registrar o pedido:', e));
+    } catch (e) { console.warn('Não foi possível registrar o pedido:', e); }
+  }
 
   const totalItens = () => (sacola?.itens || []).reduce((a, i) => a + i.qtd, 0);
   const subtotal = () => (sacola?.itens || []).reduce((a, i) => a + i.qtd * i.preco, 0);
@@ -131,11 +160,18 @@
   window.solicitarServico = function () {
     const it = itemAtual;
     const obs = document.getElementById('is-obs').value.trim();
-    const msg = `Olá! Vi no *Antas Digital* e gostaria de um orçamento:\n\n`
+    if (!exigirLogin(null, 'Crie sua conta ou entre para pedir orçamento')) return;
+    const msg = `Olá! Vi no *Achei Fácil* e gostaria de um orçamento:\n\n`
       + `*Serviço:* ${it.nome}${it.preco > 0 ? ` (a partir de ${brl(it.preco)})` : ''}\n`
       + (obs ? `*Detalhes:* ${obs}\n` : '');
     closeModal('item-sheet');
-    enviarWhatsApp(it.loja, msg);
+    if (enviarWhatsApp(it.loja, msg)) {
+      registrarPedido({
+        tipo: 'orcamento', lojaId: it.loja.id || '', lojaNome: it.loja.nome || '', lojaCategoria: it.loja.categoria || '',
+        itens: [{ nome: it.nome, qtd: 1, preco: it.preco || 0, obs }], qtdItens: 1,
+        subtotal: it.preco || 0, taxaEntrega: 0, total: it.preco || 0,
+      });
+    }
   };
 
   // ─── Barra "Ver sacola" ───
@@ -304,15 +340,28 @@
       </section>
       <div id="sc-preview"></div>`;
 
+    const logado = !!window.currentUser;
     document.getElementById('sacola-footer').innerHTML = `
+      ${logado ? '' : `<p class="sc-login-hint"><i class="ti ti-user-check"></i> Para fazer o pedido, entre na sua conta. É rapidinho e só precisa fazer uma vez.</p>`}
       <button class="sc-send" onclick="enviarPedido()" ${faltaMinimo ? 'disabled' : ''}>
-        <i class="ti ti-brand-whatsapp"></i>
-        <span>Enviar pedido</span>
+        <i class="ti ti-${logado ? 'brand-whatsapp' : 'login-2'}"></i>
+        <span>${logado ? 'Enviar pedido' : 'Entrar e fazer pedido'}</span>
         <strong>${brl(total)}</strong>
       </button>`;
   }
 
+  // Atualiza a sacola aberta quando a pessoa entra/sai da conta
+  window.sacolaAuthMudou = function () {
+    if (document.body.dataset.page === 'sacola' && sacola) renderSacola();
+  };
+
   window.enviarPedido = function () {
+    if (!sacola) return;
+    if (!exigirLogin(() => {
+      if (!sacola) return;
+      if (document.body.dataset.page !== 'sacola') window.abrirSacola(); else renderSacola();
+      toast('Pronto! Agora toque em "Enviar pedido" 👇', 'success', 4000);
+    })) return;
     const loja = sacola.loja;
     const nome = document.getElementById('sc-nome').value.trim();
     const endereco = document.getElementById('sc-endereco')?.value.trim() || '';
@@ -328,7 +377,7 @@
     const linhas = sacola.itens.map(i =>
       `${i.qtd}x ${i.nome} — ${i.preco > 0 ? brl(i.preco * i.qtd) : 'a combinar'}` + (i.obs ? `\n   _Obs: ${i.obs}_` : '')).join('\n');
 
-    const msg = `🛍️ *Novo pedido — Antas Digital*\n`
+    const msg = `🛍️ *Novo pedido — Achei Fácil*\n`
       + `*Loja:* ${loja.nome}\n\n`
       + `*Itens*\n${linhas}\n\n`
       + `Subtotal: ${brl(sub)}\n`
@@ -342,6 +391,13 @@
       + (obs ? `*Obs:* ${obs}\n` : '');
 
     if (enviarWhatsApp(loja, msg, true)) {
+      registrarPedido({
+        tipo: 'pedido', lojaId: loja.id || '', lojaNome: loja.nome || '', lojaCategoria: loja.categoria || '',
+        itens: sacola.itens.map(i => ({ nome: i.nome, qtd: i.qtd, preco: i.preco || 0, obs: i.obs || '' })),
+        qtdItens: totalItens(), subtotal: sub, taxaEntrega: taxa, total: sub + (taxa || 0),
+        modo: cliente.modo, pagamento: cliente.pagamento, clienteNome: nome,
+        endereco: cliente.modo === 'entrega' ? endereco : '', observacao: obs,
+      });
       rascunho.obs = rascunho.troco = '';
       sacola = null;
       salvar();

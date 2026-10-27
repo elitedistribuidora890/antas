@@ -157,11 +157,12 @@ const PAGE_LABELS = {
   usuarios:'Usuários', configuracoes:'Configurações',
   'promocoes-admin':'Promoções da Cidade', 'classificados-admin':'Classificados',
   'config-ia':'Configurações da IA', 'config-firebase':'Configurações do Firebase',
-  estatisticas:'Acessos do Site'
+  estatisticas:'Acessos do Site', pedidos:'Pedidos'
 };
 window.PAGE_LOADERS = {
   dashboard: () => loadDashboard(),
   estatisticas: () => loadEstatisticas(),
+  pedidos: () => loadPedidos(),
   empresas: () => loadEmpresas(),
   aprovacoes: () => loadAprovacoes(),
   noticias: () => loadNoticias(),
@@ -252,6 +253,16 @@ async function loadDashboard() {
     const soma = campo => emp.docs.reduce((t, d) => t + (Number(d.data()[campo]) || 0), 0);
     document.getElementById('stat-visualizacoes').textContent = soma('views').toLocaleString('pt-BR');
     document.getElementById('stat-whatsapp').textContent = soma('whatsappClicks').toLocaleString('pt-BR');
+
+    // Total de pedidos feitos pelo app (coleção pedidos)
+    try {
+      const { getCountFromServer } = fb();
+      const c = await getCountFromServer(collection(db(), 'pedidos'));
+      document.getElementById('stat-pedidos').textContent = c.data().count.toLocaleString('pt-BR');
+    } catch (e) {
+      console.warn('Pedidos: sem permissão de leitura ou coleção ainda vazia.', e);
+      document.getElementById('stat-pedidos').textContent = '0';
+    }
 
     // Pending badge
    const pendDocs = await getDocs(query(collection(db(), 'solicitacoes_empresas'), where('status','==','pendente')));
@@ -648,7 +659,7 @@ async function loadAprovacoes() {
           </div>
           ${e.usuarioWhatsapp ? (() => {
             const uwRaw = e.usuarioWhatsapp.replace(/\D/g, '');
-            const msg = encodeURIComponent(`Olá ${e.usuarioNome || ''}! Recebemos sua solicitação para divulgar "${e.nome || 'seu negócio'}" no Antas Digital.`);
+            const msg = encodeURIComponent(`Olá ${e.usuarioNome || ''}! Recebemos sua solicitação para divulgar "${e.nome || 'seu negócio'}" no Achei Fácil.`);
             return `<a href="https://wa.me/55${uwRaw}?text=${msg}" target="_blank" class="btn-whatsapp-user">
               <svg viewBox="0 0 24 24" width="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.124 1.534 5.857L0 24l6.334-1.508A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.028-1.383l-.36-.214-3.762.896.952-3.663-.234-.376A9.793 9.793 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
               Falar com Solicitante
@@ -671,7 +682,7 @@ async function loadAprovacoes() {
             <div class="aprovacao-field aprovacao-field-wp">
               <strong>WhatsApp</strong>
               <span>${e.whatsapp || '—'}</span>
-              ${wpLink ? `<a href="${wpLink}?text=${encodeURIComponent(`Olá! Somos do Antas Digital e gostaríamos de confirmar seu cadastro de "${e.nome}".`)}" target="_blank" class="btn-whatsapp-inline">
+              ${wpLink ? `<a href="${wpLink}?text=${encodeURIComponent(`Olá! Somos do Achei Fácil e gostaríamos de confirmar seu cadastro de "${e.nome}".`)}" target="_blank" class="btn-whatsapp-inline">
                 <svg viewBox="0 0 24 24" width="13" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.124 1.534 5.857L0 24l6.334-1.508A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.028-1.383l-.36-.214-3.762.896.952-3.663-.234-.376A9.793 9.793 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
                 WhatsApp
               </a>` : ''}
@@ -1304,7 +1315,7 @@ window.saveConfiguracoes = async function() {
   } catch(e) { toast('Erro ao salvar configurações.','error'); }
 };
 
-console.log('[Antas Digital Admin] Panel loaded.');
+console.log('[Achei Fácil Admin] Panel loaded.');
 /* ══════════════════════════════════════════
    ADMIN — PROMOÇÕES, CLASSIFICADOS, IA, FIREBASE
 ══════════════════════════════════════════ */
@@ -1692,3 +1703,92 @@ window.deleteAvaliacao = async function(ratingId, companyId) {
     console.error(e);
   }
 };
+
+// ══════════════════════════════════════════════════
+// PEDIDOS (coleção "pedidos", gravada pelo sacola.js)
+// ══════════════════════════════════════════════════
+let _pedidosCache = null;
+let _pedidosDias = 30;
+
+window.setPeriodoPedidos = function (dias) {
+  _pedidosDias = dias;
+  document.querySelectorAll('#pedidos-periodo button').forEach(b => b.classList.toggle('active', Number(b.dataset.dias) === dias));
+  renderPedidos();
+};
+
+window.loadPedidos = async function (forcar) {
+  const { collection, getDocs, query, orderBy, limit } = fb();
+  if (_pedidosCache && !forcar) return renderPedidos();
+  const tb = document.getElementById('tbody-pedidos');
+  if (tb) tb.innerHTML = '<tr><td colspan="6" class="loading-row">Carregando...</td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db(), 'pedidos'), orderBy('criadoEm', 'desc'), limit(2000)));
+    _pedidosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch (e) {
+    console.error(e);
+    _pedidosCache = [];
+    toast('Não foi possível ler os pedidos. Confira as regras do Firestore para a coleção "pedidos".', 'error', 6000);
+  }
+  renderPedidos();
+};
+
+function renderPedidos() {
+  const lista = _pedidosCache || [];
+  const brl = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const dataDe = p => p.criadoEm?.toDate ? p.criadoEm.toDate() : (p.criadoEm ? new Date(p.criadoEm) : null);
+
+  const agora = new Date();
+  const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  let inicio = null;
+  if (_pedidosDias === 1) inicio = inicioHoje;
+  else if (_pedidosDias > 0) inicio = new Date(inicioHoje.getTime() - (_pedidosDias - 1) * 86400000);
+
+  const periodo = lista.filter(p => { const d = dataDe(p); return !inicio || (d && d >= inicio); });
+  const pedidos = periodo.filter(p => p.tipo !== 'orcamento');
+  const orcamentos = periodo.filter(p => p.tipo === 'orcamento');
+  const valor = pedidos.reduce((t, p) => t + (Number(p.total) || 0), 0);
+  const clientes = new Set(periodo.map(p => p.clienteUid).filter(Boolean));
+  const hoje = lista.filter(p => { const d = dataDe(p); return d && d >= inicioHoje; }).length;
+
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('stat-ped-pedidos', pedidos.length.toLocaleString('pt-BR'));
+  set('stat-ped-orcamentos', orcamentos.length.toLocaleString('pt-BR'));
+  set('stat-ped-valor', brl(valor));
+  set('stat-ped-ticket', pedidos.length ? brl(valor / pedidos.length) : '—');
+  set('stat-ped-clientes', clientes.size.toLocaleString('pt-BR'));
+  set('stat-ped-hoje', hoje.toLocaleString('pt-BR'));
+  set('pedidos-periodo-label', _pedidosDias === 0 ? `${lista.length} registros no total` :
+    `Desde ${inicio.toLocaleDateString('pt-BR')}`);
+
+  // Por loja
+  const porLoja = {};
+  periodo.forEach(p => {
+    const k = p.lojaNome || '—';
+    porLoja[k] = porLoja[k] || { pedidos: 0, orcamentos: 0, valor: 0 };
+    if (p.tipo === 'orcamento') porLoja[k].orcamentos++;
+    else { porLoja[k].pedidos++; porLoja[k].valor += Number(p.total) || 0; }
+  });
+  const lojas = Object.entries(porLoja).sort((a, b) => (b[1].pedidos + b[1].orcamentos) - (a[1].pedidos + a[1].orcamentos));
+  const tbL = document.getElementById('tbody-pedidos-lojas');
+  if (tbL) tbL.innerHTML = lojas.length ? lojas.map(([nome, l]) =>
+    `<tr><td>${esc(nome)}</td><td class="num">${l.pedidos}</td><td class="num">${l.orcamentos}</td><td class="num">${brl(l.valor)}</td></tr>`).join('')
+    : '<tr><td colspan="4" class="loading-row">Nenhum pedido no período.</td></tr>';
+
+  // Lista
+  const tb = document.getElementById('tbody-pedidos');
+  if (tb) tb.innerHTML = periodo.length ? periodo.slice(0, 300).map(p => {
+    const d = dataDe(p);
+    const quando = d ? `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : '—';
+    const itens = (p.itens || []).map(i => `${i.qtd}× ${esc(i.nome)}`).join(', ');
+    const cliente = esc(p.clienteNome || p.clienteConta || p.clienteEmail || '—');
+    return `<tr>
+      <td>${quando}</td>
+      <td>${cliente}${p.clienteEmail ? `<br><small style="color:#6B7287">${esc(p.clienteEmail)}</small>` : ''}</td>
+      <td>${esc(p.lojaNome || '—')}</td>
+      <td style="max-width:260px">${itens || '—'}</td>
+      <td class="num">${p.total ? brl(p.total) : '—'}</td>
+      <td>${p.tipo === 'orcamento' ? '<span class="badge badge-pendente">orçamento</span>' : `<span class="badge badge-ativa">${p.modo === 'retirada' ? 'retirada' : 'entrega'}</span>`}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="loading-row">Nenhum pedido no período.</td></tr>';
+}

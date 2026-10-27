@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   ANTAS DIGITAL — VISUAL DE APLICATIVO
+   ACHEI FÁCIL — VISUAL DE APLICATIVO
    Carregado depois do styles.css. Só cuida do visual.
 ═══════════════════════════════════════════════ */
 
@@ -582,6 +582,9 @@ button, .biz-row, .menu-row, .category-card, .bottom-nav-item, .filter-chip { -w
 .cp-section:first-of-type { border-top: 0; }
 .cp-section > h3 { font-size: 17px; }
 .cp-text { font-size: 14px; }
+.cp-text--clamp {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer;
+}
 
 /* Cardápio: linhas com foto à direita */
 .cp-catalog .menu-section-title { font-size: 17px; }
@@ -636,32 +639,29 @@ button, .biz-row, .menu-row, .category-card, .bottom-nav-item, .filter-chip { -w
 .cp-status.is-open { background: #E3F6EE; color: #0F7A55; }
 .cp-status.is-open .cp-status-dot { box-shadow: 0 0 0 3px rgba(15,157,107,.2); }
 
-/* Título da seção com contador */
-.cp-catalog .menu-section-header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
-.menu-section-count { font-size: 12.5px; font-weight: 600; color: var(--app-muted); }
+/* Título da seção */
+.cp-catalog .menu-section-header { margin-bottom: 2px; }
 
-/* Atalhos para os grupos (Pratos, Bebidas…) */
+/* Atalhos para os grupos (Pratos, Bebidas…): ficam presos abaixo da barra do topo */
 .cat-nav {
+  position: sticky; top: calc(62px + env(safe-area-inset-top, 0px)); z-index: 300;
   display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-  margin: 8px -16px 4px; padding: 2px 16px 6px;
+  margin: 6px -16px 0; padding: 8px 16px 10px;
+  background: var(--app-bg); border-bottom: 1px solid #F0F1F4;
 }
 .cat-nav::-webkit-scrollbar { display: none; }
 .cat-nav button {
   flex-shrink: 0; height: 34px; padding: 0 14px; border-radius: 999px;
-  background: var(--app-fill); color: var(--app-text);
-  font-size: 13px; font-weight: 600; white-space: nowrap;
+  background: var(--app-fill); color: var(--app-muted);
+  font-size: 13px; font-weight: 700; white-space: nowrap;
+  transition: background .15s, color .15s;
 }
-.cat-nav button:active { background: var(--app-text); color: #fff; }
-.cardapio-group, .pro-group { scroll-margin-top: 80px; }
+.cat-nav button.is-active { background: var(--app-text); color: #fff; }
+.cardapio-group, .pro-group { scroll-margin-top: 124px; }
 
 /* ─── Cardápio (Alimentação) ─── */
 .cardapio-group-title, .pro-group-title {
-  display: flex; align-items: center; gap: 8px;
-  margin: 20px 0 4px; font-size: 16px; font-weight: 800; color: var(--app-text); letter-spacing: -.01em;
-}
-.cardapio-group-title span, .pro-group-title span {
-  font-size: 11.5px; font-weight: 700; color: var(--app-muted);
-  background: var(--app-fill); padding: 2px 8px; border-radius: 999px;
+  margin: 22px 0 2px; font-size: 16px; font-weight: 800; color: var(--app-text); letter-spacing: -.01em;
 }
 .dish {
   display: flex; gap: 14px; align-items: stretch;
@@ -671,22 +671,25 @@ button, .biz-row, .menu-row, .category-card, .bottom-nav-item, .filter-chip { -w
 .dish:active { background: #FAFAFB; }
 .dish.is-off { cursor: default; opacity: .5; }
 .dish-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.dish-name { font-size: 15.5px; font-weight: 700; color: var(--app-text); line-height: 1.3; }
+.dish-name {
+  font-size: 15.5px; font-weight: 700; color: var(--app-text); line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .dish-desc {
   margin-top: 4px; font-size: 13px; line-height: 1.45; color: var(--app-muted);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .dish-bottom { margin-top: auto; padding-top: 10px; display: flex; align-items: center; gap: 8px; }
-.dish-price { font-size: 15.5px; font-weight: 800; color: #0F7A55; }
+.dish-price { font-size: 15.5px; font-weight: 800; color: var(--app-text); }
 .dish-price.is-muted { font-size: 13px; font-weight: 600; color: var(--app-muted); }
 .dish-off { font-size: 11.5px; font-weight: 700; color: #B42318; background: #FEECEB; padding: 2px 8px; border-radius: 999px; }
 .dish-photo {
-  position: relative; width: 104px; height: 104px; flex-shrink: 0;
+  position: relative; width: 96px; height: 96px; flex-shrink: 0;
   border-radius: 14px; overflow: visible; background: #FFF4E8;
   display: flex; align-items: center; justify-content: center;
 }
 .dish-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
-.dish-photo > i { font-size: 34px; color: #E8892B; }
+.dish-photo > i { font-size: 30px; color: #F2B776; }
 .dish-add {
   position: absolute; right: -6px; bottom: -6px;
   width: 32px; height: 32px; border-radius: 50%;
@@ -699,7 +702,7 @@ button, .biz-row, .menu-row, .category-card, .bottom-nav-item, .filter-chip { -w
 /* ─── Catálogo de serviços ─── */
 .svc-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .svc {
-  display: flex; gap: 14px; padding: 14px;
+  display: flex; align-items: center; gap: 14px; padding: 12px 14px;
   background: #fff; border: 1px solid var(--app-line); border-radius: 16px; cursor: pointer;
 }
 .svc:active { background: #FAFAFB; }
@@ -714,15 +717,12 @@ button, .biz-row, .menu-row, .category-card, .bottom-nav-item, .filter-chip { -w
 .svc-info { flex: 1; min-width: 0; }
 .svc-name { font-size: 15px; font-weight: 700; color: var(--app-text); line-height: 1.3; }
 .svc-desc {
-  margin-top: 3px; font-size: 13px; line-height: 1.45; color: var(--app-muted);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--app-muted);
+  display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
 }
-.svc-bottom {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--app-line);
-}
-.svc-cta { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 700; color: var(--app-blue); white-space: nowrap; }
-.svc-cta i { font-size: 16px; }
+.svc-bottom { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.svc-bottom .pro-price { flex-direction: row; align-items: baseline; gap: 4px; }
+.svc-go { flex-shrink: 0; font-size: 20px; color: #B8BDC9; }
 
 /* Preço do catálogo */
 .pro-price { display: flex; flex-direction: column; font-size: 15px; font-weight: 800; color: var(--app-text); line-height: 1.2; }
@@ -743,19 +743,15 @@ button, .biz-row, .menu-row, .category-card, .bottom-nav-item, .filter-chip { -w
   display: flex; align-items: center; justify-content: center;
 }
 .prod-media img { width: 100%; height: 100%; object-fit: cover; }
-.prod-media > i { font-size: 34px; }
+.prod-media > i { font-size: 30px; opacity: .45; }
 .prod-off {
   position: absolute; left: 8px; top: 8px;
   font-size: 11px; font-weight: 700; color: #fff; background: rgba(21,26,45,.8);
   padding: 3px 8px; border-radius: 999px;
 }
-.prod-info { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.prod-info { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .prod-name {
   font-size: 14px; font-weight: 700; color: var(--app-text); line-height: 1.3;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.prod-desc {
-  font-size: 12px; color: var(--app-muted); line-height: 1.4;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .prod-info .pro-price { margin-top: auto; padding-top: 4px; }
@@ -1018,3 +1014,8 @@ body[data-page="sacola"] .bottom-nav { display: none; }
   margin: 0 -16px; padding: 10px 16px; background: rgba(255,255,255,.96);
   font-size: 16px; font-weight: 800; color: var(--app-text);
 }
+
+/* Aviso de login na sacola */
+.sc-login-hint { display:flex; gap:8px; align-items:flex-start; margin:0 0 10px; padding:10px 12px; border-radius:12px;
+  background:#EEF3FF; color:#1E3A8A; font-size:13px; line-height:1.45; }
+.sc-login-hint i { font-size:18px; margin-top:1px; }

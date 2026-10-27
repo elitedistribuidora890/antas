@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Antas Digital — Painel Administrativo</title>
+  <title>Achei Fácil — Painel Administrativo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -105,16 +105,16 @@ window.addEventListener('load', () => {
   </div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-icon"><img src="logo-mark.png" alt="Antas Digital"></div>
+      <div class="logo-icon"><img src="logo-mark.png" alt="Achei Fácil"></div>
       <div>
-        <h1>Antas Digital</h1>
+        <h1>Achei Fácil</h1>
         <span>Painel Administrativo</span>
       </div>
     </div>
     <div id="login-error" class="login-error hidden"></div>
     <div class="field">
       <label>E-mail</label>
-      <input type="email" id="login-email" placeholder="admin@Antas Digital.com.br" />
+      <input type="email" id="login-email" placeholder="admin@acheifacil.com.br" />
     </div>
     <div class="field">
       <label>Senha</label>
@@ -136,7 +136,7 @@ window.addEventListener('load', () => {
       <div class="sidebar-logo">
         <img class="logo-emoji" src="logo-mark.png" alt="">
         <div>
-          <strong>Antas Digital</strong>
+          <strong>Achei Fácil</strong>
           <small>Painel administrativo</small>
         </div>
       </div>
@@ -150,6 +150,9 @@ window.addEventListener('load', () => {
       </a>
       <a class="nav-item" data-page="estatisticas" onclick="navTo('estatisticas')">
         <i class="nav-icon ti ti-chart-line"></i><span class="nav-label">Acessos do site</span>
+      </a>
+      <a class="nav-item" data-page="pedidos" onclick="navTo('pedidos')">
+        <i class="nav-icon ti ti-shopping-bag"></i><span class="nav-label">Pedidos</span>
       </a>
 
       <div class="nav-section-label">Empresas</div>
@@ -292,6 +295,13 @@ window.addEventListener('load', () => {
               <span class="stat-label">Usuários</span>
             </div>
           </div>
+          <div class="stat-card" style="--accent:#0F9D6B; cursor:pointer" onclick="navTo('pedidos')">
+            <div class="stat-icon">🛍️</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-pedidos">—</span>
+              <span class="stat-label">Pedidos feitos</span>
+            </div>
+          </div>
           <div class="stat-card" style="--accent:#3b82f6">
             <div class="stat-icon">👁️</div>
             <div class="stat-info">
@@ -332,6 +342,56 @@ window.addEventListener('load', () => {
             <table class="data-table">
               <thead><tr><th>Empresa</th><th>Data</th><th>Ação</th></tr></thead>
               <tbody id="tbody-pendentes"><tr><td colspan="3" class="loading-row">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── PEDIDOS ── -->
+      <section class="page" id="page-pedidos">
+        <div class="page-header">
+          <div>
+            <h2>Pedidos</h2>
+            <span class="page-subtitle">Pedidos e orçamentos enviados pelo app (só clientes cadastrados)</span>
+          </div>
+          <button class="btn-ghost" onclick="loadPedidos(true)"><i class="ti ti-refresh"></i> Atualizar</button>
+        </div>
+
+        <div class="period-bar">
+          <div class="period-chips" id="pedidos-periodo">
+            <button data-dias="1" onclick="setPeriodoPedidos(1)">Hoje</button>
+            <button data-dias="7" onclick="setPeriodoPedidos(7)">7 dias</button>
+            <button data-dias="30" class="active" onclick="setPeriodoPedidos(30)">30 dias</button>
+            <button data-dias="0" onclick="setPeriodoPedidos(0)">Todos</button>
+          </div>
+          <span class="period-label" id="pedidos-periodo-label"></span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card" style="--accent:#1E4FD1"><div class="stat-icon"><i class="ti ti-shopping-bag"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-pedidos">—</span><span class="stat-label">Pedidos</span></div></div>
+          <div class="stat-card" style="--accent:#7C3AED"><div class="stat-icon"><i class="ti ti-briefcase"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-orcamentos">—</span><span class="stat-label">Orçamentos</span></div></div>
+          <div class="stat-card" style="--accent:#0F9D6B"><div class="stat-icon"><i class="ti ti-cash"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-valor">—</span><span class="stat-label">Valor em pedidos</span></div></div>
+          <div class="stat-card" style="--accent:#F59E0B"><div class="stat-icon"><i class="ti ti-receipt"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-ticket">—</span><span class="stat-label">Ticket médio</span></div></div>
+          <div class="stat-card" style="--accent:#EC4899"><div class="stat-icon"><i class="ti ti-users"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-clientes">—</span><span class="stat-label">Clientes que pediram</span></div></div>
+          <div class="stat-card" style="--accent:#0EA5E9"><div class="stat-icon"><i class="ti ti-sun"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-hoje">—</span><span class="stat-label">Pedidos hoje</span></div></div>
+        </div>
+
+        <div class="table-card" style="margin-top:.85rem">
+          <h3>Pedidos por loja</h3>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>Loja</th><th class="num">Pedidos</th><th class="num">Orçamentos</th><th class="num">Valor</th></tr></thead>
+              <tbody id="tbody-pedidos-lojas"><tr><td colspan="4" class="loading-row">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-top:.85rem">
+          <h3>Últimos pedidos</h3>
+          <div class="table-scroll table-scroll--tall">
+            <table class="data-table">
+              <thead><tr><th>Data</th><th>Cliente</th><th>Loja</th><th>Itens</th><th class="num">Total</th><th>Tipo</th></tr></thead>
+              <tbody id="tbody-pedidos"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -606,7 +666,7 @@ window.addEventListener('load', () => {
           <div class="config-card">
             <h3>Contatos Oficiais</h3>
             <div class="field"><label>WhatsApp Oficial</label><input type="text" id="cfg-whatsapp" placeholder="(00) 00000-0000" /></div>
-            <div class="field"><label>Instagram</label><input type="text" id="cfg-instagram" placeholder="@Antas Digital" /></div>
+            <div class="field"><label>Instagram</label><input type="text" id="cfg-instagram" placeholder="@acheifacil" /></div>
             <div class="field"><label>Facebook</label><input type="text" id="cfg-facebook" /></div>
           </div>
           <div class="config-card config-full">
@@ -728,11 +788,11 @@ window.addEventListener('load', () => {
             <h3>Prompt Base</h3>
             <div class="field">
               <label>Instruções para a IA (como ela deve se comportar)</label>
-              <textarea id="ia-prompt-base" rows="6" placeholder="Você é o assistente do Antas Digital, guia comercial da região. Responda apenas com base nos dados do sistema..."></textarea>
+              <textarea id="ia-prompt-base" rows="6" placeholder="Você é o assistente do Achei Fácil, guia comercial da região. Responda apenas com base nos dados do sistema..."></textarea>
             </div>
             <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
               💡 A IA responde perguntas sobre empresas, produtos, promoções, classificados e vagas cadastradas no sistema.
-              Se não encontrar dados, responde: <em>"Não encontrei essa informação cadastrada no Antas Digital no momento."</em>
+              Se não encontrar dados, responde: <em>"Não encontrei essa informação cadastrada no Achei Fácil no momento."</em>
             </p>
           </div>
           <div class="config-card config-full" style="text-align:right">
@@ -1098,7 +1158,7 @@ window.addEventListener('load', () => {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="admin.js?v=2"></script>
+<script src="admin.js?v=3"></script>
 <script src="dados-teste.js?v=4"></script>
 <script src="admin-diagnostico.js?v=1"></script>
 </body>

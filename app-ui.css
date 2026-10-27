@@ -1019,3 +1019,45 @@ body[data-page="sacola"] .bottom-nav { display: none; }
 .sc-login-hint { display:flex; gap:8px; align-items:flex-start; margin:0 0 10px; padding:10px 12px; border-radius:12px;
   background:#EEF3FF; color:#1E3A8A; font-size:13px; line-height:1.45; }
 .sc-login-hint i { font-size:18px; margin-top:1px; }
+
+/* ═══════════════════════════════════════════════
+   AVISO "EM BREVE COMO APLICATIVO" (home)
+═══════════════════════════════════════════════ */
+.app-soon-wrap { padding-top: 4px; }
+.app-soon {
+  position: relative; display: flex; align-items: center; gap: 14px;
+  padding: 18px 44px 18px 18px; border-radius: 18px; color: #fff; overflow: hidden;
+  background: linear-gradient(135deg, #2F63E8 0%, #1E4FD1 55%, #0E265E 100%);
+  box-shadow: 0 10px 24px rgba(30,79,209,.25);
+}
+.app-soon::after { /* brilho decorativo */
+  content: ''; position: absolute; right: -40px; top: -40px; width: 140px; height: 140px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(246,196,83,.35), transparent 70%); pointer-events: none;
+}
+.app-soon-icon {
+  width: 52px; height: 52px; flex-shrink: 0; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.16); animation: app-soon-bob 2.4s ease-in-out infinite;
+}
+.app-soon-icon i { font-size: 28px; }
+@keyframes app-soon-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .app-soon-icon { animation: none; } }
+.app-soon-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.app-soon-tag {
+  align-self: flex-start; padding: 2px 9px; border-radius: 999px;
+  background: #F6C453; color: #0F1426; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+}
+.app-soon-text strong { font-size: 16px; font-weight: 800; line-height: 1.25; }
+.app-soon-text small { font-size: 13px; color: rgba(255,255,255,.82); }
+.app-soon-stores { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.app-soon-stores span {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.14); font-size: 12px; font-weight: 700;
+}
+.app-soon-stores i { font-size: 15px; }
+.app-soon-close {
+  position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.14); color: #fff; border: 0; cursor: pointer;
+}
+.app-soon-close i { font-size: 16px; }

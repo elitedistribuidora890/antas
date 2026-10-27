@@ -204,6 +204,33 @@
       </div>
     </section>
 
+    <!-- Aviso: em breve como aplicativo -->
+    <section class="app-soon-wrap" id="app-soon">
+      <div class="container">
+        <div class="app-soon">
+          <button class="app-soon-close" onclick="fecharAvisoApp()" aria-label="Fechar aviso"><i class="ti ti-x"></i></button>
+          <span class="app-soon-icon"><i class="ti ti-device-mobile"></i></span>
+          <div class="app-soon-text">
+            <span class="app-soon-tag">Em breve</span>
+            <strong>Achei Fácil vai virar aplicativo!</strong>
+            <small>Logo disponível para baixar no seu celular.</small>
+            <div class="app-soon-stores">
+              <span><i class="ti ti-brand-google-play"></i> Google Play</span>
+              <span><i class="ti ti-brand-apple"></i> App Store</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      // Some se a pessoa já fechou o aviso neste aparelho
+      try { if (localStorage.getItem('avisoAppFechado') === '1') document.getElementById('app-soon').remove(); } catch (e) {}
+      function fecharAvisoApp() {
+        try { localStorage.setItem('avisoAppFechado', '1'); } catch (e) {}
+        document.getElementById('app-soon')?.remove();
+      }
+    </script>
+
     <!-- Categorias -->
     <section class="app-block">
       <div class="container">

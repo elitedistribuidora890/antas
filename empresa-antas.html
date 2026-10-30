@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel da Empresa — Antas Digital</title>
+<title>Painel da Empresa — Achei Fácil</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -669,14 +669,14 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
 
 <!-- GATE: LOADING -->
 <div id="gate-loading">
-  <img src="logo.png" alt="Antas Digital" class="gate-logo">
+  <img src="logo.png" alt="Achei Fácil" class="gate-logo">
   <div class="spinner"></div>
   <p class="gate-sub">Verificando acesso...</p>
 </div>
 
 <!-- GATE: DENIED (not logged in) -->
 <div id="gate-denied" class="hidden">
-  <img src="logo.png" alt="Antas Digital" class="gate-logo">
+  <img src="logo.png" alt="Achei Fácil" class="gate-logo">
   <div class="gate-icon">🔒</div>
   <div class="gate-title">Painel da Empresa</div>
   <p class="gate-sub">Entre com o e-mail e senha da sua conta para acessar.</p>
@@ -708,8 +708,8 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
     <div class="ep-header-inner">
       <a href="index.html" class="ep-back" aria-label="Voltar ao site"><i class="ti ti-arrow-left"></i></a>
       <div class="ep-header-logo">
-        <img src="logo-mark.png" alt="Antas Digital">
-        <span>Antas Digital</span>
+        <img src="logo-mark.png" alt="Achei Fácil">
+        <span>Achei Fácil</span>
       </div>
       <div class="ep-header-user">
         <span class="ep-user-name" id="ep-user-name"></span>
@@ -899,6 +899,32 @@ body > .ep-panel { max-width: 900px; margin: 0 auto; padding: 20px 16px 110px; }
           <div class="form-full">
             <label class="form-label">Endereço *</label>
             <input type="text" id="field-address" placeholder="Rua, número, bairro, cidade">
+          </div>
+        </div>
+      </div>
+
+      <!-- Entrega e pedidos (usado na sacola do app) -->
+      <div class="ep-card">
+        <div class="ep-card-title"><span>🛵</span> Entrega e pedidos</div>
+        <p style="font-size:13px;color:var(--gray-600);margin:-4px 0 14px">Os clientes montam a sacola no app e o pedido chega no seu WhatsApp.</p>
+        <div class="form-grid-2">
+          <label class="form-full" style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--gray-800)">
+            <input type="checkbox" id="field-faz-entrega" style="width:20px;height:20px;min-height:0"> Faço entrega
+          </label>
+          <label class="form-full" style="display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--gray-800)">
+            <input type="checkbox" id="field-retirada" style="width:20px;height:20px;min-height:0"> Cliente pode retirar no local
+          </label>
+          <div>
+            <label class="form-label">Taxa de entrega (R$)</label>
+            <input type="number" id="field-taxa-entrega" min="0" step="0.5" inputmode="decimal" placeholder="Vazio = a combinar">
+          </div>
+          <div>
+            <label class="form-label">Pedido mínimo (R$)</label>
+            <input type="number" id="field-pedido-minimo" min="0" step="1" inputmode="decimal" placeholder="Ex: 15">
+          </div>
+          <div class="form-full">
+            <label class="form-label">Tempo de entrega</label>
+            <input type="text" id="field-tempo-entrega" maxlength="30" placeholder="Ex: 30–45 min">
           </div>
         </div>
       </div>
@@ -1127,6 +1153,8 @@ const storage = getStorage(app);
 
 // ─── REGISTRO DE ACESSOS (para estatísticas no painel admin) ───
 (async function registrarAcesso() {
+  // Testes no computador (Live Server, localhost) não contam como visita
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
   try {
     await addDoc(collection(db, 'acessos_site'), {
       ts: serverTimestamp(),
@@ -1301,6 +1329,12 @@ function renderHero() {
 }
 
 /* ─── FILL FORMS ─── */
+// Campo numérico vazio vira null ("a combinar")
+function numOrNull(id) {
+  const v = document.getElementById(id).value.trim().replace(',', '.');
+  return v === '' || isNaN(+v) ? null : +v;
+}
+
 function fillForms() {
   const d = companyData;
   setField('field-name', d.name || d.nome || '');
@@ -1312,6 +1346,11 @@ function fillForms() {
   setField('field-facebook', d.facebook || '');
   setField('field-tiktok', d.tiktok || '');
   setField('field-website', d.website || '');
+  document.getElementById('field-faz-entrega').checked = d.fazEntrega !== false;
+  document.getElementById('field-retirada').checked = d.aceitaRetirada !== false;
+  setField('field-taxa-entrega', String(d.taxaEntrega ?? ''));
+  setField('field-pedido-minimo', String(d.pedidoMinimo ?? ''));
+  setField('field-tempo-entrega', d.tempoEntrega || '');
 
   // Category select
   const cat = d.category || d.categoria || '';
@@ -1498,7 +1537,7 @@ window.saveAll = async function() {
     let logoUrl = companyData.logo || companyData.logoUrl || '';
     if (pendingLogoFile) {
       const logoRef = ref(storage, `empresas/${companyId}/logo_${Date.now()}`);
-      const snap = await uploadBytes(logoRef, pendingLogoFile);
+      const snap = await uploadBytes(logoRef, (window._compressImage ? await window._compressImage(pendingLogoFile, 512) : pendingLogoFile));
       logoUrl = await getDownloadURL(snap.ref);
       pendingLogoFile = null;
     }
@@ -1508,7 +1547,7 @@ window.saveAll = async function() {
     const newUrls = [];
     for (const p of pendingPhotos) {
       const pRef = ref(storage, `empresas/${companyId}/gallery/${Date.now()}_${p.file.name}`);
-      const snap = await uploadBytes(pRef, p.file);
+      const snap = await uploadBytes(pRef, (window._compressImage ? await window._compressImage(p.file, 1400) : p.file));
       const url = await getDownloadURL(snap.ref);
       newUrls.push(url);
     }
@@ -1545,6 +1584,11 @@ window.saveAll = async function() {
       facebook: document.getElementById('field-facebook').value.trim(),
       tiktok: document.getElementById('field-tiktok').value.trim(),
       website: document.getElementById('field-website').value.trim(),
+      fazEntrega: document.getElementById('field-faz-entrega').checked,
+      aceitaRetirada: document.getElementById('field-retirada').checked,
+      taxaEntrega: numOrNull('field-taxa-entrega'),
+      pedidoMinimo: numOrNull('field-pedido-minimo'),
+      tempoEntrega: document.getElementById('field-tempo-entrega').value.trim(),
       logo: logoUrl,
       logoUrl: logoUrl,
       gallery: finalGallery,
@@ -2290,7 +2334,7 @@ window.saveProduto = async function() {
     }
     if (pendingProdutoFoto) {
       const pRef = ref(storage2, `empresas/${modCompanyId}/produtos/${Date.now()}_${pendingProdutoFoto.name}`);
-      const snap = await uploadBytes(pRef, pendingProdutoFoto);
+      const snap = await uploadBytes(pRef, (window._compressImage ? await window._compressImage(pendingProdutoFoto, 1000) : pendingProdutoFoto));
       fotoUrl = await getDownloadURL(snap.ref);
     }
 
@@ -2441,7 +2485,7 @@ window.savePromocao = async function() {
     let fotoUrl = window._promocoesData?.[editingPromocaoId]?.foto || '';
     if (pendingPromocaoFoto) {
       const pRef = ref(storage2, `empresas/${modCompanyId}/promocoes/${Date.now()}_${pendingPromocaoFoto.name}`);
-      const snap = await uploadBytes(pRef, pendingPromocaoFoto);
+      const snap = await uploadBytes(pRef, (window._compressImage ? await window._compressImage(pendingPromocaoFoto, 1200) : pendingPromocaoFoto));
       fotoUrl = await getDownloadURL(snap.ref);
     }
 
@@ -2611,7 +2655,7 @@ window.saveClassificado = async function() {
     const uploadedFotos = [];
     for (const p of pendingClassificadoFotos) {
       const pRef = ref(storage2, `empresas/${modCompanyId}/classificados/${Date.now()}_${p.file.name}`);
-      const snap = await uploadBytes(pRef, p.file);
+      const snap = await uploadBytes(pRef, (window._compressImage ? await window._compressImage(p.file, 1400) : p.file));
       uploadedFotos.push(await getDownloadURL(snap.ref));
     }
 
@@ -2783,13 +2827,16 @@ function _compressImage(file, max = 1000, quality = 0.82) {
       const w = Math.round(img.width * r), h = Math.round(img.height * r);
       const cv = document.createElement('canvas');
       cv.width = w; cv.height = h;
-      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      const c2 = cv.getContext('2d');
+      c2.fillStyle = '#fff'; c2.fillRect(0, 0, w, h); // PNG transparente (logo) não fica com fundo preto no JPEG
+      c2.drawImage(img, 0, 0, w, h);
       cv.toBlob(b => { URL.revokeObjectURL(url); resolve(b && b.size < file.size ? b : file); }, 'image/jpeg', quality);
     };
     img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
     img.src = url;
   });
 }
+window._compressImage = _compressImage;
 
 /* Medidor de uso + bloqueio dos botões ao chegar no limite */
 function updateCatalogoMeter() {

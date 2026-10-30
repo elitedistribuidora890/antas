@@ -3,14 +3,20 @@
   <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#163B9E">
-  <title>Antas Digital — Portal da Cidade</title>
+  <meta name="theme-color" content="#FFFFFF">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Achei Fácil">
+  <title>Achei Fácil — Portal da Cidade</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="app-ui.css">
+  <link rel="stylesheet" href="app-ui.css?v=3">
   <link rel="shortcut icon" href="logo.png" type="image/x-icon">
   </head>
   <body data-page="home">
@@ -18,9 +24,9 @@
   <!-- ===== DESKTOP GATE (só aparece em tela grande) ===== -->
   <div id="desktop-gate" class="desktop-gate">
     <div class="desktop-gate-card">
-      <div class="desktop-gate-logo"><img src="logo.png" alt="Antas Digital"></div>
+      <div class="desktop-gate-logo"><img src="logo.png" alt="Achei Fácil"></div>
       <h1 class="desktop-gate-title">Feito pra celular</h1>
-      <p class="desktop-gate-text">O Antas Digital foi pensado pra funcionar como aplicativo no seu smartphone. Acesse pelo celular pra usar.</p>
+      <p class="desktop-gate-text">O Achei Fácil foi pensado pra funcionar como aplicativo no seu smartphone. Acesse pelo celular pra usar.</p>
       <div class="desktop-gate-qr">
         <img id="desktop-gate-qr-img" alt="QR code para abrir no celular" width="150" height="150">
         <span>Aponte a câmera do celular pra esse QR code</span>
@@ -54,9 +60,9 @@
       </div>
       <div class="form-group">
         <label>Senha</label>
-        <input type="password" id="login-password" placeholder="••••••••">
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" onkeyup="if(event.key==='Enter')handleLogin()">
       </div>
-      <button class="btn-primary w-full" onclick="handleLogin()">Entrar</button>
+      <button class="btn-primary w-full" id="btn-do-login" onclick="handleLogin()">Entrar</button>
       <p class="text-center mt-3"><a href="#" onclick="showRecover()">Esqueci minha senha</a></p>
       <div class="social-divider"><span>ou continue com</span></div>
       <button class="btn-google" onclick="handleGoogleLogin()">
@@ -78,7 +84,7 @@
         <label>Senha</label>
         <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres">
       </div>
-      <button class="btn-primary w-full" onclick="handleRegister()">Criar conta</button>
+      <button class="btn-primary w-full" id="btn-do-register" onclick="handleRegister()">Criar conta</button>
     </div>
     <div id="tab-recover" class="tab-content">
       <h2 class="modal-title">Recuperar senha</h2>
@@ -144,51 +150,10 @@
   </div>
 
 
-  <!-- Purchase Modal -->
-  <div id="purchase-modal" class="modal hidden" style="max-width:480px">
+  <!-- Folha do item (adicionar à sacola) — preenchida pelo sacola.js -->
+  <div id="item-sheet" class="modal item-sheet hidden">
     <div class="modal-handle"></div>
-    <div class="modal-header">
-      <h3 class="modal-title-sm">🛒 Finalizar Pedido</h3>
-      <button class="modal-close" onclick="closeModal('purchase-modal')">✕</button>
-    </div>
-    <div id="purchase-item-summary" style="background:#F0F7FF;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center">
-      <!-- Filled by JS -->
-    </div>
-    <div class="form-group">
-      <label style="font-size:13px;font-weight:600;color:#374151">Nome completo</label>
-      <input type="text" id="purchase-name" placeholder="Seu nome completo" readonly style="background:#F3F4F6;color:#6B7280">
-    </div>
-    <div class="form-group">
-      <label style="font-size:13px;font-weight:600;color:#374151">Endereço de entrega</label>
-      <input type="text" id="purchase-address" placeholder="Rua, número, bairro, cidade">
-    </div>
-    <div class="form-group">
-      <label style="font-size:13px;font-weight:600;color:#374151">Forma de pagamento</label>
-      <select id="purchase-payment">
-        <option value="">Selecione...</option>
-        <option value="PIX">💸 PIX</option>
-        <option value="Dinheiro">💵 Dinheiro</option>
-        <option value="Cartão de Débito">💳 Cartão de Débito</option>
-        <option value="Cartão de Crédito">💳 Cartão de Crédito</option>
-        <option value="Boleto">📄 Boleto Bancário</option>
-      </select>
-    </div>
-    <div class="form-group" id="purchase-obs-group">
-      <label style="font-size:13px;font-weight:600;color:#374151">Observações (opcional)</label>
-      <textarea id="purchase-obs" rows="2" placeholder="Ex: sem cebola, entregar no portão..."></textarea>
-    </div>
-    <button class="btn-primary w-full" onclick="sendPurchaseToWhatsApp()" style="margin-top:4px;background:#25D366;display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg viewBox="0 0 24 24" width="18" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Enviar pedido via WhatsApp
-    </button>
-    <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:10px">Você será direcionado ao WhatsApp da empresa para confirmar o pedido.</p>
-  </div>
-
-  <!-- News Detail Modal -->
-  <div id="news-modal" class="modal modal-lg hidden">
-    <div class="modal-handle"></div>
-    <button class="modal-close" onclick="closeModal('news-modal')">✕</button>
-    <div id="news-modal-content"></div>
+    <div id="item-sheet-body"></div>
   </div>
 
   <!-- Event Detail Modal -->
@@ -204,8 +169,8 @@
       <a href="#" class="nav-logo" onclick="showPage('home');return false">
         <div class="logo-mark"><img src="logo-mark.png" alt=""></div>
         <div class="appbar-brand">
-          <span>Antas Digital</span>
-          <small><i class="ti ti-map-pin"></i> Antas, BA</small>
+          <span>Achei Fácil</span>
+          <small><i class="ti ti-map-pin"></i> Antas, BA <i class="ti ti-chevron-down"></i></small>
         </div>
       </a>
       <div class="nav-actions">
@@ -238,6 +203,33 @@
         </div>
       </div>
     </section>
+
+    <!-- Aviso: em breve como aplicativo -->
+    <section class="app-soon-wrap" id="app-soon">
+      <div class="container">
+        <div class="app-soon">
+          <button class="app-soon-close" onclick="fecharAvisoApp()" aria-label="Fechar aviso"><i class="ti ti-x"></i></button>
+          <span class="app-soon-icon"><i class="ti ti-device-mobile"></i></span>
+          <div class="app-soon-text">
+            <span class="app-soon-tag">Em breve</span>
+            <strong>Achei Fácil vai virar aplicativo!</strong>
+            <small>Logo disponível para baixar no seu celular.</small>
+            <div class="app-soon-stores">
+              <span><i class="ti ti-brand-google-play"></i> Google Play</span>
+              <span><i class="ti ti-brand-apple"></i> App Store</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script>
+      // Some se a pessoa já fechou o aviso neste aparelho
+      try { if (localStorage.getItem('avisoAppFechado') === '1') document.getElementById('app-soon').remove(); } catch (e) {}
+      function fecharAvisoApp() {
+        try { localStorage.setItem('avisoAppFechado', '1'); } catch (e) {}
+        document.getElementById('app-soon')?.remove();
+      }
+    </script>
 
     <!-- Categorias -->
     <section class="app-block">
@@ -279,6 +271,23 @@
       </div>
     </section>
 
+    <!-- Lojas (lista estilo iFood) -->
+    <section class="app-block" id="lojas-block">
+      <div class="container">
+        <div class="app-block-header">
+          <div>
+            <h2 class="app-block-title">Lojas</h2>
+            <p class="app-block-sub">Organizadas por categoria</p>
+          </div>
+          <button class="app-block-link" onclick="openAllLojas()">Ver todas</button>
+        </div>
+        <div id="lojas-list" class="store-groups">
+          <div class="store-row"><div class="store-card store-card--skel"><span class="skeleton"></span></div><div class="store-card store-card--skel"><span class="skeleton"></span></div><div class="store-card store-card--skel"><span class="skeleton"></span></div></div>
+        </div>
+        <button class="see-all-btn hidden" id="lojas-see-all" onclick="openAllLojas()"></button>
+      </div>
+    </section>
+
     <!-- Eventos -->
     <section class="app-block">
       <div class="container">
@@ -293,19 +302,6 @@
       </div>
     </section>
 
-    <!-- Notícias -->
-    <section class="app-block">
-      <div class="container">
-        <div class="app-block-header">
-          <div>
-            <h2 class="app-block-title">Notícias</h2>
-            <p class="app-block-sub">O que está acontecendo na cidade.</p>
-          </div>
-          <button class="app-block-link" onclick="showPage('news')">Ver todas</button>
-        </div>
-        <div class="news-grid" id="news-grid"></div>
-      </div>
-    </section>
 
     <!-- Divulgar negócio -->
     <section class="app-block">
@@ -431,6 +427,36 @@
   </div>
 
   <!-- CATEGORY PAGE -->
+  <!-- TODAS AS LOJAS -->
+  <div id="page-lojas" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div>
+        <h1 class="page-title">Lojas</h1>
+        <p class="page-subtitle" id="lojas-page-count"></p>
+      </div>
+    </div>
+    <div class="container page-body">
+      <div class="search-page-bar">
+        <i class="ti ti-search"></i>
+        <input type="search" id="lojas-page-search" placeholder="Buscar loja pelo nome" oninput="renderLojasPage()">
+      </div>
+      <div class="chip-row" id="lojas-page-filters"></div>
+      <div id="lojas-page-list"></div>
+    </div>
+  </div>
+
+  <!-- SACOLA -->
+  <div id="page-sacola" class="page">
+    <div class="page-header">
+      <button class="back-btn" onclick="voltarDaSacola()" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
+      <div><h1 class="page-title">Sacola</h1></div>
+      <button class="page-header-action" onclick="limparSacola()">Limpar</button>
+    </div>
+    <div class="container" id="sacola-body"></div>
+    <div class="sacola-footer" id="sacola-footer"></div>
+  </div>
+
   <div id="page-category" class="page">
     <div class="page-header">
       <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
@@ -495,19 +521,6 @@
       <div class="map-container" id="map-container">
         <div id="leaflet-map" style="height:100%;width:100%"></div>
         <div class="map-toggle-sidebar" onclick="toggleMapSidebar()">☰</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEWS PAGE -->
-  <div id="page-news" class="page">
-    <div class="page-header">
-      <button class="back-btn" onclick="showPage('home')" aria-label="Voltar"><i class="ti ti-arrow-left"></i></button>
-      <h1 class="page-title">Notícias</h1>
-    </div>
-    <div class="container">
-      <div class="news-grid-full" id="news-page-grid">
-        <!-- JS rendered -->
       </div>
     </div>
   </div>
@@ -590,7 +603,7 @@
       <!-- Menu list (always visible) -->
     <div class="profile-menu-divider"></div>
 
-<button class="profile-menu-item" onclick="window.open('https://wa.me/5575988307844?text=Olá! Tenho interesse em divulgar minha empresa no Antas Digital.','_blank')">
+<button class="profile-menu-item" onclick="window.open('https://wa.me/5575988307844?text=Olá! Tenho interesse em divulgar minha empresa no Achei Fácil.','_blank')">
   <span class="profile-menu-icon">🏢</span>
   <span class="profile-menu-label">Divulgar Empresa</span>
   <span class="profile-menu-arrow">›</span>
@@ -652,6 +665,8 @@
 
 
   <!-- ===== BOTTOM NAV (Mobile) ===== -->
+  <div id="cart-bar" class="cart-bar hidden"></div>
+
   <nav class="bottom-nav">
     <button class="bottom-nav-item active" data-nav="home" onclick="showPage('home')">
       <span class="bnav-icon"><i class="ti ti-home"></i></span><span>Início</span>
@@ -661,9 +676,6 @@
     </button>
     <button class="bottom-nav-item" data-nav="utilidades" onclick="showPage('utilidades')">
       <span class="bnav-icon"><i class="ti ti-building-bank"></i></span><span>Utilidades</span>
-    </button>
-    <button class="bottom-nav-item" data-nav="news" onclick="showPage('news')">
-      <span class="bnav-icon"><i class="ti ti-news"></i></span><span>Notícias</span>
     </button>
     <button class="bottom-nav-item" data-nav="profile" onclick="showPage('profile')">
       <span class="bnav-icon"><i class="ti ti-user"></i></span><span>Perfil</span>
@@ -686,7 +698,7 @@
   ">
     <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
     <p style="margin:0 0 14px;color:#475569;font-size:14px;">
-      Podemos enviar avisos sobre notícias, eventos e novidades da cidade.
+      Podemos enviar avisos sobre eventos, promoções e novidades da cidade.
     </p>
 
     <button onclick="aceitarNotificacoes()" class="btn-primary w-full">
@@ -708,7 +720,7 @@
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc, increment, query, where, orderBy, limit, onSnapshot, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   // ─── FIREBASE CONFIG ─── (substitua pelos seus dados)
@@ -732,11 +744,13 @@
   window.DB = db;
   window.AUTH = auth;
   window.STORAGE = storage;
-  window.FB = { collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, query, where, orderBy, limit, onSnapshot, setDoc, deleteDoc };
+  window.FB = { collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, query, where, orderBy, limit, onSnapshot, setDoc, deleteDoc, serverTimestamp };
   window.FB_AUTH = { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, updateProfile, googleProvider };
 
   // ─── REGISTRO DE ACESSOS (para estatísticas no painel admin) ───
   (async function registrarAcesso() {
+    // Testes no computador (Live Server, localhost) não contam como visita
+    if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
     try {
       await addDoc(collection(db, 'acessos_site'), {
         ts: serverTimestamp(),
@@ -753,6 +767,13 @@
   onAuthStateChanged(auth, (user) => {
     window.currentUser = user;
     updateAuthUI(user);
+    window.sacolaAuthMudou?.();
+    // Continua o pedido que estava esperando o login
+    if (user && window._acaoAposLogin !== undefined) {
+      const acao = window._acaoAposLogin;
+      window._acaoAposLogin = undefined;
+      if (typeof acao === 'function') setTimeout(acao, 350);
+    }
     if (user) {
       loadFavorites();
       checkUserEmpresa(user.uid);
@@ -803,47 +824,85 @@
   window.updateAuthUI = updateAuthUI;
 
   // ─── AUTH ACTIONS ───
-  window.handleLogin = async function() {
-    const email = document.getElementById('login-email').value.trim();
+  // Botão mostra "Entrando…" e não aceita clique duplo enquanto espera o Firebase
+  async function comBotao(id, texto, fn) {
+    const btn = document.getElementById(id);
+    const original = btn?.textContent;
+    if (btn) { if (btn.disabled) return; btn.disabled = true; btn.textContent = texto; }
+    try { await fn(); } finally { if (btn) { btn.disabled = false; btn.textContent = original; } }
+  }
+  // Salva/atualiza o perfil sem travar o login se o Firestore recusar
+  async function salvarPerfil(user, extra) {
+    try { await setDoc(doc(db,'usuarios',user.uid), { name: user.displayName || extra?.name || '', email: user.email, ...extra }, { merge: true }); }
+    catch (e) { console.warn('Perfil não salvo:', e.code); }
+  }
+
+  window.handleLogin = function() {
+    const email = document.getElementById('login-email').value.trim().toLowerCase();
     const pw = document.getElementById('login-password').value;
     if (!email || !pw) return showToast('Preencha todos os campos', 'error');
-    try {
-      await signInWithEmailAndPassword(auth, email, pw);
-      closeModal('auth-modal');
-      showToast('Login realizado com sucesso!', 'success');
-    } catch(e) {
-      showToast(translateFirebaseError(e.code), 'error');
-    }
+    return comBotao('btn-do-login', 'Entrando…', async () => {
+      try {
+        await signInWithEmailAndPassword(auth, email, pw);
+        closeModal('auth-modal');
+        showToast('Login realizado com sucesso!', 'success');
+      } catch(e) {
+        console.warn('Login:', e.code);
+        showToast(translateFirebaseError(e.code), 'error');
+      }
+    });
   };
 
-  window.handleRegister = async function() {
+  window.handleRegister = function() {
     const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
+    const email = document.getElementById('reg-email').value.trim().toLowerCase();
     const pw = document.getElementById('reg-password').value;
     if (!name||!email||!pw) return showToast('Preencha todos os campos', 'error');
     if (pw.length < 6) return showToast('Senha deve ter mínimo 6 caracteres', 'error');
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, pw);
-      await updateProfile(cred.user, { displayName: name });
-      await setDoc(doc(db,'usuarios',cred.user.uid), { name, email, createdAt: new Date(), favorites: [] });
+    return comBotao('btn-do-register', 'Criando conta…', async () => {
+      let cred;
+      try {
+        cred = await createUserWithEmailAndPassword(auth, email, pw);
+      } catch(e) {
+        console.warn('Cadastro:', e.code);
+        return showToast(translateFirebaseError(e.code), 'error');
+      }
+      // A conta já existe a partir daqui: falhas abaixo não podem virar "erro ao criar conta"
+      try { await updateProfile(cred.user, { displayName: name }); updateAuthUI(auth.currentUser); } catch(e) { console.warn('Nome não salvo:', e.code); }
+      await salvarPerfil(cred.user, { name, createdAt: new Date(), favorites: [] });
       closeModal('auth-modal');
       showToast('Conta criada com sucesso!', 'success');
+    });
+  };
+
+  // Navegadores dentro de apps (WhatsApp, Instagram, Facebook…) não deixam entrar com Google
+  const NAVEGADOR_DE_APP = /FBAN|FBAV|Instagram|WhatsApp|Line\/|; wv\)|TikTok|musical_ly/i.test(navigator.userAgent);
+
+  window.handleGoogleLogin = async function() {
+    if (NAVEGADOR_DE_APP) {
+      return showToast('Para entrar com Google, abra o site no Chrome ou Safari (toque nos ⋮ e "Abrir no navegador"). Ou entre com e-mail e senha.', 'error');
+    }
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      await depoisDoGoogle(result.user);
     } catch(e) {
+      console.warn('Google:', e.code);
+      // Plano B: se a janela do Google foi bloqueada, tenta pelo redirecionamento
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+        try { return await signInWithRedirect(auth, googleProvider); } catch(e2) { console.warn('Google (redirect):', e2.code); }
+      }
+      if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
       showToast(translateFirebaseError(e.code), 'error');
     }
   };
-
-  window.handleGoogleLogin = async function() {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      await setDoc(doc(db,'usuarios',user.uid), { name: user.displayName, email: user.email, photo: user.photoURL, createdAt: new Date() }, {merge:true});
-      closeModal('auth-modal');
-      showToast('Bem-vindo, ' + user.displayName + '!', 'success');
-    } catch(e) {
-      showToast('Erro ao entrar com Google', 'error');
-    }
-  };
+  async function depoisDoGoogle(user) {
+    await salvarPerfil(user, { photo: user.photoURL || '', ultimoLogin: new Date() });
+    closeModal('auth-modal');
+    showToast('Bem-vindo, ' + (user.displayName || 'você') + '!', 'success');
+  }
+  // Volta do login por redirecionamento
+  getRedirectResult(auth).then(r => { if (r?.user) depoisDoGoogle(r.user); })
+    .catch(e => { console.warn('Google (retorno):', e.code); if (e.code && e.code !== 'auth/no-auth-event') showToast(translateFirebaseError(e.code), 'error'); });
 
   window.handleRecover = async function() {
     const email = document.getElementById('recover-email').value.trim();
@@ -866,11 +925,14 @@
   // ─── FIRESTORE DATA LOADING ───
   let allCompanies = [];
   let allEvents = [];
-  let allNews = [];
   let allCatalogItems = [];
+  // Cache do catálogo por empresa: empresaId → { docs, em }. Vale por 5 min.
+  const catalogoCache = new Map();
+  let catalogoCarregado = false;
+  const CATALOGO_VALIDADE = 5 * 60 * 1000;
 
   async function loadAll() {
-    await Promise.all([loadCompanies(), loadEvents(), loadNews(), loadCatalogItems()]);
+    await Promise.all([loadCompanies(), loadEvents(), loadCatalogItems()]);
     animateStats();
   }
 
@@ -880,6 +942,12 @@
     allCatalogItems = [];
     try {
       const snap = await getDocs(collection(db,'catalogo'));
+      // Guarda os itens de cada empresa: o cardápio abre na hora, sem nova consulta
+      const porEmpresa = {};
+      snap.docs.forEach(d => { const e = d.data().empresaId; if (e) (porEmpresa[e] = porEmpresa[e] || []).push(d); });
+      catalogoCache.clear();
+      Object.entries(porEmpresa).forEach(([e, docs]) => catalogoCache.set(e, { docs, em: Date.now() }));
+      catalogoCarregado = true;
       allCatalogItems = snap.docs.map(d => {
         const data = d.data();
         return {
@@ -931,6 +999,11 @@
   neighborhood: data.bairro || data.neighborhood || '',
   gallery: data.gallery || data.fotos || [],
   horarios: data.horarios || {},
+  fazEntrega: data.fazEntrega,
+  aceitaRetirada: data.aceitaRetirada,
+  taxaEntrega: data.taxaEntrega,
+  pedidoMinimo: data.pedidoMinimo,
+  tempoEntrega: data.tempoEntrega || '',
   logo: data.logo || data.logoUrl || '',
   cover: data.cover || data.capaUrl || '',
   lat: data.lat || null,
@@ -949,10 +1022,11 @@
 
     } catch(e) {
       console.error(e);
-      allCompanies = getDemoCompanies();
+      allCompanies = getDemoCompanies() || [];
     }
 
     renderHighlights();
+    renderLojas();
     renderCategories();
     updateMapMarkers();
     document.getElementById('stat-companies').dataset.target = allCompanies.length;
@@ -987,39 +1061,6 @@
     renderEventsPage();
     document.getElementById('stat-events').dataset.target = allEvents.length;
   }
-
-  async function loadNews() {
-    allNews = []; // garante array antes de qualquer coisa
-    try {
-      const snap = await getDocs(
-        query(collection(db,'noticias'), orderBy('criadoEm','desc'), limit(6))
-      );
-
-      allNews = snap.docs.map(d => {
-        const data = d.data();
-
-        return {
-          id: d.id,
-          title: data.title || data.titulo || '',
-          image: data.image || data.imagemUrl || '',
-          summary: data.summary || data.resumo || '',
-          content: data.content || data.texto || '',
-          date: data.date || data.criadoEm || new Date(),
-          category: data.category || data.categoria || 'Geral',
-          author: data.author || data.autor || ''
-        };
-      });
-
-    } catch(e) {
-      console.warn('Notícias: usando dados de demonstração.', e.code);
-      allNews = (typeof getDemoNews === 'function') ? getDemoNews() : [];
-    }
-
-    if (!Array.isArray(allNews)) allNews = [];
-    renderNews();
-    renderNewsPage();
-  }
-
 
   async function loadFavorites() {
     if (!window.currentUser) return;
@@ -1156,13 +1197,12 @@
 
   // ─── COMPANY INTERACTIONS ───
   window.openCompany = async function(company) {
-    // Increment views only for unique devices (fingerprint via localStorage)
+    // Conta a visita (uma por aparelho) em segundo plano — a página abre na hora
     try {
       const viewKey = 'viewed_' + company.id;
-      const alreadyViewed = localStorage.getItem(viewKey);
-      if (!alreadyViewed) {
-        await updateDoc(doc(db,'empresas',company.id), { views: increment(1) });
+      if (!localStorage.getItem(viewKey)) {
         localStorage.setItem(viewKey, '1');
+        updateDoc(doc(db,'empresas',company.id), { views: increment(1) }).catch(() => localStorage.removeItem(viewKey));
       }
     } catch(e){}
 
@@ -1179,7 +1219,24 @@
       company.tiktok && { icon:'brand-tiktok', label:'@'+clean(company.tiktok), url:'https://tiktok.com/@'+clean(company.tiktok) },
       company.website && { icon:'world', label:company.website.replace(/^https?:\/\//,''), url:company.website },
     ].filter(Boolean);
-    const hours = buildHoursHTML(company.horarios||{});
+    // Só mostra se está aberto ou fechado agora; os horários o dono edita no painel da empresa
+    const openNow = window.isOpenNow ? window.isOpenNow(company.horarios) : null;
+    const statusPill = openNow === true
+      ? '<span class="cp-status is-open"><span class="cp-status-dot"></span>Aberto agora</span>'
+      : openNow === false ? '<span class="cp-status"><span class="cp-status-dot"></span>Fechado agora</span>' : '';
+
+    window._currentCompany = company;
+    // Faixa de entrega (só para quem vende pelo app: cardápio e produtos)
+    const vende = ['cardapio','produtos'].includes(getCategoryContent(company.category)?.tipo);
+    const fmt = v => 'R$ ' + Number(v).toFixed(2).replace('.', ',');
+    const deliveryInfo = !vende ? [] : [
+      company.fazEntrega !== false && (typeof company.taxaEntrega === 'number'
+        ? `<span><i class="ti ti-motorbike"></i> ${company.taxaEntrega === 0 ? 'Entrega grátis' : 'Entrega ' + fmt(company.taxaEntrega)}</span>`
+        : `<span><i class="ti ti-motorbike"></i> Faz entrega</span>`),
+      company.tempoEntrega && `<span><i class="ti ti-clock"></i> ${company.tempoEntrega}</span>`,
+      typeof company.pedidoMinimo === 'number' && company.pedidoMinimo > 0 && `<span>Mínimo ${fmt(company.pedidoMinimo)}</span>`,
+      company.fazEntrega === false && company.aceitaRetirada !== false && `<span><i class="ti ti-building-store"></i> Só retirada</span>`,
+    ].filter(Boolean);
 
     document.getElementById('company-topbar-title').textContent = company.name;
     const favBtn = document.getElementById('company-fav-btn');
@@ -1191,17 +1248,16 @@
       <div class="cp-cover" style="${cover ? `background-image:url('${cover}')` : `background:linear-gradient(135deg, ${catColor}, ${catColor}88)`}"></div>
       <div class="cp-body">
         <div class="cp-head">
-          <div class="cp-logo">${company.logo ? `<img src="${company.logo}" alt="">` : `<span>${company.name[0]}</span>`}</div>
+          <div class="cp-logo">${company.logo ? `<img src="${company.logo}" alt="">` : `<span>${initialOf(company.name)}</span>`}</div>
           <div class="cp-head-info">
             <h2 class="cp-name">${company.name}</h2>
             ${place ? `<p class="cp-place"><i class="ti ti-map-pin"></i> ${place}</p>` : ''}
-            ${company.sponsored ? '<span class="badge-sponsor"><i class="ti ti-star-filled"></i> Patrocinado</span>' : ''}
+            ${deliveryInfo.length ? `<div class="cp-delivery">${deliveryInfo.join('<i class="cp-dot"></i>')}</div>` : ''}
+            ${(statusPill || company.sponsored) ? `<div class="cp-badges">${statusPill}${company.sponsored ? '<span class="badge-sponsor"><i class="ti ti-star-filled"></i> Patrocinado</span>' : ''}</div>` : ''}
           </div>
         </div>
 
-        ${company.description ? `<section class="cp-section"><h3>Sobre</h3><p class="cp-text">${company.description}</p></section>` : ''}
-
-        ${hours ? `<section class="cp-section">${hours}</section>` : ''}
+        ${company.description ? `<section class="cp-section"><h3>Sobre</h3><p class="cp-text cp-text--clamp" onclick="this.classList.remove('cp-text--clamp')">${company.description}</p></section>` : ''}
 
         <section class="cp-section cp-catalog">${buildCategoryTabs(company)}</section>
 
@@ -1237,7 +1293,10 @@
     showPage('company');
     loadCompanyRatings(company.id);
     loadCompanyContent(company.id, company.category);
+    window.updateCartBar && window.updateCartBar();
   };
+  window.getCompanyById = id => allCompanies.find(c => c.id === id);
+  window.getCategoryContent = category => getCategoryContent(category);
 
   // ─── MAPEAMENTO CATEGORIA → TIPO DE CONTEÚDO ───
   const CATEGORY_CONTENT = {
@@ -1256,6 +1315,13 @@
     'Contabilidade e Finanças': { tipo: 'servicos',  label: '💰 Serviços',     colecao: 'catalogo' },
     'Advocacia e Jurídico':     { tipo: 'servicos',  label: '⚖️ Serviços',     colecao: 'catalogo' },
     'Transporte':               { tipo: 'servicos',  label: '🚗 Serviços',     colecao: 'catalogo' },
+    'Aniversário':              { tipo: 'produtos',  label: '🎂 Produtos',     colecao: 'catalogo' },
+    'Presentes':                { tipo: 'produtos',  label: '🎁 Produtos',     colecao: 'catalogo' },
+    'Empregos':                 { tipo: 'servicos',  label: '💼 Vagas e serviços', colecao: 'catalogo' },
+    'Grupos':                   { tipo: 'servicos',  label: '👥 Atividades',   colecao: 'catalogo' },
+    'Influenciadores':          { tipo: 'servicos',  label: '📱 Divulgação',   colecao: 'catalogo' },
+    'Artistas':                 { tipo: 'servicos',  label: '🎨 Serviços',     colecao: 'catalogo' },
+    'Religião e Igrejas':       { tipo: 'servicos',  label: '⛪ Programação',  colecao: 'catalogo' },
   };
 
   // Busca em CATEGORY_CONTENT ignorando espaços/maiúsc/acentuação (mesmo problema do normCat)
@@ -1284,60 +1350,136 @@
     const container = document.getElementById(`cat-content-${companyId}`);
     if (!cfg || !container) return;
     try {
-      const snap = await getDocs(query(
-        collection(db, cfg.colecao),
-        where('empresaId', '==', companyId)
-      ));
-      if (snap.empty) {
+      // Usa o que já foi baixado no início; só consulta o servidor se não tiver ou estiver velho
+      let cached = cfg.colecao === 'catalogo' ? catalogoCache.get(companyId) : null;
+      if (!cached && catalogoCarregado && cfg.colecao === 'catalogo') cached = { docs: [], em: Date.now() };
+      if (!cached || Date.now() - cached.em > CATALOGO_VALIDADE) {
+        const snap = await getDocs(query(collection(db, cfg.colecao), where('empresaId', '==', companyId)));
+        cached = { docs: snap.docs, em: Date.now() };
+        if (cfg.colecao === 'catalogo') catalogoCache.set(companyId, cached);
+      }
+      if (!document.body.contains(container)) return; // o cliente já saiu da página
+      if (!cached.docs.length) {
         container.innerHTML = `<p class="menu-empty">Nenhum item cadastrado ainda.</p>`;
         return;
       }
-      const docs = [...snap.docs].sort((a,b) => {
+      const docs = [...cached.docs].sort((a,b) => {
         const ta = a.data().createdAt?.seconds || 0;
         const tb = b.data().createdAt?.seconds || 0;
         return tb - ta;
       });
-      // Store company whatsapp for purchase modal (already set by openCompany, but refresh if needed)
-      if (!window._currentCompanyWhatsapp) {
-        try {
-          const compSnap = await getDoc(doc(db, 'empresas', companyId));
-          if (compSnap.exists()) window._currentCompanyWhatsapp = compSnap.data().whatsapp || '';
-        } catch(e) {}
-      }
+      // O WhatsApp da loja já foi guardado por openCompany (não precisa buscar de novo)
 
-      // Agrupa por "tipo" (ex: Lanches, Bebidas, Sobremesas) quando houver mais de um grupo
+      // Agrupa por "tipo" (ex: Pratos, Bebidas, Serviços) quando houver mais de um grupo
+      const TIPO_LABEL = { prato:'Pratos', produto:'Produtos', servico:'Serviços', outro:'Outros' };
       const groups = {};
       docs.forEach(d => {
-        const item = d.data();
-        const tipo = (item.tipo || '').trim() || 'Itens';
+        const item = { ...d.data(), _id: d.id };
+        const raw = (item.tipo || '').trim();
+        const tipo = TIPO_LABEL[raw.toLowerCase()] || (raw ? raw[0].toUpperCase() + raw.slice(1) : 'Itens');
         (groups[tipo] = groups[tipo] || []).push(item);
       });
       const groupNames = Object.keys(groups);
       const showGroupHeaders = groupNames.length > 1;
 
-      // Cartões lado a lado (foto, nome, preço); toque abre o pedido
-      const renderItem = (item) => {
-        const foto = item.fotoUrl || item.foto || '';
-        const nome = item.nome || item.titulo || item.name || '—';
+      const readItem = (item) => {
         const preco = item.preco || item.valor || item.price || 0;
-        const precoFmt = preco > 0 ? `R$ ${parseFloat(preco).toFixed(2).replace('.',',')}` : '';
-        const desc = item.descricao || item.description || '';
-        const disponivel = item.status !== 'indisponivel' && item.status !== 'inativo';
-        const itemDataJson = JSON.stringify({nome, preco, precoFmt, foto, desc}).replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        return `<div class="product-card ${disponivel?'':'is-unavailable'}" ${disponivel?`onclick="openPurchaseModal(${itemDataJson})"`:''}>
-          <div class="product-card-img">${foto ? `<img src="${foto}" alt="" loading="lazy">` : `<span>${cfg.label.split(' ')[0]}</span>`}</div>
-          <div class="product-card-body">
-            <p class="product-card-name">${nome}</p>
-            ${precoFmt ? `<p class="product-card-price">${precoFmt}</p>` : '<p class="product-card-price product-card-price--muted">Consultar preço</p>'}
-            ${!disponivel ? '<span class="product-card-tag">Indisponível</span>' : ''}
+        const r = {
+          foto: item.fotoUrl || item.foto || '',
+          nome: item.nome || item.titulo || item.name || '—',
+          desc: item.descricao || item.description || '',
+          precoFmt: preco > 0 ? `R$ ${parseFloat(preco).toFixed(2).replace('.',',')}` : (item.gratuito ? 'Gratuito' : ''),
+          disponivel: item.status !== 'indisponivel' && item.status !== 'inativo',
+        };
+        r.preco = preco;
+        r.click = r.disponivel
+          ? `onclick="openPurchaseModal(${JSON.stringify({id:item._id, nome:r.nome, preco, precoFmt:r.precoFmt, foto:r.foto, desc:r.desc}).replace(/'/g,"\\'").replace(/"/g,'&quot;')})"`
+          : '';
+        return r;
+      };
+      const groupId = (g) => `cat-g-${companyId}-${groupNames.indexOf(g)}`;
+      const groupNav = showGroupHeaders
+        ? `<div class="cat-nav" id="cat-nav-${companyId}">${groupNames.map((g, i) => `<button type="button" class="${i ? '' : 'is-active'}" data-target="${groupId(g)}" onclick="document.getElementById('${groupId(g)}').scrollIntoView({behavior:'smooth',block:'start'})">${g}</button>`).join('')}</div>`
+        : '';
+      const watchGroups = () => {
+        const nav = document.getElementById(`cat-nav-${companyId}`);
+        if (!nav || !('IntersectionObserver' in window)) return;
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(en => {
+            if (!en.isIntersecting) return;
+            nav.querySelectorAll('button').forEach(b => {
+              const on = b.dataset.target === en.target.id;
+              b.classList.toggle('is-active', on);
+              if (on) nav.scrollTo({ left: b.offsetLeft - 16, behavior: 'smooth' });
+            });
+          });
+        }, { rootMargin: '-130px 0px -60% 0px' });
+        groupNames.forEach(g => { const el = document.getElementById(groupId(g)); el && io.observe(el); });
+      };
+
+      if (cfg.tipo === 'cardapio') {
+        // ─── CARDÁPIO (Alimentação): nome, descrição e preço à esquerda; foto à direita ───
+        const renderDish = (item) => {
+          const it = readItem(item);
+          return `<div class="dish ${it.disponivel?'':'is-off'}" ${it.click}>
+            <div class="dish-info">
+              <p class="dish-name">${it.nome}</p>
+              ${it.desc ? `<p class="dish-desc">${it.desc}</p>` : ''}
+              <div class="dish-bottom">
+                ${it.precoFmt ? `<span class="dish-price">${it.precoFmt}</span>` : '<span class="dish-price is-muted">Consultar preço</span>'}
+                ${!it.disponivel ? '<span class="dish-off">Esgotado</span>' : ''}
+              </div>
+            </div>
+            <div class="dish-photo">
+              ${it.foto ? `<img src="${it.foto}" alt="" loading="lazy" decoding="async">` : '<i class="ti ti-tools-kitchen-2"></i>'}
+              ${it.disponivel ? '<span class="dish-add"><i class="ti ti-plus"></i></span>' : ''}
+            </div>
+          </div>`;
+        };
+        container.innerHTML = `<div class="cardapio">${groupNav}${groupNames.map(g => `
+          <div class="cardapio-group" id="${groupId(g)}">
+            ${showGroupHeaders ? `<h4 class="cardapio-group-title">${g}</h4>` : ''}
+            ${groups[g].map(renderDish).join('')}
+          </div>`).join('')}</div>`;
+        watchGroups();
+        return;
+      }
+
+      // ─── CATÁLOGO (serviços, produtos, imóveis): cartões limpos e diretos ───
+      const isService = cfg.tipo === 'servicos';
+      const renderPro = (item) => {
+        const it = readItem(item);
+        const media = it.foto
+          ? `<img src="${it.foto}" alt="" loading="lazy" decoding="async">`
+          : `<i class="ti ti-${isService ? 'briefcase' : cfg.tipo === 'imoveis' ? 'home' : 'package'}"></i>`;
+        const price = it.precoFmt
+          ? `<span class="pro-price">${isService && it.preco > 0 ? '<small>a partir de</small>' : ''}${it.precoFmt}</span>`
+          : '<span class="pro-price is-muted">Sob consulta</span>';
+        if (isService) {
+          return `<div class="svc ${it.disponivel?'':'is-off'}" ${it.click}>
+            <div class="svc-media">${media}</div>
+            <div class="svc-info">
+              <p class="svc-name">${it.nome}</p>
+              ${it.desc ? `<p class="svc-desc">${it.desc}</p>` : ''}
+              <div class="svc-bottom">${price}${!it.disponivel ? '<span class="dish-off">Indisponível</span>' : ''}</div>
+            </div>
+            ${it.disponivel ? '<i class="ti ti-chevron-right svc-go"></i>' : ''}
+          </div>`;
+        }
+        return `<div class="prod ${it.disponivel?'':'is-off'}" ${it.click}>
+          <div class="prod-media">${media}${!it.disponivel ? '<span class="prod-off">Indisponível</span>' : ''}</div>
+          <div class="prod-info">
+            <p class="prod-name">${it.nome}</p>
+            ${price}
           </div>
         </div>`;
       };
-
-      container.innerHTML = groupNames.map(g => `
-        ${showGroupHeaders ? `<div class="menu-group-title">${g}</div>` : ''}
-        <div class="product-scroll">${groups[g].map(renderItem).join('')}</div>
-      `).join('');
+      container.innerHTML = `<div class="catalogo-pro">${groupNav}${groupNames.map(g => `
+        <div class="pro-group" id="${groupId(g)}">
+          ${showGroupHeaders ? `<h4 class="pro-group-title">${g}</h4>` : ''}
+          <div class="${isService ? 'svc-list' : 'prod-grid'}">${groups[g].map(renderPro).join('')}</div>
+        </div>`).join('')}</div>`;
+      watchGroups();
     } catch(e) {
       console.warn('Conteúdo da empresa:', e.code);
       container.innerHTML = `<p class="menu-empty">Nenhum item encontrado.</p>`;
@@ -1352,67 +1494,7 @@
     window.open(`https://wa.me/55${num}`, '_blank');
   };
 
-  // ─── PURCHASE MODAL ───
-  window.openPurchaseModal = function(item) {
-    if (!window.currentUser) {
-      openModal('auth-modal');
-      showToast('Faça login para comprar 🔒', 'info');
-      return;
-    }
-    // Save current item for later use
-    window._purchaseItem = item;
-
-    // Fill summary card
-    const summaryEl = document.getElementById('purchase-item-summary');
-    summaryEl.innerHTML = `
-      ${item.foto ? `<img src="${item.foto}" alt="${item.nome}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;flex-shrink:0">` : `<div style="width:60px;height:60px;background:#EAF0FE;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">🛍️</div>`}
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;font-size:14px;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.nome}</div>
-        ${item.precoFmt ? `<div style="font-size:16px;font-weight:800;color:#1E4FD1;margin-top:2px">${item.precoFmt}</div>` : '<div style="font-size:13px;color:#6B7280">Preço a combinar</div>'}
-      </div>`;
-
-    // Pre-fill user name (readonly)
-    const user = window.currentUser;
-    document.getElementById('purchase-name').value = user.displayName || user.email || '';
-    // Clear fields
-    document.getElementById('purchase-address').value = '';
-    document.getElementById('purchase-payment').value = '';
-    document.getElementById('purchase-obs').value = '';
-
-    openModal('purchase-modal');
-  };
-
-  window.sendPurchaseToWhatsApp = function() {
-    const address = document.getElementById('purchase-address').value.trim();
-    const payment = document.getElementById('purchase-payment').value;
-    const obs = document.getElementById('purchase-obs').value.trim();
-    const user = window.currentUser;
-    const item = window._purchaseItem;
-
-    if (!address) return showToast('Informe o endereço de entrega', 'error');
-    if (!payment) return showToast('Selecione a forma de pagamento', 'error');
-
-    const whatsapp = (window._currentCompanyWhatsapp || '').replace(/\D/g,'');
-    if (!whatsapp) return showToast('Empresa sem WhatsApp cadastrado', 'error');
-
-    const nome = user.displayName || user.email || 'Cliente';
-    const preco = item.precoFmt || 'A combinar';
-    const produto = item.nome || 'Produto';
-
-    const msg = `🛒 *NOVO PEDIDO — Antas Digital*\n\n`
-      + `👤 *Cliente:* ${nome}\n`
-      + `📦 *Produto:* ${produto}\n`
-      + `💰 *Valor:* ${preco}\n`
-      + `📍 *Endereço:* ${address}\n`
-      + `💳 *Pagamento:* ${payment}\n`
-      + (obs ? `📝 *Obs:* ${obs}\n` : '')
-      + `\n_Pedido realizado pelo portal Antas Digital_`;
-
-    const url = `https://wa.me/55${whatsapp}?text=${encodeURIComponent(msg)}`;
-    closeModal('purchase-modal');
-    window.open(url, '_blank');
-    showToast('Pedido enviado! 🎉', 'success');
-  };
+  // Compra: folha do item, sacola e envio ficam no sacola.js
 
   window.openAddress = function(address) {
     window.open('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(address + ', Antas - BA'), '_blank');
@@ -1581,7 +1663,7 @@
     const place = c.neighborhood || (c.address||'').split(',').slice(-2).join(',').trim();
     return `<button class="biz-card" onclick="openCompanyById('${c.id}')">
       <div class="biz-card-photo" style="${photo ? `background-image:url('${photo}')` : `background:linear-gradient(135deg, ${catColor}, ${catColor}99)`}">
-        ${photo ? '' : `<span>${(c.name||'?')[0]}</span>`}
+        ${photo ? '' : `<span>${initialOf(c.name)}</span>`}
       </div>
       ${c.sponsored ? '<span class="badge-sponsor"><i class="ti ti-star-filled"></i> Patrocinado</span>' : ''}
       <h3 class="biz-card-name">${c.name}</h3>
@@ -1589,6 +1671,154 @@
       ${place ? `<p class="biz-card-place"><i class="ti ti-map-pin"></i> ${place}</p>` : ''}
     </button>`;
   }
+
+  // ─── HORÁRIO: aberto agora? (null = sem horário cadastrado) ───
+  const DAY_KEYS = ['domingo','segunda','terca','quarta','quinta','sexta','sabado'];
+  function getDayHours(horarios, key) {
+    const alt = {terca:'terça', sabado:'sábado'}[key];
+    return horarios?.[key] || (alt && horarios?.[alt]);
+  }
+  function isOpenNow(horarios) {
+    if (!horarios || !Object.keys(horarios).length) return null;
+    const now = new Date();
+    const h = getDayHours(horarios, DAY_KEYS[now.getDay()]);
+    if (!h || !h.aberto) return false;
+    const [oh,om] = (h.abertura||'00:00').split(':').map(Number);
+    const [ch,cm] = (h.fechamento||'23:59').split(':').map(Number);
+    const cur = now.getHours()*60 + now.getMinutes();
+    return cur >= oh*60+om && cur <= ch*60+cm;
+  }
+  window.isOpenNow = isOpenNow;
+
+  // Linha de loja no estilo iFood: logo redondo, nome, nota · categoria · bairro
+  // Primeira letra do nome, ignorando o prefixo "[TESTE]"
+  function initialOf(name) {
+    return ((name || '').replace(/^\[TESTE\]\s*/i, '').trim()[0] || '?').toUpperCase();
+  }
+  window.initialOf = initialOf;
+
+  function bizRow(c) {
+    const open = isOpenNow(c.horarios);
+    const meta = [
+      c.rating ? `<b class="biz-row-star"><i class="ti ti-star-filled"></i> ${Number(c.rating).toFixed(1)}</b>` : '',
+      c.category || '',
+      c.neighborhood || ''
+    ].filter(Boolean).join(' <span class="biz-row-dot">•</span> ');
+    return `<button class="biz-row${open===false?' is-closed':''}" onclick="openCompanyById('${c.id}')">
+      <div class="biz-row-logo">${c.logo ? `<img src="${c.logo}" alt="" loading="lazy">` : `<span>${initialOf(c.name)}</span>`}</div>
+      <div class="biz-row-info">
+        <strong>${c.name}</strong>
+        <small>${meta}</small>
+        ${open===true ? '<span class="biz-row-status is-open">Aberto agora</span>' : open===false ? '<span class="biz-row-status">Fechado</span>' : ''}
+        ${c.sponsored ? '<span class="biz-row-ad">Patrocinado</span>' : ''}
+      </div>
+      <i class="ti ti-chevron-right biz-row-arrow"></i>
+    </button>`;
+  }
+
+  // Ordem padrão: abertas primeiro, depois patrocinadas, depois mais vistas
+  function sortLojas(list, filter) {
+    if (filter === 'open') list = list.filter(c => isOpenNow(c.horarios) === true);
+    if (filter === 'rating') return list.sort((a,b) => (b.rating||0) - (a.rating||0));
+    return list.sort((a,b) => {
+      const oa = isOpenNow(a.horarios) === false ? 1 : 0, ob = isOpenNow(b.horarios) === false ? 1 : 0;
+      return oa - ob || (b.sponsored?1:0) - (a.sponsored?1:0) || (b.views||0) - (a.views||0);
+    });
+  }
+  const emptyLojas = f => `<div class="empty-state"><p>${f==='open' ? 'Nenhuma loja aberta agora.' : 'Nenhuma loja cadastrada ainda.'}</p></div>`;
+
+  // ─── LOJAS POR CATEGORIA ───
+  // Agrupa as lojas na ordem das categorias do app; o que não casar vai para "Outros"
+  function groupByCategory(list) {
+    const groups = CATEGORIES.map(cat => ({ cat, items: [] }));
+    const outros = { cat: { name: 'Outros', emoji: '🏪', color: '#64748B' }, items: [] };
+    list.forEach(c => {
+      const g = groups.find(g => normCat(g.cat.name) === normCat(c.category));
+      (g || outros).items.push(c);
+    });
+    return [...groups, outros].filter(g => g.items.length);
+  }
+
+  // Cartão compacto para as faixas da home
+  function storeCard(c) {
+    const cat = CATEGORIES.find(x => normCat(x.name) === normCat(c.category)) || {};
+    const color = cat.color || '#1E4FD1';
+    const photo = c.cover || (c.gallery || [])[0] || '';
+    const open = isOpenNow(c.horarios);
+    const status = open === true ? '<span class="store-card-status is-open">Aberto</span>'
+      : open === false ? '<span class="store-card-status">Fechado</span>' : '';
+    return `<button class="store-card${open === false ? ' is-closed' : ''}" onclick="openCompanyById('${c.id}')">
+      <div class="store-card-img" style="${photo ? `background-image:url('${photo}')` : `background:linear-gradient(135deg, ${color}, ${color}aa)`}">
+        <span class="store-card-logo">${c.logo ? `<img src="${c.logo}" alt="" loading="lazy">` : initialOf(c.name)}</span>
+      </div>
+      <strong class="store-card-name">${c.name}</strong>
+      <span class="store-card-meta">${c.rating ? `<b><i class="ti ti-star-filled"></i> ${Number(c.rating).toFixed(1)}</b>` : ''}${status}</span>
+    </button>`;
+  }
+
+  // Home: uma faixa por categoria (as que têm mais lojas primeiro, até 6 faixas)
+  const LOJAS_HOME_GRUPOS = 6;
+  function renderLojas() {
+    const el = document.getElementById('lojas-list');
+    if (!el) return;
+    const all = sortLojas([...allCompanies], 'all');
+    if (!all.length) { el.innerHTML = emptyLojas('all'); return; }
+    const groups = groupByCategory(all);
+    const shown = [...groups].sort((a, b) => b.items.length - a.items.length).slice(0, LOJAS_HOME_GRUPOS)
+      .sort((a, b) => groups.indexOf(a) - groups.indexOf(b));
+    el.innerHTML = shown.map(g => `
+      <div class="store-group">
+        <div class="store-group-head">
+          <span class="store-group-icon" style="--c:${g.cat.color}">${g.cat.emoji}</span>
+          <h3>${g.cat.name}</h3>
+          <span class="store-group-count">${g.items.length}</span>
+          <button onclick="${g.cat.name === 'Outros' ? 'openAllLojas()' : `showCategory('${g.cat.name}')`}">Ver todas <i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div class="store-row">${g.items.slice(0, 10).map(storeCard).join('')}</div>
+      </div>`).join('');
+    const more = document.getElementById('lojas-see-all');
+    if (more) {
+      more.classList.toggle('hidden', groups.length <= shown.length && all.length <= 10);
+      more.innerHTML = `Ver todas as ${all.length} lojas em ${groups.length} categorias <i class="ti ti-chevron-right"></i>`;
+    }
+  }
+
+  // Página com todas as lojas: busca, filtro por categoria e lista agrupada
+  let lojasPageFilter = 'all';
+  let lojasPageCat = '';
+  window.openAllLojas = function(cat) {
+    lojasPageFilter = 'all';
+    lojasPageCat = cat || '';
+    document.getElementById('lojas-page-search').value = '';
+    renderLojasPage();
+    showPage('lojas');
+  };
+  window.setLojasPageFilter = function(f) { lojasPageFilter = lojasPageFilter === f ? 'all' : f; renderLojasPage(); };
+  window.setLojasPageCat = function(c) { lojasPageCat = c; renderLojasPage(); window.scrollTo({ top: 0, behavior: 'instant' }); };
+  window.renderLojasPage = function() {
+    const sem = v => (v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+    const q = sem(document.getElementById('lojas-page-search').value);
+    let list = sortLojas([...allCompanies], lojasPageFilter);
+    if (q) list = list.filter(c => sem(c.name).includes(q) || sem(c.category).includes(q));
+    const groupsAll = groupByCategory(list);
+    const groups = lojasPageCat ? groupsAll.filter(g => g.cat.name === lojasPageCat) : groupsAll;
+
+    // Chips: Abertas agora + uma por categoria com a contagem
+    document.getElementById('lojas-page-filters').innerHTML =
+      `<button class="filter-chip${lojasPageFilter === 'open' ? ' active' : ''}" onclick="setLojasPageFilter('open')"><i class="ti ti-clock"></i> Abertas agora</button>` +
+      `<button class="filter-chip${!lojasPageCat ? ' active' : ''}" onclick="setLojasPageCat('')">Todas</button>` +
+      groupsAll.map(g => `<button class="filter-chip${lojasPageCat === g.cat.name ? ' active' : ''}" onclick="setLojasPageCat('${g.cat.name}')">${g.cat.emoji} ${g.cat.name} <span class="chip-count">${g.items.length}</span></button>`).join('');
+
+    const total = groups.reduce((a, g) => a + g.items.length, 0);
+    document.getElementById('lojas-page-count').textContent = `${total} ${total === 1 ? 'loja' : 'lojas'}`;
+    document.getElementById('lojas-page-list').innerHTML = total
+      ? groups.map(g => `
+        <section class="store-section">
+          <h3 class="store-section-title"><span class="store-group-icon" style="--c:${g.cat.color}">${g.cat.emoji}</span>${g.cat.name}<span class="store-group-count">${g.items.length}</span></h3>
+          <div class="biz-list">${g.items.map(bizRow).join('')}</div>
+        </section>`).join('')
+      : (q ? '<div class="empty-state"><p>Nenhuma loja com esse nome.</p></div>' : emptyLojas(lojasPageFilter));
+  };
 
   function renderHighlights() {
     const container = document.getElementById('highlights-scroll');
@@ -1603,39 +1833,6 @@
   window.openCompanyById = function(id) {
     const c = allCompanies.find(x => x.id === id) || getDemoHighlights().find(x => x.id === id);
     if (c) openCompany(c);
-  };
-
-  function renderNews() {
-    const container = document.getElementById('news-grid');
-    container.innerHTML = allNews.slice(0,3).map(n=>newsCard(n)).join('');
-  }
-
-  function renderNewsPage() {
-    const container = document.getElementById('news-page-grid');
-    container.innerHTML = allNews.map(n=>newsCard(n)).join('');
-  }
-
-  function newsCard(n) {
-    return `<div class="news-card" onclick="openNews(${JSON.stringify(n).replace(/"/g,'&quot;')})">
-      <div class="news-img" style="background-image:url('${n.image||'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=400'}')"></div>
-      <div class="news-body">
-        <span class="news-date">${formatDate(n.date)}</span>
-        <h3 class="news-title">${n.title}</h3>
-        <p class="news-summary">${n.summary||''}</p>
-        <span class="news-read">Ler mais →</span>
-      </div>
-    </div>`;
-  }
-
-  window.openNews = function(news) {
-    document.getElementById('news-modal-content').innerHTML = `
-      ${news.image?`<div class="news-modal-img" style="background-image:url('${news.image}')"></div>`:''}
-      <div class="news-modal-body">
-        <span class="news-date">${formatDate(news.date)}</span>
-        <h2 class="news-modal-title">${news.title}</h2>
-        <p class="news-content">${news.content||news.summary}</p>
-      </div>`;
-    openModal('news-modal');
   };
 
   function renderEvents() {
@@ -1753,8 +1950,9 @@
 
   // Abre o modal de compra a partir de um produto encontrado na busca
   window.openProductFromSearch = function(company, item) {
+    window._currentCompany = allCompanies.find(c => c.id === company.id) || company;
     window._currentCompanyWhatsapp = company.whatsapp || '';
-    openPurchaseModal(item);
+    openItemSheet(item);
   };
 
   function renderFavorites() {
@@ -1766,7 +1964,7 @@
       grid.innerHTML=''; empty?.classList.remove('hidden');
     } else {
       empty?.classList.add('hidden');
-      grid.innerHTML = favCompanies.map(bizCard).join('');
+      grid.innerHTML = favCompanies.map(bizRow).join('');
     }
   }
 
@@ -1786,6 +1984,14 @@
     {name:'Tecnologia e Informática',icon:'device-laptop',emoji:'💻',color:'#7C3AED'},
     {name:'Influenciadores',icon:'speakerphone',emoji:'📣',color:'#DB2777'},
     {name:'Artistas',icon:'palette',emoji:'🎨',color:'#A855F7'},
+    {name:'Pet Shop',icon:'paw',emoji:'🐾',color:'#D97706'},
+    {name:'Educação',icon:'school',emoji:'📚',color:'#2563EB'},
+    {name:'Imóveis',icon:'home',emoji:'🏠',color:'#0D9488'},
+    {name:'Esporte e Lazer',icon:'ball-football',emoji:'⚽',color:'#16A34A'},
+    {name:'Eventos e Festas',icon:'confetti',emoji:'🎉',color:'#C026D3'},
+    {name:'Contabilidade e Finanças',icon:'calculator',emoji:'💰',color:'#0F766E'},
+    {name:'Advocacia e Jurídico',icon:'scale',emoji:'⚖️',color:'#475569'},
+    {name:'Religião e Igrejas',icon:'building-church',emoji:'⛪',color:'#9333EA'},
   ];
 
   let categoriesExpanded = false;
@@ -1859,7 +2065,7 @@
   function renderCategoryCompanies(companies) {
     const grid = document.getElementById('category-companies-grid');
     if (!companies.length) { grid.innerHTML='<div class="empty-state"><p>Nenhuma empresa nesta categoria ainda.</p></div>'; return; }
-    grid.innerHTML = companies.map(bizCard).join('');
+    grid.innerHTML = companies.map(bizRow).join('');
   }
 
   window.filterCategoryCompanies = function(val) {
@@ -2096,7 +2302,17 @@
       'auth/email-already-in-use':'E-mail já cadastrado',
       'auth/weak-password':'Senha fraca. Use pelo menos 6 caracteres',
       'auth/invalid-email':'E-mail inválido',
-      'auth/too-many-requests':'Muitas tentativas. Tente mais tarde'
+      'auth/too-many-requests':'Muitas tentativas. Aguarde alguns minutos e tente de novo',
+      // Firebase atual responde assim para e-mail OU senha errados
+      'auth/invalid-credential':'E-mail ou senha incorretos',
+      'auth/invalid-login-credentials':'E-mail ou senha incorretos',
+      'auth/missing-password':'Digite sua senha',
+      'auth/user-disabled':'Esta conta foi desativada',
+      'auth/network-request-failed':'Sem conexão com a internet. Verifique e tente de novo',
+      'auth/popup-blocked':'O navegador bloqueou a janela do Google. Permita pop-ups e tente de novo',
+      'auth/unauthorized-domain':'Login com Google não liberado neste endereço do site (configuração do Firebase)',
+      'auth/operation-not-allowed':'Este tipo de login não está ativado (configuração do Firebase)',
+      'auth/internal-error':'Erro no servidor de login. Tente de novo em instantes'
     };
     return map[code]||'Erro ao autenticar. Tente novamente.';
   }
@@ -2111,9 +2327,6 @@ function getDemoHighlights() {
 }
   function getDemoEvents() {
   
-  }
-  function getDemoNews() {
-   
   }
 
   // ─── PROFILE MENU CLICK ───
@@ -2131,51 +2344,6 @@ function getDemoHighlights() {
       showToast('Em breve...', 'info');
     }
   };
-
-  // ─── BUSINESS HOURS HELPER ───
-  function buildHoursHTML(horarios) {
-    const DAYS = [
-      {key:'segunda',label:'Seg'},
-      {key:'terça',label:'Ter'},
-      {key:'quarta',label:'Qua'},
-      {key:'quinta',label:'Qui'},
-      {key:'sexta',label:'Sex'},
-      {key:'sábado',label:'Sáb'},
-      {key:'domingo',label:'Dom'},
-    ];
-    if (!horarios || !Object.keys(horarios).length) return '';
-    const now = new Date();
-    const dayIndex = (now.getDay() + 6) % 7;
-    const todayKey = DAYS[dayIndex]?.key;
-    const todayH = horarios[todayKey];
-    let statusBadge = '';
-    if (todayH) {
-      if (todayH.aberto) {
-        const [oh,om] = (todayH.abertura||'00:00').split(':').map(Number);
-        const [ch,cm] = (todayH.fechamento||'23:59').split(':').map(Number);
-        const cur = now.getHours()*60 + now.getMinutes();
-        if (cur >= oh*60+om && cur <= ch*60+cm) {
-          statusBadge = '<span style="display:inline-flex;align-items:center;gap:4px;background:#D1FAE5;color:#065F46;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🟢 Aberto agora</span>';
-        } else {
-          statusBadge = '<span style="display:inline-flex;align-items:center;gap:4px;background:#FEE2E2;color:#991B1B;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🔴 Fechado</span>';
-        }
-      } else {
-        statusBadge = '<span style="display:inline-flex;align-items:center;gap:4px;background:#FEE2E2;color:#991B1B;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700">🔴 Fechado hoje</span>';
-      }
-    }
-    const rows = DAYS.map(d => {
-      const h = horarios[d.key];
-      if (!h || !h.aberto) return `<div style="display:flex;gap:8px;font-size:13px;padding:4px 0;color:#9CA3AF"><span style="width:28px;font-weight:600">${d.label}</span><span>Fechado</span></div>`;
-      return `<div style="display:flex;gap:8px;font-size:13px;padding:4px 0"><span style="width:28px;font-weight:600">${d.label}</span><span>${h.abertura} – ${h.fechamento}</span></div>`;
-    }).join('');
-    return `<div style="margin:16px 0;padding:14px;background:#F9FAFB;border-radius:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <strong style="font-size:14px">🕐 Horário de Funcionamento</strong>
-        ${statusBadge}
-      </div>
-      <div>${rows}</div>
-    </div>`;
-  }
 
   // ─── RATINGS ───
   window.loadCompanyRatings = async function(companyId) {
@@ -2447,7 +2615,7 @@ function getDemoHighlights() {
   const data = await response.json();
       const typing = document.querySelector('.typing-indicator');
       if (typing) typing.remove();
-      const answer = data.choices?.[0]?.message?.content || 'Não encontrei essa informação cadastrada no Antas Digital no momento.';
+      const answer = data.choices?.[0]?.message?.content || 'Não encontrei essa informação cadastrada no Achei Fácil no momento.';
       appendAIMessage(answer, 'bot');
     } catch(e) {
       const typing = document.querySelector('.typing-indicator');
@@ -2506,7 +2674,9 @@ function getDemoHighlights() {
 
   // ─── ADS CAROUSEL ───
   // Edite este array pra trocar os anúncios (pode vir do Firestore depois, se quiser).
+  // "plain": a imagem já traz o texto, então não leva legenda nem sombra. "action": o que o toque faz.
   const homeAds = [
+    { img: 'anuncie-aqui.svg', title: 'Sua empresa aqui! Divulgue grátis no Achei Fácil', plain: true, action: 'openBusinessModal()' },
     { img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900&q=70&auto=format', tag: 'Promoção', title: 'Sua empresa aqui em destaque', subtitle: 'Anuncie pro público de Antas', link: null },
     { img: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=900&q=70&auto=format', tag: 'Novidade', title: 'Espaço publicitário disponível', subtitle: 'Fale com a gente pra reservar', link: null },
     { img: 'https://images.unsplash.com/photo-1607082349566-187342175e2f?w=900&q=70&auto=format', tag: 'Destaque', title: 'Alcance clientes na região', subtitle: 'Toque para saber mais', link: null }
@@ -2521,13 +2691,13 @@ function getDemoHighlights() {
     if (!track || !dots || !wrap || !homeAds.length) { if (wrap) wrap.style.display = 'none'; return; }
 
     track.innerHTML = homeAds.map(ad => `
-      <a class="ad-slide" ${ad.link ? `href="${ad.link}" target="_blank" rel="noopener"` : `onclick="return false"`}>
+      <a class="ad-slide${ad.plain ? ' ad-slide--plain' : ''}" ${ad.link ? `href="${ad.link}" target="_blank" rel="noopener"` : `onclick="${ad.action ? ad.action + ';' : ''}return false"`}>
         <img src="${ad.img}" alt="${ad.title}" loading="lazy">
-        <div class="ad-slide-info">
+        ${ad.plain ? '' : `<div class="ad-slide-info">
           ${ad.tag ? `<span class="ad-slide-tag">${ad.tag}</span><br>` : ''}
           <div class="ad-slide-title">${ad.title}</div>
           ${ad.subtitle ? `<div class="ad-slide-subtitle">${ad.subtitle}</div>` : ''}
-        </div>
+        </div>`}
       </a>`).join('');
 
     dots.innerHTML = homeAds.map((_, i) =>
@@ -2582,7 +2752,7 @@ function getDemoHighlights() {
   <div id="cookie-notif" style="position:fixed;bottom:90px;left:16px;right:16px;background:#fff;border-radius:18px;padding:18px;box-shadow:0 10px 35px rgba(0,0,0,.25);z-index:999999;display:none;">
     <h3 style="margin:0 0 8px;color:#0f172a;">🔔 Receber notificações?</h3>
     <p style="margin:0 0 14px;color:#475569;font-size:14px;">
-      Podemos enviar avisos sobre notícias, eventos e novidades da cidade.
+      Podemos enviar avisos sobre eventos, promoções e novidades da cidade.
     </p>
     <button onclick="aceitarNotificacoes()" class="btn-primary w-full">Aceitar notificações</button>
     <button onclick="recusarNotificacoes()" style="margin-top:10px;width:100%;background:transparent;border:0;color:#64748b;font-size:14px;">Agora não</button>
@@ -2592,6 +2762,7 @@ function getDemoHighlights() {
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script src="app.js"></script>
+  <script src="sacola.js?v=2"></script>
   <script>
   // Sobrescreve showPage do app.js para funcionar com IDs do index (page-xxx)
   window.showPage = function(pageId) {
@@ -2610,8 +2781,9 @@ function getDemoHighlights() {
       // Telas internas marcam a aba de onde vieram
       const UTIL_PAGES = ['utilidades','bus','servicos','promocoes','vagas','classificados','map'];
       const navKey = UTIL_PAGES.includes(pageId) ? 'utilidades'
-        : ['news','events','profile'].includes(pageId) ? pageId : 'home';
+        : ['events','profile'].includes(pageId) ? pageId : 'home';
       document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === navKey));
+      window.updateCartBar && window.updateCartBar();
     } else {
       console.warn('Pagina nao encontrada:', pageId);
     }
@@ -2623,7 +2795,7 @@ function getDemoHighlights() {
   };
 
   // ─── MODAL HELPERS (global) ───
-  const MODAL_IDS = ['auth-modal','business-modal','company-modal','news-modal','event-modal','purchase-modal'];
+  const MODAL_IDS = ['auth-modal','business-modal','company-modal','event-modal','item-sheet'];
 
   window.openModal = function(id) {
     document.getElementById(id)?.classList.remove('hidden');
@@ -2720,7 +2892,7 @@ function getDemoHighlights() {
   </script>
 
 <div id="ai-floating-chat" class="ai-floating-chat hidden">
-  <div class="ai-floating-header">    <span>IA Antas Digital</span>
+  <div class="ai-floating-header">    <span>IA Achei Fácil</span>
     <button onclick="toggleAIChat()">✕</button>
   </div>
 

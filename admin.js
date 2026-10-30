@@ -157,12 +157,11 @@ const PAGE_LABELS = {
   usuarios:'Usuários', configuracoes:'Configurações',
   'promocoes-admin':'Promoções da Cidade', 'classificados-admin':'Classificados',
   'config-ia':'Configurações da IA', 'config-firebase':'Configurações do Firebase',
-  estatisticas:'Acessos do Site', pedidos:'Pedidos'
+  estatisticas:'Acessos do Site'
 };
 window.PAGE_LOADERS = {
   dashboard: () => loadDashboard(),
   estatisticas: () => loadEstatisticas(),
-  pedidos: () => loadPedidos(),
   empresas: () => loadEmpresas(),
   aprovacoes: () => loadAprovacoes(),
   noticias: () => loadNoticias(),
@@ -249,20 +248,11 @@ async function loadDashboard() {
     document.getElementById('stat-eventos').textContent = evt.size;
     document.getElementById('stat-usuarios').textContent = usr.size;
 
-    // Visualizações e cliques no WhatsApp: o app soma direto em cada empresa (views / whatsappClicks)
-    const soma = campo => emp.docs.reduce((t, d) => t + (Number(d.data()[campo]) || 0), 0);
-    document.getElementById('stat-visualizacoes').textContent = soma('views').toLocaleString('pt-BR');
-    document.getElementById('stat-whatsapp').textContent = soma('whatsappClicks').toLocaleString('pt-BR');
-
-    // Total de pedidos feitos pelo app (coleção pedidos)
-    try {
-      const { getCountFromServer } = fb();
-      const c = await getCountFromServer(collection(db(), 'pedidos'));
-      document.getElementById('stat-pedidos').textContent = c.data().count.toLocaleString('pt-BR');
-    } catch (e) {
-      console.warn('Pedidos: sem permissão de leitura ou coleção ainda vazia.', e);
-      document.getElementById('stat-pedidos').textContent = '0';
-    }
+    // Visualizations & clicks (aggregated)
+    const visDocs = await getDocs(collection(db(), 'visualizacoes'));
+    const wpDocs  = await getDocs(collection(db(), 'cliques_whatsapp'));
+    document.getElementById('stat-visualizacoes').textContent = visDocs.size;
+    document.getElementById('stat-whatsapp').textContent = wpDocs.size;
 
     // Pending badge
    const pendDocs = await getDocs(query(collection(db(), 'solicitacoes_empresas'), where('status','==','pendente')));
@@ -299,46 +289,50 @@ document.getElementById('notif-dot').classList.toggle('show', pendDocs.size > 0)
 }
 
 let chartViews, chartCats;
-// Paleta usada nos gráficos do admin
-const CHART_COLORS = ['#1E4FD1','#0F9D6B','#F59E0B','#EC4899','#7C3AED','#0EA5E9','#EF4444','#14B8A6','#F97316','#64748B'];
-const chartGrid = { color: 'rgba(16,24,40,.06)' };
-const chartTicks = { color: '#6B7287', font: { size: 11 } };
-
-async function renderCharts(empDocs) {
-  const { collection, getDocs, query, where, orderBy, Timestamp } = fb();
-
-  // Acessos reais dos últimos 7 dias (coleção acessos_site)
+function renderCharts(empDocs) {
+  // Views Chart (fake 7-day data — replace with real aggregation)
   const ctx1 = document.getElementById('chart-views');
-  if (ctx1) {
-    const inicio = new Date(); inicio.setHours(0,0,0,0); inicio.setDate(inicio.getDate() - 6);
-    const dias = [];
-    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); dias.push(diaKey(d)); }
-    const cont = Object.fromEntries(dias.map(k => [k, 0]));
-    try {
-      const snap = await getDocs(query(collection(db(), 'acessos_site'), where('ts', '>=', Timestamp.fromDate(inicio)), orderBy('ts', 'asc')));
-      snap.docs.forEach(d => { const dt = d.data().ts?.toDate?.(); if (dt && cont[diaKey(dt)] !== undefined) cont[diaKey(dt)]++; });
-    } catch (e) { console.error('Acessos (dashboard):', e); }
-    if (chartViews) chartViews.destroy();
-    chartViews = new Chart(ctx1, {
-      type: 'bar',
-      data: { labels: dias.map(diaCurto), datasets: [{ label: 'Acessos', data: dias.map(k => cont[k]), backgroundColor: '#1E4FD1', borderRadius: 6, maxBarThickness: 36 }] },
-      options: { responsive: true, plugins: { legend: { display: false } },
-        scales: { x: { grid: { display: false }, ticks: chartTicks }, y: { beginAtZero: true, grid: chartGrid, ticks: { ...chartTicks, precision: 0 } } } }
-    });
-  }
+  if (!ctx1) return;
+  if (chartViews) chartViews.destroy();
+  const days = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  chartViews = new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [{
+        label: 'Visualizações',
+        data: days.map(() => Math.floor(Math.random()*80+20)),
+        borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,.1)',
+        tension: .4, fill: true, pointRadius: 4, pointBackgroundColor: '#6366f1'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#8892a4' } },
+        y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#8892a4' } }
+      }
+    }
+  });
 
-  // Empresas por categoria: barras horizontais (cabe qualquer número de categorias)
+  // Category donut
   const catMap = {};
   empDocs.forEach(d => { const c = d.data().categoria || 'Outros'; catMap[c] = (catMap[c]||0)+1; });
-  const top = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const labels = Object.keys(catMap);
+  const vals = labels.map(l => catMap[l]);
+  const colors = ['#6366f1','#10b981','#f59e0b','#ec4899','#3b82f6','#8b5cf6'];
   const ctx2 = document.getElementById('chart-cats');
-  if (!ctx2) return;
   if (chartCats) chartCats.destroy();
   chartCats = new Chart(ctx2, {
-    type: 'bar',
-    data: { labels: top.map(t => t[0]), datasets: [{ data: top.map(t => t[1]), backgroundColor: top.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]), borderRadius: 6, maxBarThickness: 18 }] },
-    options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, grid: chartGrid, ticks: { ...chartTicks, precision: 0 } }, y: { grid: { display: false }, ticks: chartTicks } } }
+    type: 'doughnut',
+    data: {
+      labels, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, cutout: '65%',
+      plugins: { legend: { position: 'bottom', labels: { color: '#8892a4', padding: 8, font: { size: 11 } } } }
+    }
   });
 }
 
@@ -346,125 +340,133 @@ async function renderCharts(empDocs) {
 // ESTATÍSTICAS DE ACESSO
 // ══════════════════════════════════════════════════
 let chartAcessosHoras, chartAcessosDias;
-let _acessosCache = null;        // todos os acessos (baixados uma vez; "Atualizar" baixa de novo)
-let _acessosPeriodo = 30;        // dias; 0 = desde o primeiro acesso
-
-// Data local no formato aaaa-mm-dd (chave de agrupamento por dia)
-function diaKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-const diaData = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
-const diaCurto = k => diaData(k).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-const SEMANA = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-
-async function loadEstatisticas(forcar) {
-  const { collection, getDocs, query, orderBy } = fb();
+async function loadEstatisticas() {
+  const { collection, getDocs, query, where, orderBy, limit, getCountFromServer, Timestamp } = fb();
   try {
-    if (!_acessosCache || forcar) {
-      document.getElementById('tbody-acessos-dias').innerHTML = '<tr><td colspan="5" class="loading-row">Carregando...</td></tr>';
-      const snap = await getDocs(query(collection(db(), 'acessos_site'), orderBy('ts', 'asc')));
-      _acessosCache = snap.docs.map(d => {
-        const a = d.data();
-        return { dt: a.ts?.toDate ? a.ts.toDate() : null, pagina: a.pagina, dispositivo: a.dispositivo, referencia: a.referencia };
-      }).filter(a => a.dt);
+    // Total geral (contagem eficiente, sem baixar todos os documentos)
+    const countSnap = await getCountFromServer(collection(db(), 'acessos_site'));
+    document.getElementById('stat-acessos-total').textContent = countSnap.data().count;
+
+    // Janela dos últimos 7 dias (inclui hoje)
+    const inicio = new Date();
+    inicio.setHours(0,0,0,0);
+    inicio.setDate(inicio.getDate() - 6);
+
+    const snap7 = await getDocs(
+      query(collection(db(), 'acessos_site'),
+        where('ts', '>=', Timestamp.fromDate(inicio)),
+        orderBy('ts', 'asc'))
+    );
+
+    const hojeStr = new Date().toLocaleDateString('pt-BR');
+    const porDia = {};   // 'dd/mm' -> total
+    const porHoraHoje = new Array(24).fill(0);
+    let totalHoje = 0;
+
+    // pré-popula os últimos 7 dias com 0 (garante ordem correta no gráfico)
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      porDia[d.toLocaleDateString('pt-BR')] = 0;
     }
-    renderEstatisticas();
+
+    snap7.docs.forEach(docu => {
+      const data = docu.data();
+      const dt = data.ts?.toDate ? data.ts.toDate() : null;
+      if (!dt) return;
+      const diaStr = dt.toLocaleDateString('pt-BR');
+      if (porDia[diaStr] !== undefined) porDia[diaStr]++;
+      if (diaStr === hojeStr) {
+        totalHoje++;
+        porHoraHoje[dt.getHours()]++;
+      }
+    });
+
+    document.getElementById('stat-acessos-hoje').textContent = totalHoje;
+    document.getElementById('stat-acessos-7dias').textContent = snap7.size;
+
+    const picoIdx = porHoraHoje.indexOf(Math.max(...porHoraHoje));
+    document.getElementById('stat-acessos-hora-pico').textContent =
+      Math.max(...porHoraHoje) > 0 ? `${String(picoIdx).padStart(2,'0')}h` : '—';
+
+    renderChartsAcessos(porDia, porHoraHoje);
+
+    // Tabela de últimos acessos
+    const snapRecentes = await getDocs(
+      query(collection(db(), 'acessos_site'), orderBy('ts', 'desc'), limit(20))
+    );
+    const tbody = document.getElementById('tbody-acessos-recentes');
+    tbody.innerHTML = snapRecentes.empty
+      ? '<tr><td colspan="5" class="loading-row">Nenhum acesso registrado ainda.</td></tr>'
+      : snapRecentes.docs.map(docu => {
+          const a = docu.data();
+          const dt = a.ts?.toDate ? a.ts.toDate() : null;
+          return `<tr>
+            <td>${dt ? dt.toLocaleDateString('pt-BR') : '—'}</td>
+            <td>${dt ? dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) : '—'}</td>
+            <td>${a.pagina || '/'}</td>
+            <td>${a.dispositivo === 'mobile' ? '📱 Mobile' : '💻 Desktop'}</td>
+            <td>${a.referencia && a.referencia !== 'direto' ? a.referencia : 'Acesso direto'}</td>
+          </tr>`;
+        }).join('');
   } catch (e) {
     console.error(e);
-    toast('Erro ao carregar estatísticas de acesso: ' + (e.code || e.message), 'error');
+    toast('Erro ao carregar estatísticas de acesso.', 'error');
   }
 }
 window.loadEstatisticas = loadEstatisticas;
 
-window.setPeriodoAcessos = function (dias) {
-  _acessosPeriodo = dias;
-  document.querySelectorAll('#acessos-periodo button').forEach(b => b.classList.toggle('active', Number(b.dataset.dias) === dias));
-  renderEstatisticas();
-};
-
-function renderEstatisticas() {
-  const todos = _acessosCache || [];
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
-  const primeiro = todos[0]?.dt ? new Date(todos[0].dt) : new Date(hoje);
-  primeiro.setHours(0,0,0,0);
-  const inicio = _acessosPeriodo ? new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() - (_acessosPeriodo - 1)) : primeiro;
-  const lista = todos.filter(a => a.dt >= inicio);
-
-  // Todos os dias do período, inclusive os sem acesso
-  const dias = [];
-  for (let d = new Date(inicio); d <= hoje; d.setDate(d.getDate() + 1)) dias.push(diaKey(d));
-  const porDia = Object.fromEntries(dias.map(k => [k, { total: 0, mobile: 0, desktop: 0 }]));
-  const porHora = new Array(24).fill(0);
-  let mobile = 0;
-  lista.forEach(a => {
-    const k = diaKey(a.dt);
-    if (!porDia[k]) return;
-    porDia[k].total++;
-    porDia[k][a.dispositivo === 'mobile' ? 'mobile' : 'desktop']++;
-    porHora[a.dt.getHours()]++;
-    if (a.dispositivo === 'mobile') mobile++;
-  });
-
-  const total = lista.length;
-  const melhor = dias.reduce((m, k) => porDia[k].total > porDia[m].total ? k : m, dias[0]);
-  const pico = porHora.indexOf(Math.max(...porHora));
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('stat-acessos-total', todos.length.toLocaleString('pt-BR'));
-  set('stat-acessos-periodo', total.toLocaleString('pt-BR'));
-  set('stat-acessos-media', dias.length ? (total / dias.length).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0');
-  set('stat-acessos-melhor', melhor && porDia[melhor].total ? `${porDia[melhor].total} · ${diaCurto(melhor)}` : '—');
-  set('stat-acessos-hoje', (porDia[diaKey(hoje)]?.total || 0).toLocaleString('pt-BR'));
-  set('stat-acessos-hora-pico', total ? `${String(pico).padStart(2,'0')}h` : '—');
-  set('stat-acessos-mobile', total ? Math.round(mobile / total * 100) + '%' : '—');
-  set('acessos-periodo-label', _acessosPeriodo ? `Últimos ${_acessosPeriodo} dias` : `Desde ${primeiro.toLocaleDateString('pt-BR')}`);
-
-  renderChartsAcessos(dias, porDia, porHora);
-
-  // Tabela: um dia por linha, do mais recente para o mais antigo
-  const max = Math.max(1, ...dias.map(k => porDia[k].total));
-  document.getElementById('tbody-acessos-dias').innerHTML = dias.slice().reverse().map(k => {
-    const d = porDia[k];
-    return `<tr class="${d.total ? '' : 'is-zero'}">
-      <td><strong>${diaData(k).toLocaleDateString('pt-BR')}</strong></td>
-      <td>${SEMANA[diaData(k).getDay()]}</td>
-      <td class="num">${d.total}</td>
-      <td class="num">${d.mobile} / ${d.desktop}</td>
-      <td class="bar-cell"><span class="day-bar" style="width:${Math.round(d.total / max * 100)}%"></span></td>
-    </tr>`;
-  }).join('');
-
-  // Últimos acessos
-  const recentes = todos.slice(-20).reverse();
-  document.getElementById('tbody-acessos-recentes').innerHTML = recentes.length ? recentes.map(a => `<tr>
-      <td>${a.dt.toLocaleDateString('pt-BR')}</td>
-      <td>${a.dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</td>
-      <td>${a.pagina || '/'}</td>
-      <td>${a.dispositivo === 'mobile' ? '📱 Celular' : '💻 Computador'}</td>
-      <td>${a.referencia && a.referencia !== 'direto' ? a.referencia : 'Acesso direto'}</td>
-    </tr>`).join('') : '<tr><td colspan="5" class="loading-row">Nenhum acesso registrado ainda.</td></tr>';
-}
-
-function renderChartsAcessos(dias, porDia, porHora) {
-  const c1 = document.getElementById('chart-acessos-dias');
-  if (c1) {
-    if (chartAcessosDias) chartAcessosDias.destroy();
-    chartAcessosDias = new Chart(c1, {
+function renderChartsAcessos(porDia, porHoraHoje) {
+  // Gráfico por horário (hoje)
+  const ctxH = document.getElementById('chart-acessos-horas');
+  if (ctxH) {
+    if (chartAcessosHoras) chartAcessosHoras.destroy();
+    chartAcessosHoras = new Chart(ctxH, {
       type: 'bar',
-      data: { labels: dias.map(diaCurto), datasets: [{ label: 'Acessos', data: dias.map(k => porDia[k].total), backgroundColor: '#1E4FD1', borderRadius: 4, maxBarThickness: 28 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-        scales: { x: { grid: { display: false }, ticks: { ...chartTicks, autoSkip: true, maxTicksLimit: 12, maxRotation: 0 } },
-                  y: { beginAtZero: true, grid: chartGrid, ticks: { ...chartTicks, precision: 0 } } } }
+      data: {
+        labels: porHoraHoje.map((_, h) => `${String(h).padStart(2,'0')}h`),
+        datasets: [{
+          label: 'Acessos',
+          data: porHoraHoje,
+          backgroundColor: '#3b82f6', borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#8892a4', maxRotation: 0 } },
+          y: { beginAtZero: true, ticks: { color: '#8892a4', precision: 0 }, grid: { color: 'rgba(255,255,255,.05)' } }
+        }
+      }
     });
   }
-  const c2 = document.getElementById('chart-acessos-horas');
-  if (c2) {
-    if (chartAcessosHoras) chartAcessosHoras.destroy();
-    chartAcessosHoras = new Chart(c2, {
-      type: 'bar',
-      data: { labels: porHora.map((_, h) => `${h}h`), datasets: [{ label: 'Acessos', data: porHora, backgroundColor: '#0F9D6B', borderRadius: 4 }] },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
-        scales: { x: { grid: { display: false }, ticks: { ...chartTicks, autoSkip: true, maxTicksLimit: 12, maxRotation: 0 } },
-                  y: { beginAtZero: true, grid: chartGrid, ticks: { ...chartTicks, precision: 0 } } } }
+
+  // Gráfico últimos 7 dias
+  const ctxD = document.getElementById('chart-acessos-dias');
+  if (ctxD) {
+    if (chartAcessosDias) chartAcessosDias.destroy();
+    const labels = Object.keys(porDia);
+    const vals = Object.values(porDia);
+    chartAcessosDias = new Chart(ctxD, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Acessos',
+          data: vals,
+          borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,.1)',
+          tension: .4, fill: true, pointRadius: 4, pointBackgroundColor: '#10b981'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#8892a4' } },
+          y: { beginAtZero: true, ticks: { color: '#8892a4', precision: 0 }, grid: { color: 'rgba(255,255,255,.05)' } }
+        }
+      }
     });
   }
 }
@@ -659,7 +661,7 @@ async function loadAprovacoes() {
           </div>
           ${e.usuarioWhatsapp ? (() => {
             const uwRaw = e.usuarioWhatsapp.replace(/\D/g, '');
-            const msg = encodeURIComponent(`Olá ${e.usuarioNome || ''}! Recebemos sua solicitação para divulgar "${e.nome || 'seu negócio'}" no Achei Fácil.`);
+            const msg = encodeURIComponent(`Olá ${e.usuarioNome || ''}! Recebemos sua solicitação para divulgar "${e.nome || 'seu negócio'}" no Antas Digital.`);
             return `<a href="https://wa.me/55${uwRaw}?text=${msg}" target="_blank" class="btn-whatsapp-user">
               <svg viewBox="0 0 24 24" width="15" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.124 1.534 5.857L0 24l6.334-1.508A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.028-1.383l-.36-.214-3.762.896.952-3.663-.234-.376A9.793 9.793 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
               Falar com Solicitante
@@ -682,7 +684,7 @@ async function loadAprovacoes() {
             <div class="aprovacao-field aprovacao-field-wp">
               <strong>WhatsApp</strong>
               <span>${e.whatsapp || '—'}</span>
-              ${wpLink ? `<a href="${wpLink}?text=${encodeURIComponent(`Olá! Somos do Achei Fácil e gostaríamos de confirmar seu cadastro de "${e.nome}".`)}" target="_blank" class="btn-whatsapp-inline">
+              ${wpLink ? `<a href="${wpLink}?text=${encodeURIComponent(`Olá! Somos do Antas Digital e gostaríamos de confirmar seu cadastro de "${e.nome}".`)}" target="_blank" class="btn-whatsapp-inline">
                 <svg viewBox="0 0 24 24" width="13" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.124 1.534 5.857L0 24l6.334-1.508A11.954 11.954 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.028-1.383l-.36-.214-3.762.896.952-3.663-.234-.376A9.793 9.793 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/></svg>
                 WhatsApp
               </a>` : ''}
@@ -918,7 +920,7 @@ let _utilidades = [];
 async function loadUtilidades() {
   const { collection, getDocs, query, orderBy } = fb();
   try {
-    const snap = await getDocs(query(collection(db(), 'utilidades'), orderBy('nome')));
+    const snap = await getDocs(query(collection(db(), 'utilidades_publicas'), orderBy('nome')));
     _utilidades = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const tbody = document.getElementById('tbody-utilidades');
     tbody.innerHTML = _utilidades.length ? _utilidades.map(u => `
@@ -966,15 +968,15 @@ window.saveUtilidade = async function() {
       atualizadoEm: serverTimestamp()
     };
     const id = document.getElementById('utilidade-id').value;
-    if (id) { await updateDoc(doc(db(), 'utilidades', id), data); toast('Atualizado!','success'); }
-    else { data.criadoEm = serverTimestamp(); await addDoc(collection(db(), 'utilidades'), data); toast('Criado!','success'); }
+    if (id) { await updateDoc(doc(db(), 'utilidades_publicas', id), data); toast('Atualizado!','success'); }
+    else { data.criadoEm = serverTimestamp(); await addDoc(collection(db(), 'utilidades_publicas'), data); toast('Criado!','success'); }
     closeAllModals(); loadUtilidades();
   } catch(e) { toast('Erro.','error'); }
 };
 window.deleteUtilidade = function(id) {
   const { doc, deleteDoc } = fb();
   confirm('Excluir esta utilidade?', async () => {
-    try { await deleteDoc(doc(db(), 'utilidades', id)); toast('Excluído.','success'); loadUtilidades(); }
+    try { await deleteDoc(doc(db(), 'utilidades_publicas', id)); toast('Excluído.','success'); loadUtilidades(); }
     catch(e) { toast('Erro.','error'); }
   });
 };
@@ -1191,7 +1193,7 @@ let _patrocinados = [];
 async function loadPatrocinados() {
   const { collection, getDocs, query, orderBy } = fb();
   try {
-    const snap = await getDocs(query(collection(db(), 'patrocinados'), orderBy('inicio','desc')));
+    const snap = await getDocs(query(collection(db(), 'empresas_patrocinadas'), orderBy('inicio','desc')));
     _patrocinados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const today = new Date().toISOString().split('T')[0];
     const tbody = document.getElementById('tbody-patrocinados');
@@ -1220,7 +1222,7 @@ window.savePatrocinado = async function() {
   if (!sel.value) { toast('Selecione uma empresa.','error'); return; }
   const { collection, doc, addDoc, serverTimestamp } = fb();
   try {
-    await addDoc(collection(db(), 'patrocinados'), {
+    await addDoc(collection(db(), 'empresas_patrocinadas'), {
       empresaId: sel.value, empresaNome: opt?.text || '',
       inicio: document.getElementById('patrocinado-inicio').value,
       fim: document.getElementById('patrocinado-fim').value,
@@ -1236,7 +1238,7 @@ window.savePatrocinado = async function() {
 window.deletePatrocinado = function(id) {
   const { doc, deleteDoc } = fb();
   confirm('Remover patrocínio?', async () => {
-    try { await deleteDoc(doc(db(), 'patrocinados', id)); toast('Removido.','success'); loadPatrocinados(); }
+    try { await deleteDoc(doc(db(), 'empresas_patrocinadas', id)); toast('Removido.','success'); loadPatrocinados(); }
     catch(e) { toast('Erro.','error'); }
   });
 };
@@ -1315,7 +1317,7 @@ window.saveConfiguracoes = async function() {
   } catch(e) { toast('Erro ao salvar configurações.','error'); }
 };
 
-console.log('[Achei Fácil Admin] Panel loaded.');
+console.log('[Antas Digital Admin] Panel loaded.');
 /* ══════════════════════════════════════════
    ADMIN — PROMOÇÕES, CLASSIFICADOS, IA, FIREBASE
 ══════════════════════════════════════════ */
@@ -1703,92 +1705,3 @@ window.deleteAvaliacao = async function(ratingId, companyId) {
     console.error(e);
   }
 };
-
-// ══════════════════════════════════════════════════
-// PEDIDOS (coleção "pedidos", gravada pelo sacola.js)
-// ══════════════════════════════════════════════════
-let _pedidosCache = null;
-let _pedidosDias = 30;
-
-window.setPeriodoPedidos = function (dias) {
-  _pedidosDias = dias;
-  document.querySelectorAll('#pedidos-periodo button').forEach(b => b.classList.toggle('active', Number(b.dataset.dias) === dias));
-  renderPedidos();
-};
-
-window.loadPedidos = async function (forcar) {
-  const { collection, getDocs, query, orderBy, limit } = fb();
-  if (_pedidosCache && !forcar) return renderPedidos();
-  const tb = document.getElementById('tbody-pedidos');
-  if (tb) tb.innerHTML = '<tr><td colspan="6" class="loading-row">Carregando...</td></tr>';
-  try {
-    const snap = await getDocs(query(collection(db(), 'pedidos'), orderBy('criadoEm', 'desc'), limit(2000)));
-    _pedidosCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    console.error(e);
-    _pedidosCache = [];
-    toast('Não foi possível ler os pedidos. Confira as regras do Firestore para a coleção "pedidos".', 'error', 6000);
-  }
-  renderPedidos();
-};
-
-function renderPedidos() {
-  const lista = _pedidosCache || [];
-  const brl = v => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const esc = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const dataDe = p => p.criadoEm?.toDate ? p.criadoEm.toDate() : (p.criadoEm ? new Date(p.criadoEm) : null);
-
-  const agora = new Date();
-  const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
-  let inicio = null;
-  if (_pedidosDias === 1) inicio = inicioHoje;
-  else if (_pedidosDias > 0) inicio = new Date(inicioHoje.getTime() - (_pedidosDias - 1) * 86400000);
-
-  const periodo = lista.filter(p => { const d = dataDe(p); return !inicio || (d && d >= inicio); });
-  const pedidos = periodo.filter(p => p.tipo !== 'orcamento');
-  const orcamentos = periodo.filter(p => p.tipo === 'orcamento');
-  const valor = pedidos.reduce((t, p) => t + (Number(p.total) || 0), 0);
-  const clientes = new Set(periodo.map(p => p.clienteUid).filter(Boolean));
-  const hoje = lista.filter(p => { const d = dataDe(p); return d && d >= inicioHoje; }).length;
-
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('stat-ped-pedidos', pedidos.length.toLocaleString('pt-BR'));
-  set('stat-ped-orcamentos', orcamentos.length.toLocaleString('pt-BR'));
-  set('stat-ped-valor', brl(valor));
-  set('stat-ped-ticket', pedidos.length ? brl(valor / pedidos.length) : '—');
-  set('stat-ped-clientes', clientes.size.toLocaleString('pt-BR'));
-  set('stat-ped-hoje', hoje.toLocaleString('pt-BR'));
-  set('pedidos-periodo-label', _pedidosDias === 0 ? `${lista.length} registros no total` :
-    `Desde ${inicio.toLocaleDateString('pt-BR')}`);
-
-  // Por loja
-  const porLoja = {};
-  periodo.forEach(p => {
-    const k = p.lojaNome || '—';
-    porLoja[k] = porLoja[k] || { pedidos: 0, orcamentos: 0, valor: 0 };
-    if (p.tipo === 'orcamento') porLoja[k].orcamentos++;
-    else { porLoja[k].pedidos++; porLoja[k].valor += Number(p.total) || 0; }
-  });
-  const lojas = Object.entries(porLoja).sort((a, b) => (b[1].pedidos + b[1].orcamentos) - (a[1].pedidos + a[1].orcamentos));
-  const tbL = document.getElementById('tbody-pedidos-lojas');
-  if (tbL) tbL.innerHTML = lojas.length ? lojas.map(([nome, l]) =>
-    `<tr><td>${esc(nome)}</td><td class="num">${l.pedidos}</td><td class="num">${l.orcamentos}</td><td class="num">${brl(l.valor)}</td></tr>`).join('')
-    : '<tr><td colspan="4" class="loading-row">Nenhum pedido no período.</td></tr>';
-
-  // Lista
-  const tb = document.getElementById('tbody-pedidos');
-  if (tb) tb.innerHTML = periodo.length ? periodo.slice(0, 300).map(p => {
-    const d = dataDe(p);
-    const quando = d ? `${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}` : '—';
-    const itens = (p.itens || []).map(i => `${i.qtd}× ${esc(i.nome)}`).join(', ');
-    const cliente = esc(p.clienteNome || p.clienteConta || p.clienteEmail || '—');
-    return `<tr>
-      <td>${quando}</td>
-      <td>${cliente}${p.clienteEmail ? `<br><small style="color:#6B7287">${esc(p.clienteEmail)}</small>` : ''}</td>
-      <td>${esc(p.lojaNome || '—')}</td>
-      <td style="max-width:260px">${itens || '—'}</td>
-      <td class="num">${p.total ? brl(p.total) : '—'}</td>
-      <td>${p.tipo === 'orcamento' ? '<span class="badge badge-pendente">orçamento</span>' : `<span class="badge badge-ativa">${p.modo === 'retirada' ? 'retirada' : 'entrega'}</span>`}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="6" class="loading-row">Nenhum pedido no período.</td></tr>';
-}

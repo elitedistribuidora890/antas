@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Achei Fácil — Painel Administrativo</title>
+  <title>Antas Digital — Painel Administrativo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
-  <link rel="stylesheet" href="admin.css?v=2" />
-  <link rel="stylesheet" href="admin-app.css?v=2" />
+  <link rel="stylesheet" href="admin.css" />
+  <link rel="stylesheet" href="admin-app.css" />
 
   <!-- Firebase -->
   <script type="module">
@@ -105,16 +105,16 @@ window.addEventListener('load', () => {
   </div>
   <div class="login-card">
     <div class="login-logo">
-      <div class="logo-icon"><img src="logo-mark.png" alt="Achei Fácil"></div>
+      <div class="logo-icon"><img src="logo-mark.png" alt="Antas Digital"></div>
       <div>
-        <h1>Achei Fácil</h1>
+        <h1>Antas Digital</h1>
         <span>Painel Administrativo</span>
       </div>
     </div>
     <div id="login-error" class="login-error hidden"></div>
     <div class="field">
       <label>E-mail</label>
-      <input type="email" id="login-email" placeholder="admin@acheifacil.com.br" />
+      <input type="email" id="login-email" placeholder="admin@Antas Digital.com.br" />
     </div>
     <div class="field">
       <label>Senha</label>
@@ -136,7 +136,7 @@ window.addEventListener('load', () => {
       <div class="sidebar-logo">
         <img class="logo-emoji" src="logo-mark.png" alt="">
         <div>
-          <strong>Achei Fácil</strong>
+          <strong>Antas Digital</strong>
           <small>Painel administrativo</small>
         </div>
       </div>
@@ -150,9 +150,6 @@ window.addEventListener('load', () => {
       </a>
       <a class="nav-item" data-page="estatisticas" onclick="navTo('estatisticas')">
         <i class="nav-icon ti ti-chart-line"></i><span class="nav-label">Acessos do site</span>
-      </a>
-      <a class="nav-item" data-page="pedidos" onclick="navTo('pedidos')">
-        <i class="nav-icon ti ti-shopping-bag"></i><span class="nav-label">Pedidos</span>
       </a>
 
       <div class="nav-section-label">Empresas</div>
@@ -207,13 +204,6 @@ window.addEventListener('load', () => {
       </a>
       <a class="nav-item" data-page="config-firebase" onclick="navTo('config-firebase')">
         <i class="nav-icon ti ti-database"></i><span class="nav-label">Firebase</span>
-      </a>
-      <a class="nav-item" data-page="diagnostico" onclick="navTo('diagnostico')">
-        <i class="nav-icon ti ti-stethoscope"></i><span class="nav-label">Diagnóstico</span>
-        <span class="nav-badge" id="badge-diagnostico"></span>
-      </a>
-      <a class="nav-item" data-page="dados-teste" onclick="navTo('dados-teste')">
-        <i class="nav-icon ti ti-flask"></i><span class="nav-label">Dados de teste</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -295,13 +285,6 @@ window.addEventListener('load', () => {
               <span class="stat-label">Usuários</span>
             </div>
           </div>
-          <div class="stat-card" style="--accent:#0F9D6B; cursor:pointer" onclick="navTo('pedidos')">
-            <div class="stat-icon">🛍️</div>
-            <div class="stat-info">
-              <span class="stat-value" id="stat-pedidos">—</span>
-              <span class="stat-label">Pedidos feitos</span>
-            </div>
-          </div>
           <div class="stat-card" style="--accent:#3b82f6">
             <div class="stat-icon">👁️</div>
             <div class="stat-info">
@@ -320,7 +303,7 @@ window.addEventListener('load', () => {
 
         <div class="charts-row">
           <div class="chart-card">
-            <h3>Acessos ao site — últimos 7 dias</h3>
+            <h3>Visualizações — Últimos 7 dias</h3>
             <canvas id="chart-views" height="200"></canvas>
           </div>
           <div class="chart-card">
@@ -347,136 +330,66 @@ window.addEventListener('load', () => {
         </div>
       </section>
 
-      <!-- ── PEDIDOS ── -->
-      <section class="page" id="page-pedidos">
-        <div class="page-header">
-          <div>
-            <h2>Pedidos</h2>
-            <span class="page-subtitle">Pedidos e orçamentos enviados pelo app (só clientes cadastrados)</span>
-          </div>
-          <button class="btn-ghost" onclick="loadPedidos(true)"><i class="ti ti-refresh"></i> Atualizar</button>
-        </div>
-
-        <div class="period-bar">
-          <div class="period-chips" id="pedidos-periodo">
-            <button data-dias="1" onclick="setPeriodoPedidos(1)">Hoje</button>
-            <button data-dias="7" onclick="setPeriodoPedidos(7)">7 dias</button>
-            <button data-dias="30" class="active" onclick="setPeriodoPedidos(30)">30 dias</button>
-            <button data-dias="0" onclick="setPeriodoPedidos(0)">Todos</button>
-          </div>
-          <span class="period-label" id="pedidos-periodo-label"></span>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card" style="--accent:#1E4FD1"><div class="stat-icon"><i class="ti ti-shopping-bag"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-pedidos">—</span><span class="stat-label">Pedidos</span></div></div>
-          <div class="stat-card" style="--accent:#7C3AED"><div class="stat-icon"><i class="ti ti-briefcase"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-orcamentos">—</span><span class="stat-label">Orçamentos</span></div></div>
-          <div class="stat-card" style="--accent:#0F9D6B"><div class="stat-icon"><i class="ti ti-cash"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-valor">—</span><span class="stat-label">Valor em pedidos</span></div></div>
-          <div class="stat-card" style="--accent:#F59E0B"><div class="stat-icon"><i class="ti ti-receipt"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-ticket">—</span><span class="stat-label">Ticket médio</span></div></div>
-          <div class="stat-card" style="--accent:#EC4899"><div class="stat-icon"><i class="ti ti-users"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-clientes">—</span><span class="stat-label">Clientes que pediram</span></div></div>
-          <div class="stat-card" style="--accent:#0EA5E9"><div class="stat-icon"><i class="ti ti-sun"></i></div><div class="stat-info"><span class="stat-value" id="stat-ped-hoje">—</span><span class="stat-label">Pedidos hoje</span></div></div>
-        </div>
-
-        <div class="table-card" style="margin-top:.85rem">
-          <h3>Pedidos por loja</h3>
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead><tr><th>Loja</th><th class="num">Pedidos</th><th class="num">Orçamentos</th><th class="num">Valor</th></tr></thead>
-              <tbody id="tbody-pedidos-lojas"><tr><td colspan="4" class="loading-row">Carregando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="table-card" style="margin-top:.85rem">
-          <h3>Últimos pedidos</h3>
-          <div class="table-scroll table-scroll--tall">
-            <table class="data-table">
-              <thead><tr><th>Data</th><th>Cliente</th><th>Loja</th><th>Itens</th><th class="num">Total</th><th>Tipo</th></tr></thead>
-              <tbody id="tbody-pedidos"><tr><td colspan="6" class="loading-row">Carregando...</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
       <!-- ── ESTATÍSTICAS DE ACESSO ── -->
       <section class="page" id="page-estatisticas">
         <div class="page-header">
           <div>
             <h2>Acessos do Site</h2>
-            <span class="page-subtitle">Quantas pessoas abriram o app, dia a dia</span>
+            <span class="page-subtitle">Quantas pessoas visitaram o portal e quando</span>
           </div>
-          <button class="btn-ghost" onclick="loadEstatisticas(true)"><i class="ti ti-refresh"></i> Atualizar</button>
-        </div>
-
-        <div class="period-bar">
-          <div class="period-chips" id="acessos-periodo">
-            <button data-dias="7" onclick="setPeriodoAcessos(7)">7 dias</button>
-            <button data-dias="30" class="active" onclick="setPeriodoAcessos(30)">30 dias</button>
-            <button data-dias="90" onclick="setPeriodoAcessos(90)">90 dias</button>
-            <button data-dias="0" onclick="setPeriodoAcessos(0)">Todos os dias</button>
-          </div>
-          <span class="period-label" id="acessos-periodo-label"></span>
+          <button class="btn-ghost" onclick="loadEstatisticas()">🔄 Atualizar</button>
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card" style="--accent:#1E4FD1"><div class="stat-icon"><i class="ti ti-eye"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-periodo">—</span><span class="stat-label">Acessos no período</span></div></div>
-          <div class="stat-card" style="--accent:#0F9D6B"><div class="stat-icon"><i class="ti ti-calendar-stats"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-media">—</span><span class="stat-label">Média por dia</span></div></div>
-          <div class="stat-card" style="--accent:#F59E0B"><div class="stat-icon"><i class="ti ti-trophy"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-melhor">—</span><span class="stat-label">Melhor dia</span></div></div>
-          <div class="stat-card" style="--accent:#7C3AED"><div class="stat-icon"><i class="ti ti-clock"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-hora-pico">—</span><span class="stat-label">Horário de pico</span></div></div>
-          <div class="stat-card" style="--accent:#EC4899"><div class="stat-icon"><i class="ti ti-device-mobile"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-mobile">—</span><span class="stat-label">Pelo celular</span></div></div>
-          <div class="stat-card" style="--accent:#0EA5E9"><div class="stat-icon"><i class="ti ti-sun"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-hoje">—</span><span class="stat-label">Hoje</span></div></div>
-          <div class="stat-card" style="--accent:#64748B"><div class="stat-icon"><i class="ti ti-world"></i></div><div class="stat-info"><span class="stat-value" id="stat-acessos-total">—</span><span class="stat-label">Total desde o início</span></div></div>
-        </div>
-
-        <div class="chart-card chart-wide">
-          <h3>Acessos por dia</h3>
-          <div class="chart-box"><canvas id="chart-acessos-dias"></canvas></div>
-        </div>
-        <div class="charts-row">
-          <div class="chart-card">
-            <h3>Horários com mais acesso (no período)</h3>
-            <div class="chart-box chart-box--sm"><canvas id="chart-acessos-horas"></canvas></div>
+          <div class="stat-card" style="--accent:#6366f1">
+            <div class="stat-icon">👁️</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-acessos-total">—</span>
+              <span class="stat-label">Acessos Totais</span>
+            </div>
           </div>
-          <div class="table-card">
-            <h3>Últimos acessos</h3>
-            <div class="table-scroll">
-              <table class="data-table">
-                <thead><tr><th>Data</th><th>Hora</th><th>Página</th><th>Aparelho</th><th>Origem</th></tr></thead>
-                <tbody id="tbody-acessos-recentes"><tr><td colspan="5" class="loading-row">Carregando...</td></tr></tbody>
-              </table>
+          <div class="stat-card" style="--accent:#10b981">
+            <div class="stat-icon">📅</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-acessos-hoje">—</span>
+              <span class="stat-label">Acessos Hoje</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#f59e0b">
+            <div class="stat-icon">🗓️</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-acessos-7dias">—</span>
+              <span class="stat-label">Últimos 7 Dias</span>
+            </div>
+          </div>
+          <div class="stat-card" style="--accent:#3b82f6">
+            <div class="stat-icon">⏱️</div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-acessos-hora-pico">—</span>
+              <span class="stat-label">Horário de Pico (hoje)</span>
             </div>
           </div>
         </div>
 
-        <div class="table-card" style="margin-top:.85rem">
-          <h3>Todos os dias do período</h3>
-          <div class="table-scroll table-scroll--tall">
-            <table class="data-table days-table">
-              <thead><tr><th>Data</th><th>Dia</th><th class="num">Acessos</th><th class="num">Celular / PC</th><th></th></tr></thead>
-              <tbody id="tbody-acessos-dias"><tr><td colspan="5" class="loading-row">Carregando...</td></tr></tbody>
+        <div class="charts-row">
+          <div class="chart-card">
+            <h3>Acessos por Horário (hoje)</h3>
+            <canvas id="chart-acessos-horas" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Acessos — Últimos 7 dias</h3>
+            <canvas id="chart-acessos-dias" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="tables-row">
+          <div class="table-card" style="flex:1 1 100%">
+            <h3>Últimos Acessos</h3>
+            <table class="data-table">
+              <thead><tr><th>Data</th><th>Hora</th><th>Página</th><th>Dispositivo</th><th>Origem</th></tr></thead>
+              <tbody id="tbody-acessos-recentes"><tr><td colspan="5" class="loading-row">Carregando...</td></tr></tbody>
             </table>
           </div>
-        </div>
-      </section>
-
-      <!-- ── DIAGNÓSTICO DO BANCO ── -->
-      <section class="page" id="page-diagnostico">
-        <div class="page-header">
-          <div>
-            <h2>Diagnóstico do banco</h2>
-            <span class="page-subtitle">Testa cada parte do Firebase e mostra o que está dando erro</span>
-          </div>
-          <button class="btn-primary" onclick="rodarDiagnostico()"><i class="ti ti-player-play"></i> Testar agora</button>
-        </div>
-        <div id="diag-resumo" class="diag-resumo"></div>
-        <div class="table-card">
-          <table class="data-table diag-table">
-            <thead><tr><th>Parte do app</th><th>Coleção</th><th>Status</th><th>O que significa</th></tr></thead>
-            <tbody id="diag-body"><tr><td colspan="4" class="loading-row">Clique em "Testar agora".</td></tr></tbody>
-          </table>
-        </div>
-        <div class="table-card" style="margin-top:.85rem">
-          <h3>Erros registrados nesta sessão do painel</h3>
-          <div id="diag-log" class="diag-log"><p class="empty-state" style="padding:1.5rem">Nenhum erro até agora.</p></div>
         </div>
       </section>
 
@@ -666,7 +579,7 @@ window.addEventListener('load', () => {
           <div class="config-card">
             <h3>Contatos Oficiais</h3>
             <div class="field"><label>WhatsApp Oficial</label><input type="text" id="cfg-whatsapp" placeholder="(00) 00000-0000" /></div>
-            <div class="field"><label>Instagram</label><input type="text" id="cfg-instagram" placeholder="@acheifacil" /></div>
+            <div class="field"><label>Instagram</label><input type="text" id="cfg-instagram" placeholder="@Antas Digital" /></div>
             <div class="field"><label>Facebook</label><input type="text" id="cfg-facebook" /></div>
           </div>
           <div class="config-card config-full">
@@ -788,11 +701,11 @@ window.addEventListener('load', () => {
             <h3>Prompt Base</h3>
             <div class="field">
               <label>Instruções para a IA (como ela deve se comportar)</label>
-              <textarea id="ia-prompt-base" rows="6" placeholder="Você é o assistente do Achei Fácil, guia comercial da região. Responda apenas com base nos dados do sistema..."></textarea>
+              <textarea id="ia-prompt-base" rows="6" placeholder="Você é o assistente do Antas Digital, guia comercial da região. Responda apenas com base nos dados do sistema..."></textarea>
             </div>
             <p style="font-size:12px;color:var(--text-muted);margin-top:8px">
               💡 A IA responde perguntas sobre empresas, produtos, promoções, classificados e vagas cadastradas no sistema.
-              Se não encontrar dados, responde: <em>"Não encontrei essa informação cadastrada no Achei Fácil no momento."</em>
+              Se não encontrar dados, responde: <em>"Não encontrei essa informação cadastrada no Antas Digital no momento."</em>
             </p>
           </div>
           <div class="config-card config-full" style="text-align:right">
@@ -829,32 +742,6 @@ window.addEventListener('load', () => {
           </div>
           <div class="config-card config-full" style="text-align:right">
             <button class="btn-primary" onclick="saveFirebaseConfig()">💾 Salvar Config. Firebase</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ══════ DADOS DE TESTE ══════ -->
-      <section class="page" id="page-dados-teste">
-        <div class="page-header">
-          <div>
-            <h2>Dados de teste</h2>
-            <span class="page-subtitle">Preenche o app com exemplos para ver como fica</span>
-          </div>
-        </div>
-        <div class="config-grid">
-          <div class="config-card config-full">
-            <h3>O que é criado</h3>
-            <p style="font-size:13px;color:var(--text-muted);line-height:1.7">
-              44 empresas fictícias, pelo menos uma em cada uma das 22 categorias, com 171 itens de cardápio e catálogo
-              (pratos, produtos, serviços, vagas, planos…), 6 promoções e 4 notícias recentes da Bahia com a fonte.<br>
-              Tudo aparece com <strong>[TESTE]</strong> no nome e fica marcado no banco, então o botão de apagar remove só esses dados.
-              Empresas reais não são tocadas.
-            </p>
-            <p id="teste-status" style="font-size:13px;margin-top:12px;color:var(--text)">Abra esta tela para ver o resumo.</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-              <button class="btn-primary teste-btn" onclick="criarDadosTeste()"><i class="ti ti-flask"></i> Criar dados de teste</button>
-              <button class="btn-danger teste-btn" onclick="apagarDadosTeste()"><i class="ti ti-trash"></i> Apagar dados de teste</button>
-            </div>
           </div>
         </div>
       </section>
@@ -1158,8 +1045,6 @@ window.addEventListener('load', () => {
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script src="admin.js?v=3"></script>
-<script src="dados-teste.js?v=4"></script>
-<script src="admin-diagnostico.js?v=1"></script>
+<script src="admin.js"></script>
 </body>
 </html>
